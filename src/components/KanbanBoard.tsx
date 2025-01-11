@@ -1,32 +1,35 @@
 import { DeliveryCard } from "./DeliveryCard";
 
 const columns = [
-  { id: "not-assigned", title: "Não Atribuído", count: 0 },
+  { id: "not-assigned", title: "Não Atribuído", count: 3 },
   { id: "assigned", title: "Atribuído", count: 0 },
   { id: "accepted", title: "Aceito", count: 0 },
-  { id: "in-transit", title: "Em deslocamento", count: 2 },
-  { id: "arrived", title: "Chegou ao local", count: 1 },
-  { id: "completed", title: "Finalizado hoje", count: 93 },
+  { id: "in-transit", title: "Em deslocamento", count: 0 },
+  { id: "arrived", title: "Chegou ao local", count: 0 },
+  { id: "completed", title: "Finalizado hoje", count: 0 },
 ];
 
 const sampleDeliveries = [
   {
     code: "457818",
     customer: "LUCIANA MOREIRA SOUZA DE CARVALHO",
-    address: "RUA DOUTOR ANTÔNIO GONÇALVES DE MATOS, 345",
+    address: "RUA DOUTOR ANTÔNIO GONÇALVES DE MATOS, 345 - CENTRO, SÃO PAULO - SP",
+    phone: "(11) 98765-4321",
     status: "pending" as const,
   },
   {
     code: "469141",
     customer: "CS FOMENTO MERCANTIL LTDA",
-    address: "AVENIDA BIAS FORTES, 349",
-    status: "success" as const,
+    address: "AVENIDA BIAS FORTES, 349 - LOURDES, BELO HORIZONTE - MG",
+    phone: "(31) 98765-4321",
+    status: "pending" as const,
   },
   {
     code: "470609",
     customer: "REGINA FLAVIA",
-    address: "RUA JOÃO MANSUR NFURI, 120",
-    status: "success" as const,
+    address: "RUA JOÃO MANSUR NFURI, 120 - JARDIM PAULISTA, SÃO PAULO - SP",
+    phone: "(11) 98765-4322",
+    status: "pending" as const,
   },
 ];
 
@@ -45,7 +48,7 @@ export const KanbanBoard = () => {
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg min-h-[calc(100vh-12rem)]">
-              {column.id === "in-transit" && sampleDeliveries.map((delivery) => (
+              {column.id === "not-assigned" && sampleDeliveries.map((delivery) => (
                 <DeliveryCard key={delivery.code} {...delivery} />
               ))}
             </div>

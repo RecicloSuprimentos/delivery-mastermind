@@ -1,4 +1,4 @@
-import { Bell, Map, MessageSquare, Search, Settings, User } from "lucide-react";
+import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -8,7 +8,7 @@ export const Navigation = () => {
       <div className="px-4 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/lovable-uploads/f898aedd-9ace-4deb-9dbd-9472ed5ad258.png" alt="Reciclo Logo" className="h-8" />
+            <span className="text-2xl font-bold text-primary">ROTERIZADOR</span>
             <div className="ml-8 flex space-x-4">
               <Button variant="ghost">PLANEJAMENTO</Button>
               <Button variant="ghost">TEMPO REAL</Button>
@@ -26,7 +26,10 @@ export const Navigation = () => {
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
-            <Button variant="outline">SERVIÇO</Button>
+            <Button variant="default" className="gap-2">
+              <PlusCircle className="h-5 w-5" />
+              SERVIÇO
+            </Button>
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>

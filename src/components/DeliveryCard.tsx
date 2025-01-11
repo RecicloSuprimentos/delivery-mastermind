@@ -1,15 +1,17 @@
-import { User } from "lucide-react";
+import { MapPin, MoreVertical, Map } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface DeliveryCardProps {
   code: string;
   customer: string;
   address: string;
+  phone: string;
   status: "success" | "closed" | "pending";
 }
 
-export const DeliveryCard = ({ code, customer, address, status }: DeliveryCardProps) => {
+export const DeliveryCard = ({ code, customer, address, phone, status }: DeliveryCardProps) => {
   const getStatusBadge = () => {
     switch (status) {
       case "success":
@@ -22,21 +24,30 @@ export const DeliveryCard = ({ code, customer, address, status }: DeliveryCardPr
   };
 
   return (
-    <Card className="p-4 mb-4 cursor-pointer hover:shadow-md transition-shadow">
-      <div className="flex items-start space-x-3">
-        <div className="bg-muted p-2 rounded-full">
-          <User className="h-6 w-6 text-secondary" />
+    <Card className="p-4 mb-4 cursor-pointer hover:shadow-md transition-shadow bg-white">
+      <div className="flex flex-col space-y-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-bold text-sm text-primary">ENTREGA {code}</h3>
+            <p className="text-sm font-medium mt-1">{customer}</p>
+          </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-sm">ENTREGA {code}</h3>
-            <input type="checkbox" className="rounded border-gray-300" />
-          </div>
-          <p className="text-sm font-medium mt-1">{customer}</p>
-          <p className="text-sm text-secondary mt-1">{address}</p>
-          <div className="mt-2 flex justify-end">
-            {getStatusBadge()}
-          </div>
+        
+        <div className="flex items-start space-x-2">
+          <MapPin className="h-4 w-4 text-secondary mt-1" />
+          <p className="text-sm text-secondary flex-1">{address}</p>
+        </div>
+        
+        <p className="text-sm text-secondary">{phone}</p>
+        
+        <div className="flex justify-between items-center mt-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Map className="h-4 w-4" />
+          </Button>
+          {getStatusBadge()}
         </div>
       </div>
     </Card>
