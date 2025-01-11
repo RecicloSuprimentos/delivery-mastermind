@@ -1,5 +1,5 @@
 import { DeliveryCard } from "./DeliveryCard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -40,6 +40,7 @@ const sampleDeliveries = [
 
 export const KanbanBoard = () => {
   const [deliveries, setDeliveries] = useState(sampleDeliveries);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newDelivery, setNewDelivery] = useState({
     code: "",
     customer: "",
@@ -60,6 +61,7 @@ export const KanbanBoard = () => {
 
     setDeliveries([delivery, ...deliveries]);
     setNewDelivery({ code: "", customer: "", address: "", phone: "" });
+    setIsDialogOpen(false);
     toast.success("Serviço adicionado com sucesso!");
   };
 
@@ -85,7 +87,7 @@ export const KanbanBoard = () => {
         ))}
       </div>
 
-      <Dialog>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Novo Serviço</DialogTitle>

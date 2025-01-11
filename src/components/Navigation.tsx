@@ -2,8 +2,11 @@ import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle } from "lu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 
 export const Navigation = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <nav className="bg-white border-b border-gray-200 fixed w-full z-50">
       <div className="px-4 py-2.5">
@@ -27,7 +30,7 @@ export const Navigation = () => {
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="default" className="gap-2">
                   <PlusCircle className="h-5 w-5" />
