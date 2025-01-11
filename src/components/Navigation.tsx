@@ -1,6 +1,7 @@
 import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 export const Navigation = () => {
   return (
@@ -26,10 +27,14 @@ export const Navigation = () => {
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
-            <Button variant="default" className="gap-2">
-              <PlusCircle className="h-5 w-5" />
-              SERVIÇO
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="default" className="gap-2">
+                  <PlusCircle className="h-5 w-5" />
+                  SERVIÇO
+                </Button>
+              </DialogTrigger>
+            </Dialog>
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>

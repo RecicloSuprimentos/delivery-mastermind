@@ -1,4 +1,9 @@
 import { DeliveryCard } from "./DeliveryCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -34,11 +39,35 @@ const sampleDeliveries = [
 ];
 
 export const KanbanBoard = () => {
+  const [deliveries, setDeliveries] = useState(sampleDeliveries);
+  const [newDelivery, setNewDelivery] = useState({
+    code: "",
+    customer: "",
+    address: "",
+    phone: "",
+  });
+
+  const handleAddDelivery = () => {
+    if (!newDelivery.code || !newDelivery.customer || !newDelivery.address || !newDelivery.phone) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
+
+    const delivery = {
+      ...newDelivery,
+      status: "pending" as const,
+    };
+
+    setDeliveries([delivery, ...deliveries]);
+    setNewDelivery({ code: "", customer: "", address: "", phone: "" });
+    toast.success("Serviço adicionado com sucesso!");
+  };
+
   return (
     <div className="flex-1 overflow-x-auto">
-      <div className="flex min-w-max h-full p-4 space-x-4">
+      <div className="flex h-full p-4 space-x-4">
         {columns.map((column) => (
-          <div key={column.id} className="w-80">
+          <div key={column.id} className="flex-1 min-w-[300px]">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-sm">
                 {column.title}
@@ -48,13 +77,62 @@ export const KanbanBoard = () => {
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg min-h-[calc(100vh-12rem)]">
-              {column.id === "not-assigned" && sampleDeliveries.map((delivery) => (
+              {column.id === "not-assigned" && deliveries.map((delivery) => (
                 <DeliveryCard key={delivery.code} {...delivery} />
               ))}
             </div>
           </div>
         ))}
       </div>
+
+      <Dialog>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Novo Serviço</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="code">Código da Entrega</label>
+              <Input
+                id="code"
+                value={newDelivery.code}
+                onChange={(e) => setNewDelivery({ ...newDelivery, code: e.target.value })}
+                placeholder="Digite o código"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="customer">Nome do Cliente</label>
+              <Input
+                id="customer"
+                value={newDelivery.customer}
+                onChange={(e) => setNewDelivery({ ...newDelivery, customer: e.target.value })}
+                placeholder="Digite o nome do cliente"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="address">Endereço</label>
+              <Input
+                id="address"
+                value={newDelivery.address}
+                onChange={(e) => setNewDelivery({ ...newDelivery, address: e.target.value })}
+                placeholder="Digite o endereço completo"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="phone">Telefone</label>
+              <Input
+                id="phone"
+                value={newDelivery.phone}
+                onChange={(e) => setNewDelivery({ ...newDelivery, phone: e.target.value })}
+                placeholder="Digite o telefone"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={handleAddDelivery}>Adicionar Serviço</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
