@@ -37,8 +37,8 @@ export const DeliveryCard = ({ code, customer, address, phone, status }: Deliver
         </div>
         
         <div className="flex items-start space-x-2">
-          <MapPin className="h-4 w-4 text-secondary mt-1" />
-          <p className="text-sm text-secondary flex-1">{address}</p>
+          <MapPin className="h-4 w-4 text-secondary mt-1 flex-shrink-0" />
+          <p className="text-xs text-secondary flex-1">{address}</p>
         </div>
         
         <p className="text-sm text-secondary">{phone}</p>

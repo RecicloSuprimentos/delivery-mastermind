@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -14,55 +17,58 @@ const columns = [
   { id: "completed", title: "Finalizado hoje", count: 0 },
 ];
 
-const sampleDeliveries = [
-  {
-    code: "457818",
-    customer: "LUCIANA MOREIRA SOUZA DE CARVALHO",
-    address: "RUA DOUTOR ANTÔNIO GONÇALVES DE MATOS, 345 - CENTRO, SÃO PAULO - SP",
-    phone: "(11) 98765-4321",
-    status: "pending" as const,
-  },
-  {
-    code: "469141",
-    customer: "CS FOMENTO MERCANTIL LTDA",
-    address: "AVENIDA BIAS FORTES, 349 - LOURDES, BELO HORIZONTE - MG",
-    phone: "(31) 98765-4321",
-    status: "pending" as const,
-  },
-  {
-    code: "470609",
-    customer: "REGINA FLAVIA",
-    address: "RUA JOÃO MANSUR NFURI, 120 - JARDIM PAULISTA, SÃO PAULO - SP",
-    phone: "(11) 98765-4322",
-    status: "pending" as const,
-  },
-];
-
 export const KanbanBoard = () => {
-  const [deliveries, setDeliveries] = useState(sampleDeliveries);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newDelivery, setNewDelivery] = useState({
     code: "",
+    type: "delivery",
     customer: "",
     address: "",
     phone: "",
+    timeWindow: "",
   });
 
-  const handleAddDelivery = () => {
+  const { data: deliveries = [], refetch } = useQuery({
+    queryKey: ['services'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleAddDelivery = async () => {
     if (!newDelivery.code || !newDelivery.customer || !newDelivery.address || !newDelivery.phone) {
       toast.error("Por favor, preencha todos os campos");
       return;
     }
 
-    const delivery = {
-      ...newDelivery,
-      status: "pending" as const,
-    };
+    try {
+      const { error } = await supabase
+        .from('services')
+        .insert([{
+          code: newDelivery.code,
+          customer: newDelivery.customer,
+          address: newDelivery.address,
+          phone: newDelivery.phone,
+          status: 'not-assigned',
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        }]);
 
-    setDeliveries([delivery, ...deliveries]);
-    setNewDelivery({ code: "", customer: "", address: "", phone: "" });
-    setIsDialogOpen(false);
-    toast.success("Serviço adicionado com sucesso!");
+      if (error) throw error;
+
+      setNewDelivery({ code: "", type: "delivery", customer: "", address: "", phone: "", timeWindow: "" });
+      setIsDialogOpen(false);
+      refetch();
+      toast.success("Serviço adicionado com sucesso!");
+    } catch (error) {
+      console.error('Error adding service:', error);
+      toast.error("Erro ao adicionar serviço");
+    }
   };
 
   return (
@@ -75,7 +81,7 @@ export const KanbanBoard = () => {
                 {column.title}
               </h2>
               <span className="bg-muted text-secondary text-sm px-2 py-1 rounded">
-                {column.count}
+                {column.id === "not-assigned" ? deliveries.length : 0}
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg min-h-[calc(100vh-12rem)]">
@@ -94,12 +100,27 @@ export const KanbanBoard = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <label htmlFor="code">Código da Entrega</label>
+              <label htmlFor="type">Tipo de Serviço</label>
+              <Select
+                value={newDelivery.type}
+                onValueChange={(value) => setNewDelivery({ ...newDelivery, type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="delivery">Entrega</SelectItem>
+                  <SelectItem value="pickup">Coleta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="code">ID do Serviço</label>
               <Input
                 id="code"
                 value={newDelivery.code}
                 onChange={(e) => setNewDelivery({ ...newDelivery, code: e.target.value })}
-                placeholder="Digite o código"
+                placeholder="Digite o ID"
               />
             </div>
             <div className="grid gap-2">
@@ -127,6 +148,15 @@ export const KanbanBoard = () => {
                 value={newDelivery.phone}
                 onChange={(e) => setNewDelivery({ ...newDelivery, phone: e.target.value })}
                 placeholder="Digite o telefone"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="timeWindow">Intervalo de Horário</label>
+              <Input
+                id="timeWindow"
+                value={newDelivery.timeWindow}
+                onChange={(e) => setNewDelivery({ ...newDelivery, timeWindow: e.target.value })}
+                placeholder="Ex: 14:00 - 16:00"
               />
             </div>
           </div>
