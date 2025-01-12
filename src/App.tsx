@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoadScript } from "@react-google-maps/api";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import AddressSearchPage from "./pages/AddressSearchPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +58,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/address-search"
+                element={
+                  <ProtectedRoute>
+                    <AddressSearchPage />
                   </ProtectedRoute>
                 }
               />

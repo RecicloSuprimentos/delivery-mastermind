@@ -1,6 +1,7 @@
 import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle, LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -11,11 +12,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-interface NavigationProps {
-  onCreateService: () => void;
-}
-
-export const Navigation = ({ onCreateService }: NavigationProps) => {
+export const Navigation = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -46,14 +44,17 @@ export const Navigation = ({ onCreateService }: NavigationProps) => {
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
-            <Button 
-              variant="default" 
-              className="gap-2 bg-black hover:bg-black/90"
-              onClick={onCreateService}
-            >
-              <PlusCircle className="h-5 w-5" />
-              SERVIÇO
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" className="gap-2 bg-black hover:bg-black/90">
+                  <PlusCircle className="h-5 w-5" />
+                  SERVIÇO
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-[90vw] h-[95vh] p-0">
+                {/* Service form will be added here after we implement the new version */}
+              </DialogContent>
+            </Dialog>
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
