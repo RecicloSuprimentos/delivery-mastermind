@@ -1,8 +1,6 @@
-import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle, LogOut, MapPin } from "lucide-react";
+import { Bell, Map, MessageSquare, Search, Settings, User, LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,21 +18,17 @@ export const Navigation = () => {
     navigate('/login');
   };
 
-  const handleServiceClick = () => {
-    navigate('/address-search');
-  };
-
   return (
     <nav className="bg-white border-b border-gray-200 fixed w-full z-50">
       <div className="px-4 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <span className="text-2xl font-bold text-primary">ROTERIZADOR</span>
+            <span className="text-[1.8rem] font-bold text-primary">ROTERIZADOR</span>
             <div className="ml-8 flex space-x-4">
-              <Button variant="ghost">PLANEJAMENTO</Button>
-              <Button variant="ghost">TEMPO REAL</Button>
-              <Button variant="ghost">ANÁLISE</Button>
-              <Button variant="ghost">COMUNICAÇÃO</Button>
+              <Button variant="ghost" className="text-[0.9rem]">PLANEJAMENTO</Button>
+              <Button variant="ghost" className="text-[0.9rem]">TEMPO REAL</Button>
+              <Button variant="ghost" className="text-[0.9rem]">ANÁLISE</Button>
+              <Button variant="ghost" className="text-[0.9rem]">COMUNICAÇÃO</Button>
             </div>
           </div>
           
@@ -43,44 +37,36 @@ export const Navigation = () => {
               <Input
                 type="search"
                 placeholder="Pesquisar..."
-                className="pl-10 pr-4 py-2 w-64"
+                className="pl-10 pr-4 py-2 w-64 text-[0.9rem]"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             </div>
-            <Button 
-              variant="default" 
-              className="gap-2 bg-black hover:bg-black/90"
-              onClick={handleServiceClick}
-            >
-              <PlusCircle className="h-5 w-5" />
-              SERVIÇO
+            <Button variant="ghost" size="icon">
+              <Bell className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
+              <MessageSquare className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon">
-              <MessageSquare className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Map className="h-5 w-5" />
+              <Map className="h-4 w-4" />
             </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <MapPin className="h-5 w-5" />
+                  <MapPin className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>
+                <DropdownMenuItem className="text-[0.9rem]">
                   <User className="mr-2 h-4 w-4" />
                   Meu Perfil
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem className="text-[0.9rem]">
                   <Settings className="mr-2 h-4 w-4" />
                   Configurações
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={handleLogout} className="text-[0.9rem]">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </DropdownMenuItem>
