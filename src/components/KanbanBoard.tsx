@@ -15,21 +15,13 @@ const columns = [
 
 type ValidStatus = "not-assigned" | "assigned" | "accepted" | "in-transit" | "arrived" | "completed";
 
-interface Delivery {
-  code: string;
-  customer: string;
-  address: string;
-  phone: string;
-  status: ValidStatus;
-}
-
 const isValidStatus = (status: string): status is ValidStatus => {
   return ["not-assigned", "assigned", "accepted", "in-transit", "arrived", "completed"].includes(status);
 };
 
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const deliveries: Delivery[] = []; // Temporariamente vazio até reimplementarmos
+  const deliveries: any[] = []; // Temporariamente vazio até reimplementarmos
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
@@ -70,7 +62,7 @@ export const KanbanBoard = () => {
                     customer={delivery.customer}
                     address={delivery.address}
                     phone={delivery.phone}
-                    status={delivery.status}
+                    status={delivery.status as ValidStatus}
                   />
                 );
               })}
