@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { ServiceFormValues } from "./types";
 import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
@@ -23,33 +23,82 @@ interface AddressSectionProps {
 
 export const AddressSection = ({ form }: AddressSectionProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Cleanup function for marker
+  const clearMarker = () => {
+    if (marker) {
+      marker.setMap(null);
+      setMarker(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearMarker();
+    };
+  }, []);
+
   const onLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
+    console.log("Autocomplete loaded");
     setAutocomplete(autocomplete);
   }, []);
 
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    console.log("Map loaded");
+    setMap(map);
+  }, []);
+
+  const updateMapLocation = (place: google.maps.places.PlaceResult) => {
+    if (map && place.geometry?.location) {
+      map.setCenter(place.geometry.location);
+      map.setZoom(16);
+
+      clearMarker();
+
+      const newMarker = new google.maps.Marker({
+        map,
+        position: place.geometry.location,
+      });
+      setMarker(newMarker);
+    }
+  };
+
   const onPlaceChanged = useCallback(() => {
     if (autocomplete) {
+      console.log("Place changed event triggered");
       const place = autocomplete.getPlace();
-      
+      console.log("Selected place:", place);
+
       if (place.formatted_address) {
+        console.log("Setting address:", place.formatted_address);
+        
+        // Update form value
         form.setValue('address', place.formatted_address, {
           shouldValidate: true,
           shouldDirty: true,
           shouldTouch: true
         });
-        
-        // Atualiza o valor do input diretamente
+
+        // Update input value directly
         if (inputRef.current) {
           inputRef.current.value = place.formatted_address;
         }
+
+        // Update map
+        updateMapLocation(place);
+      } else {
+        console.warn("No formatted address found in place result");
       }
+    } else {
+      console.warn("Autocomplete is not initialized");
     }
   }, [autocomplete, form]);
 
   return (
-    <div className="grid gap-4">
+    <div className="space-y-4">
       <div className="grid grid-cols-[2fr,1fr] gap-4">
         <FormField
           control={form.control}
@@ -57,21 +106,21 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="font-medium">Endereço *</FormLabel>
-              <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
-                <Autocomplete
-                  onLoad={onLoad}
-                  onPlaceChanged={onPlaceChanged}
-                >
-                  <FormControl>
+              <FormControl>
+                <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
+                  <Autocomplete
+                    onLoad={onLoad}
+                    onPlaceChanged={onPlaceChanged}
+                  >
                     <Input
                       {...field}
                       ref={inputRef}
                       placeholder="Digite o endereço completo"
                       className="bg-white"
                     />
-                  </FormControl>
-                </Autocomplete>
-              </LoadScript>
+                  </Autocomplete>
+                </LoadScript>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -97,6 +146,7 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
           mapContainerStyle={mapContainerStyle}
           zoom={13}
           center={center}
+          onLoad={onMapLoad}
           options={{
             zoomControl: true,
             streetViewControl: false,
