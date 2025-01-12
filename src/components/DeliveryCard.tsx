@@ -24,7 +24,7 @@ const DeliveryCard = () => {
   const [complement, setComplement] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [observations, setObservations] = useState("");
-  const [serviceType, setServiceType] = useState<"coleta" | "entrega" | "ambos">("entrega");
+  const [serviceType, setServiceType] = useState<"coleta" | "entrega">("entrega");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -59,6 +59,7 @@ const DeliveryCard = () => {
         observations,
         latitude: location.lat,
         longitude: location.lng,
+        status: "not-assigned"
       });
 
       if (error) throw error;
@@ -111,14 +112,6 @@ const DeliveryCard = () => {
               className="w-full"
             >
               Entrega
-            </Button>
-            <Button
-              type="button"
-              variant={serviceType === "ambos" ? "default" : "outline"}
-              onClick={() => setServiceType("ambos")}
-              className="w-full"
-            >
-              Ambos
             </Button>
           </div>
 
