@@ -29,7 +29,6 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Cleanup function for marker and resources
   const clearMarker = useCallback(() => {
     if (marker) {
       marker.setMap(null);
@@ -87,7 +86,10 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
 
       if (!place.formatted_address) {
         console.warn("No formatted address found");
-        toast.error("Endereço inválido. Por favor, selecione um endereço da lista.");
+        toast.error("Por favor, selecione um endereço da lista de sugestões.");
+        if (inputRef.current) {
+          inputRef.current.value = '';
+        }
         return;
       }
 
@@ -100,7 +102,7 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
         shouldTouch: true
       });
 
-      // Update input value directly
+      // Update input value
       if (inputRef.current) {
         inputRef.current.value = place.formatted_address;
       }
@@ -112,8 +114,20 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
     } catch (error) {
       console.error("Error handling place selection:", error);
       toast.error("Erro ao selecionar endereço. Por favor, tente novamente.");
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
     }
   }, [autocomplete, form, updateMapLocation]);
+
+  // Prevent manual input
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow only arrow keys, enter, tab, backspace and delete
+    const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Tab', 'Backspace', 'Delete'];
+    if (!allowedKeys.includes(e.key)) {
+      e.preventDefault();
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -137,15 +151,20 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
                   <Autocomplete
                     onLoad={onLoad}
                     onPlaceChanged={onPlaceChanged}
+                    options={{
+                      componentRestrictions: { country: "br" },
+                      types: ["address"]
+                    }}
                   >
                     <Input
                       {...field}
                       ref={inputRef}
-                      placeholder="Digite o endereço completo"
-                      className="bg-white"
-                      onFocus={() => {
+                      placeholder="Clique para buscar um endereço"
+                      className="bg-white cursor-pointer"
+                      onKeyDown={handleKeyDown}
+                      readOnly
+                      onClick={() => {
                         if (!isLoaded) {
-                          console.warn("Google Maps not fully loaded");
                           toast.error("Aguarde o carregamento do mapa...");
                         }
                       }}
