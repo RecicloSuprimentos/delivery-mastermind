@@ -99,6 +99,11 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
         shouldTouch: true
       });
 
+      // Ensure the input field shows the selected address
+      if (inputRef.current) {
+        inputRef.current.value = place.formatted_address;
+      }
+
       // Update map
       updateMapLocation(place);
 
