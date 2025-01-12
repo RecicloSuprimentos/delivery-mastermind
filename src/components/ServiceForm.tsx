@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,6 +9,7 @@ import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
 import {
   Form,
   FormControl,
@@ -17,6 +18,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+
+const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
 const serviceSchema = z.object({
   code: z.string().min(1, "ID do serviço é obrigatório"),
@@ -33,7 +36,19 @@ interface ServiceFormProps {
   onSuccess: () => void;
 }
 
+const mapContainerStyle = {
+  width: '100%',
+  height: '200px'
+};
+
+const center = {
+  lat: -23.5505,
+  lng: -46.6333
+};
+
 export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  
   const form = useForm<z.infer<typeof serviceSchema>>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
@@ -46,6 +61,19 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
       notes: "",
     },
   });
+
+  const onPlaceChanged = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      if (place.formatted_address) {
+        form.setValue('address', place.formatted_address);
+      }
+    }
+  };
+
+  const onLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
+    setAutocomplete(autocomplete);
+  }, []);
 
   const handleAddService = async (values: z.infer<typeof serviceSchema>) => {
     try {
@@ -170,13 +198,35 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-medium">Endereço *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Digite o endereço completo" className="bg-white" />
-                    </FormControl>
+                    <LoadScript
+                      googleMapsApiKey={GOOGLE_MAPS_API_KEY}
+                      libraries={["places"]}
+                    >
+                      <Autocomplete
+                        onLoad={onLoad}
+                        onPlaceChanged={onPlaceChanged}
+                      >
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Digite o endereço completo"
+                            className="bg-white mb-2"
+                          />
+                        </FormControl>
+                      </Autocomplete>
+                      <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        zoom={13}
+                        center={center}
+                        options={{
+                          zoomControl: true,
+                          streetViewControl: false,
+                          mapTypeControl: false,
+                          fullscreenControl: false,
+                        }}
+                      />
+                    </LoadScript>
                     <FormMessage />
-                    <div className="h-[200px] bg-gray-100 rounded-lg mt-2">
-                      {/* Aqui será adicionado o componente do Google Maps */}
-                    </div>
                   </FormItem>
                 )}
               />
