@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { ServiceForm } from "./ServiceForm";
 
 export const Navigation = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -53,7 +52,7 @@ export const Navigation = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-[90vw] h-[95vh] p-0">
-                <ServiceForm onClose={() => setIsDialogOpen(false)} onSuccess={() => setIsDialogOpen(false)} />
+                {/* Service form will be added here after we implement the new version */}
               </DialogContent>
             </Dialog>
             <Button variant="ghost" size="icon">
