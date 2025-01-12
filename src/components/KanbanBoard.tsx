@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { CirclePlus } from "lucide-react";
 import { ServiceForm } from "./ServiceForm";
 
 const columns = [
@@ -39,20 +39,23 @@ export const KanbanBoard = () => {
   });
 
   return (
-    <div className="flex-1 overflow-x-auto w-full">
+    <div className="flex-1 w-full h-full overflow-hidden">
       <div className="fixed top-20 right-8 z-10">
         <Button
           onClick={() => setIsDialogOpen(true)}
           size="default"
-          className="bg-success hover:bg-success/90 text-white font-medium"
+          className="bg-success hover:bg-success/90 text-white font-medium shadow-lg"
         >
-          <Plus className="mr-2 h-4 w-4" /> SERVIÇO
+          <CirclePlus className="mr-2 h-5 w-5" /> SERVIÇO
         </Button>
       </div>
 
-      <div className="flex h-full p-4 space-x-4 min-w-full overflow-x-auto">
+      <div className="flex h-full p-4 space-x-4 overflow-x-auto min-w-full">
         {columns.map((column) => (
-          <div key={column.id} className="flex-1 min-w-[300px] max-w-[400px]">
+          <div 
+            key={column.id} 
+            className="flex-1 min-w-[300px] max-w-[400px] flex flex-col"
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-sm">
                 {column.title}
@@ -61,7 +64,7 @@ export const KanbanBoard = () => {
                 {column.id === "not-assigned" ? deliveries.length : 0}
               </span>
             </div>
-            <div className="bg-muted p-4 rounded-lg min-h-[calc(100vh-12rem)]">
+            <div className="bg-muted p-4 rounded-lg flex-1 min-h-[calc(100vh-12rem)] overflow-y-auto">
               {column.id === "not-assigned" && deliveries.map((delivery) => {
                 if (!isValidStatus(delivery.status)) {
                   console.warn(`Invalid status found: ${delivery.status}`);
