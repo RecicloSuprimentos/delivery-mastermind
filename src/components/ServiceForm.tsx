@@ -1,25 +1,16 @@
-import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-
-const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
+import { Form } from "@/components/ui/form";
+import { supabase } from "@/integrations/supabase/client";
+import { ServiceTypeSection } from "./service-form/ServiceTypeSection";
+import { CustomerInfoSection } from "./service-form/CustomerInfoSection";
+import { AddressSection } from "./service-form/AddressSection";
+import { AdditionalInfoSection } from "./service-form/AdditionalInfoSection";
+import { ServiceFormValues } from "./service-form/types";
 
 const serviceSchema = z.object({
   code: z.string().min(1, "ID do serviço é obrigatório"),
@@ -36,20 +27,8 @@ interface ServiceFormProps {
   onSuccess: () => void;
 }
 
-const mapContainerStyle = {
-  width: '100%',
-  height: '200px'
-};
-
-const center = {
-  lat: -23.5505,
-  lng: -46.6333
-};
-
 export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
-  
-  const form = useForm<z.infer<typeof serviceSchema>>({
+  const form = useForm<ServiceFormValues>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
       type: "delivery",
@@ -62,20 +41,7 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
     },
   });
 
-  const onPlaceChanged = () => {
-    if (autocomplete) {
-      const place = autocomplete.getPlace();
-      if (place.formatted_address) {
-        form.setValue('address', place.formatted_address);
-      }
-    }
-  };
-
-  const onLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
-    setAutocomplete(autocomplete);
-  }, []);
-
-  const handleAddService = async (values: z.infer<typeof serviceSchema>) => {
+  const handleAddService = async (values: ServiceFormValues) => {
     try {
       const { error } = await supabase
         .from('services')
@@ -119,151 +85,14 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleAddService)} className="space-y-6">
-          <div className="grid gap-6">
-            <div className="p-4 bg-soft-blue rounded-lg">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">Tipo de Serviço</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="delivery">Entrega</SelectItem>
-                        <SelectItem value="pickup">Coleta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <ServiceTypeSection form={form} />
+              <CustomerInfoSection form={form} />
             </div>
-
-            <div className="grid gap-6 p-4 bg-soft-gray rounded-lg">
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">ID do Serviço *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Digite o ID" className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="customer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">Nome do Cliente *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Digite o nome do cliente" className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">Telefone *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Digite o telefone" className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="p-4 bg-soft-green rounded-lg">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">Endereço *</FormLabel>
-                    <LoadScript
-                      googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-                      libraries={["places"]}
-                    >
-                      <Autocomplete
-                        onLoad={onLoad}
-                        onPlaceChanged={onPlaceChanged}
-                      >
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Digite o endereço completo"
-                            className="bg-white mb-2"
-                          />
-                        </FormControl>
-                      </Autocomplete>
-                      <GoogleMap
-                        mapContainerStyle={mapContainerStyle}
-                        zoom={13}
-                        center={center}
-                        options={{
-                          zoomControl: true,
-                          streetViewControl: false,
-                          mapTypeControl: false,
-                          fullscreenControl: false,
-                        }}
-                      />
-                    </LoadScript>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid gap-6 p-4 bg-soft-purple rounded-lg">
-              <FormField
-                control={form.control}
-                name="timeWindow"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">Intervalo de Horário</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Ex: 14:00 - 16:00" className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">Observação</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Digite uma observação (opcional)"
-                        className="bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <AddressSection form={form} />
+              <AdditionalInfoSection form={form} />
             </div>
           </div>
 
