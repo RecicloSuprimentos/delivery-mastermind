@@ -6,13 +6,7 @@ const AddressSearchPage = () => {
     <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container mx-auto pt-24 px-4">
-        <DeliveryCard 
-          code="TEST123"
-          customer="John Doe"
-          address="123 Main St"
-          phone="(555) 123-4567"
-          status="not-assigned"
-        />
+        <DeliveryCard />
       </div>
     </div>
   );
