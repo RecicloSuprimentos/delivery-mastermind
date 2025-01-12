@@ -4,6 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { ServiceFormValues } from "./types";
 import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
 import { useState, useCallback, useRef, useEffect } from "react";
+import { toast } from "sonner";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
@@ -25,77 +26,94 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Cleanup function for marker
-  const clearMarker = () => {
+  // Cleanup function for marker and resources
+  const clearMarker = useCallback(() => {
     if (marker) {
       marker.setMap(null);
       setMarker(null);
     }
-  };
+  }, [marker]);
 
   useEffect(() => {
     return () => {
       clearMarker();
     };
-  }, []);
+  }, [clearMarker]);
 
   const onLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
-    console.log("Autocomplete loaded");
+    console.log("Autocomplete loaded successfully");
     setAutocomplete(autocomplete);
+    setIsLoaded(true);
   }, []);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
-    console.log("Map loaded");
+    console.log("Map loaded successfully");
     setMap(map);
   }, []);
 
-  const updateMapLocation = (place: google.maps.places.PlaceResult) => {
-    if (map && place.geometry?.location) {
-      map.setCenter(place.geometry.location);
-      map.setZoom(16);
-
-      clearMarker();
-
-      const newMarker = new google.maps.Marker({
-        map,
-        position: place.geometry.location,
-      });
-      setMarker(newMarker);
+  const updateMapLocation = useCallback((place: google.maps.places.PlaceResult) => {
+    if (!map || !place.geometry?.location) {
+      console.warn("Map or location not available");
+      return;
     }
-  };
+
+    const location = place.geometry.location;
+    map.setCenter(location);
+    map.setZoom(16);
+
+    clearMarker();
+
+    const newMarker = new google.maps.Marker({
+      map,
+      position: location,
+      animation: google.maps.Animation.DROP
+    });
+
+    setMarker(newMarker);
+  }, [map, clearMarker]);
 
   const onPlaceChanged = useCallback(() => {
-    if (autocomplete) {
-      console.log("Place changed event triggered");
+    if (!autocomplete) {
+      console.warn("Autocomplete not initialized");
+      return;
+    }
+
+    try {
       const place = autocomplete.getPlace();
       console.log("Selected place:", place);
 
-      if (place.formatted_address) {
-        console.log("Setting address:", place.formatted_address);
-        
-        // Update form value
-        form.setValue('address', place.formatted_address, {
-          shouldValidate: true,
-          shouldDirty: true,
-          shouldTouch: true
-        });
-
-        // Update input value directly
-        if (inputRef.current) {
-          inputRef.current.value = place.formatted_address;
-        }
-
-        // Update map
-        updateMapLocation(place);
-      } else {
-        console.warn("No formatted address found in place result");
+      if (!place.formatted_address) {
+        console.warn("No formatted address found");
+        toast.error("Endereço inválido. Por favor, selecione um endereço da lista.");
+        return;
       }
-    } else {
-      console.warn("Autocomplete is not initialized");
+
+      console.log("Setting address:", place.formatted_address);
+
+      // Update form value
+      form.setValue('address', place.formatted_address, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true
+      });
+
+      // Update input value directly
+      if (inputRef.current) {
+        inputRef.current.value = place.formatted_address;
+      }
+
+      // Update map
+      updateMapLocation(place);
+
+      toast.success("Endereço selecionado com sucesso!");
+    } catch (error) {
+      console.error("Error handling place selection:", error);
+      toast.error("Erro ao selecionar endereço. Por favor, tente novamente.");
     }
-  }, [autocomplete, form]);
+  }, [autocomplete, form, updateMapLocation]);
 
   return (
     <div className="space-y-4">
@@ -107,7 +125,15 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
             <FormItem>
               <FormLabel className="font-medium">Endereço *</FormLabel>
               <FormControl>
-                <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
+                <LoadScript 
+                  googleMapsApiKey={GOOGLE_MAPS_API_KEY} 
+                  libraries={["places"]}
+                  onLoad={() => console.log("Google Maps Script loaded")}
+                  onError={(error) => {
+                    console.error("Error loading Google Maps:", error);
+                    toast.error("Erro ao carregar o mapa. Por favor, recarregue a página.");
+                  }}
+                >
                   <Autocomplete
                     onLoad={onLoad}
                     onPlaceChanged={onPlaceChanged}
@@ -117,6 +143,12 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
                       ref={inputRef}
                       placeholder="Digite o endereço completo"
                       className="bg-white"
+                      onFocus={() => {
+                        if (!isLoaded) {
+                          console.warn("Google Maps not fully loaded");
+                          toast.error("Aguarde o carregamento do mapa...");
+                        }
+                      }}
                     />
                   </Autocomplete>
                 </LoadScript>
@@ -141,7 +173,10 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
         />
       </div>
 
-      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
+      <LoadScript 
+        googleMapsApiKey={GOOGLE_MAPS_API_KEY} 
+        libraries={["places"]}
+      >
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={13}
