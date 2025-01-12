@@ -77,6 +77,8 @@ export const KanbanBoard = () => {
                     customer={delivery.customer}
                     address={delivery.address}
                     phone={delivery.phone}
+                    timeWindow={delivery.timeWindow}
+                    notes={delivery.notes}
                     status={delivery.status as ValidStatus}
                   />
                 );
