@@ -54,15 +54,27 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const { error } = await supabase.from("services").insert([
-        {
-          code: values.code,
-          customer: values.customer,
-          address: values.address,
-          phone: values.phone,
-          status: "not-assigned",
-        },
-      ]);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao cadastrar serviço",
+          description: "Usuário não autenticado.",
+        });
+        return;
+      }
+
+      const { error } = await supabase.from("services").insert({
+        code: values.code,
+        customer: values.customer,
+        address: values.address,
+        phone: values.phone,
+        status: "not-assigned",
+        user_id: user.id,
+        notes: values.notes,
+        time_window: values.timeWindow,
+      });
 
       if (error) throw error;
 
