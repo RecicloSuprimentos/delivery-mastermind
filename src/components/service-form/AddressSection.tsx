@@ -87,9 +87,6 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
       if (!place.formatted_address) {
         console.warn("No formatted address found");
         toast.error("Por favor, selecione um endereço da lista de sugestões.");
-        if (inputRef.current) {
-          inputRef.current.value = '';
-        }
         return;
       }
 
@@ -102,11 +99,6 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
         shouldTouch: true
       });
 
-      // Update input value
-      if (inputRef.current) {
-        inputRef.current.value = place.formatted_address;
-      }
-
       // Update map
       updateMapLocation(place);
 
@@ -114,20 +106,8 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
     } catch (error) {
       console.error("Error handling place selection:", error);
       toast.error("Erro ao selecionar endereço. Por favor, tente novamente.");
-      if (inputRef.current) {
-        inputRef.current.value = '';
-      }
     }
   }, [autocomplete, form, updateMapLocation]);
-
-  // Prevent manual input
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow only arrow keys, enter, tab, backspace and delete
-    const allowedKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Tab', 'Backspace', 'Delete'];
-    if (!allowedKeys.includes(e.key)) {
-      e.preventDefault();
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -159,10 +139,8 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
                     <Input
                       {...field}
                       ref={inputRef}
-                      placeholder="Clique para buscar um endereço"
-                      className="bg-white cursor-pointer"
-                      onKeyDown={handleKeyDown}
-                      readOnly
+                      placeholder="Digite para buscar um endereço"
+                      className="bg-white"
                       onClick={() => {
                         if (!isLoaded) {
                           toast.error("Aguarde o carregamento do mapa...");
