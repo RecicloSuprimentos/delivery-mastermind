@@ -18,7 +18,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
 const mapContainerStyle = {
   width: '100%',
-  height: '300px'
+  height: '240px' // Reduced by 20% from original 300px
 };
 
 const center = {
@@ -99,7 +99,7 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg w-[60vw] h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg w-[80vw] h-[95vh] overflow-hidden flex flex-col">
         <div className="space-y-6 p-6 flex-1 overflow-y-auto">
           <div className="flex items-center justify-between border-b pb-4">
             <div>
