@@ -2,10 +2,7 @@ import { DeliveryCard } from "./DeliveryCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { CirclePlus } from "lucide-react";
-import { ServiceForm } from "./ServiceForm";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -24,19 +21,7 @@ const isValidStatus = (status: string): status is ValidStatus => {
 
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { data: deliveries = [], refetch } = useQuery({
-    queryKey: ['services'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  const deliveries: any[] = []; // Temporariamente vazio até reimplementarmos
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
@@ -88,13 +73,12 @@ export const KanbanBoard = () => {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px] bg-white">
-          <ServiceForm 
-            onClose={() => setIsDialogOpen(false)}
-            onSuccess={() => {
-              setIsDialogOpen(false);
-              refetch();
-            }}
-          />
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Criar Novo Serviço</h2>
+            <p className="text-muted-foreground">
+              O formulário de criação de serviço será implementado em breve.
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
