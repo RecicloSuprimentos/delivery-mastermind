@@ -2,13 +2,13 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { ServiceFormValues } from "./types";
-import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
-const libraries = ["places"];
+const libraries: Libraries = ['places'];
 
 const mapContainerStyle = {
   width: '100%',
