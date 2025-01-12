@@ -54,7 +54,9 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
           address: values.address,
           phone: values.phone,
           status: 'not-assigned',
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          notes: values.notes,
+          time_window: values.timeWindow
         }]);
 
       if (error) throw error;
@@ -69,7 +71,7 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg w-[80vw] h-[95vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg w-[90vw] h-[95vh] overflow-hidden flex flex-col">
         <div className="space-y-6 p-6 flex-1 overflow-y-auto">
           <div className="flex items-center justify-between border-b pb-4">
             <div>
@@ -90,11 +92,9 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleAddService)} className="space-y-6">
-              <div className="space-y-6">
-                <CustomerInfoSection form={form} />
-                <AddressSection form={form} />
-                <AdditionalInfoSection form={form} />
-              </div>
+              <CustomerInfoSection form={form} />
+              <AddressSection form={form} />
+              <AdditionalInfoSection form={form} />
 
               <div className="flex justify-end pt-4 border-t">
                 <Button type="submit" className="bg-success hover:bg-success/90 text-white">

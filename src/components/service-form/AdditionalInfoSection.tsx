@@ -10,7 +10,7 @@ interface AdditionalInfoSectionProps {
 
 export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
   return (
-    <div className="grid gap-4 p-4 bg-soft-purple rounded-lg">
+    <div className="grid gap-4">
       <FormField
         control={form.control}
         name="timeWindow"
@@ -23,7 +23,7 @@ export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
                 unmask={false}
                 value={field.value}
                 onAccept={(value) => field.onChange(value)}
-                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Ex: 08:00 hs às 12:00 hs"
               />
             </FormControl>
@@ -42,7 +42,7 @@ export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
               <Textarea
                 {...field}
                 placeholder="Digite uma observação (opcional)"
-                className="bg-white resize-none h-[120px]"
+                className="resize-none h-[120px]"
               />
             </FormControl>
             <FormMessage />

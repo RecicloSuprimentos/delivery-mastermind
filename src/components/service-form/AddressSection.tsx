@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { ServiceFormValues } from "./types";
 import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
@@ -23,31 +23,33 @@ interface AddressSectionProps {
 
 export const AddressSection = ({ form }: AddressSectionProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const onLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
-    console.log('Autocomplete loaded');
     setAutocomplete(autocomplete);
   }, []);
 
   const onPlaceChanged = useCallback(() => {
-    console.log('Place changed');
     if (autocomplete) {
       const place = autocomplete.getPlace();
-      console.log('Selected place:', place);
       
       if (place.formatted_address) {
-        console.log('Setting address:', place.formatted_address);
         form.setValue('address', place.formatted_address, {
           shouldValidate: true,
           shouldDirty: true,
           shouldTouch: true
         });
+        
+        // Atualiza o valor do input diretamente
+        if (inputRef.current) {
+          inputRef.current.value = place.formatted_address;
+        }
       }
     }
   }, [autocomplete, form]);
 
   return (
-    <div className="grid gap-4 p-4 bg-soft-green rounded-lg">
+    <div className="grid gap-4">
       <div className="grid grid-cols-[2fr,1fr] gap-4">
         <FormField
           control={form.control}
@@ -63,6 +65,7 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
                   <FormControl>
                     <Input
                       {...field}
+                      ref={inputRef}
                       placeholder="Digite o endereço completo"
                       className="bg-white"
                     />

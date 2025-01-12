@@ -10,7 +10,7 @@ interface CustomerInfoSectionProps {
 
 export const CustomerInfoSection = ({ form }: CustomerInfoSectionProps) => {
   return (
-    <div className="grid gap-4 p-4 bg-soft-gray rounded-lg">
+    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
@@ -19,7 +19,7 @@ export const CustomerInfoSection = ({ form }: CustomerInfoSectionProps) => {
             <FormItem>
               <FormLabel className="font-medium">Tipo</FormLabel>
               <FormControl>
-                <div className="flex gap-4">
+                <div className="flex gap-6">
                   <label className="flex items-center gap-2">
                     <input
                       type="radio"
@@ -52,9 +52,9 @@ export const CustomerInfoSection = ({ form }: CustomerInfoSectionProps) => {
           name="code"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-medium">ID do Serviço *</FormLabel>
+              <FormLabel className="font-medium">ID do serviço *</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Digite o ID" className="bg-white" />
+                <Input {...field} placeholder="Digite o ID" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,7 +70,7 @@ export const CustomerInfoSection = ({ form }: CustomerInfoSectionProps) => {
             <FormItem>
               <FormLabel className="font-medium">Nome do Cliente *</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Digite o nome do cliente" className="bg-white" />
+                <Input {...field} placeholder="Digite o nome do cliente" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,7 +89,7 @@ export const CustomerInfoSection = ({ form }: CustomerInfoSectionProps) => {
                   unmask={false}
                   value={field.value}
                   onAccept={(value) => field.onChange(value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="(00) 00000-0000"
                 />
               </FormControl>
@@ -105,7 +105,7 @@ export const CustomerInfoSection = ({ form }: CustomerInfoSectionProps) => {
             <FormItem>
               <FormLabel className="font-medium">E-mail</FormLabel>
               <FormControl>
-                <Input {...field} type="email" placeholder="Digite o e-mail" className="bg-white" />
+                <Input {...field} type="email" placeholder="Digite o e-mail" />
               </FormControl>
               <FormMessage />
             </FormItem>
