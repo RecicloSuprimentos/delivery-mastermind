@@ -30,7 +30,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
   const [complement, setComplement] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [observations, setObservations] = useState("");
-  const [serviceType, setServiceType] = useState<"coleta" | "entrega">("entrega");
+  const [serviceType, setServiceType] = useState<"coleta" | "entrega">();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -40,6 +40,15 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!serviceType) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione o tipo de serviço",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!location) {
       toast({
@@ -136,8 +145,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Telefone</label>
               <InputMask
-                mask="(99) 9999*-9999"
-                maskChar={null}
+                mask="(99) 9999-99999"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               >
@@ -170,29 +178,30 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Complemento</label>
-            <Input
-              value={complement}
-              onChange={(e) => setComplement(e.target.value)}
-              placeholder="Apartamento, sala, etc."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Janela de Horário</label>
-            <InputMask
-              mask="99:99 às 99:99"
-              value={timeWindow}
-              onChange={(e) => setTimeWindow(e.target.value)}
-            >
-              {(inputProps: any) => (
-                <Input
-                  {...inputProps}
-                  placeholder="14:00 às 18:00"
-                />
-              )}
-            </InputMask>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Complemento</label>
+              <Input
+                value={complement}
+                onChange={(e) => setComplement(e.target.value)}
+                placeholder="Apartamento, sala, etc."
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Janela de Horário</label>
+              <InputMask
+                mask="99:99 às 99:99"
+                value={timeWindow}
+                onChange={(e) => setTimeWindow(e.target.value)}
+              >
+                {(inputProps: any) => (
+                  <Input
+                    {...inputProps}
+                    placeholder="14:00 às 18:00"
+                  />
+                )}
+              </InputMask>
+            </div>
           </div>
 
           <div className="space-y-2">

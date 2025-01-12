@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Phone, Clock, FileEdit, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPinHouse, Phone, Clock, FileEdit, ChevronDown, ChevronUp } from "lucide-react";
 import { Card } from "./ui/card";
 
 interface Service {
@@ -47,7 +47,7 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
         </div>
 
         <div className="flex items-center gap-2 text-gray-600 mb-2">
-          <MapPin className="h-4 w-4" />
+          <MapPinHouse className="h-4 w-4" />
           <span className="text-sm">{service.address}</span>
         </div>
 
