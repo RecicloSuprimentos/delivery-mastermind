@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
+import DeliveryCard from "./DeliveryCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { CirclePlus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import ServiceCard from "./ServiceCard";
-import DeliveryCard from "./DeliveryCard";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -17,46 +15,17 @@ const columns = [
 
 type ValidStatus = "not-assigned" | "assigned" | "accepted" | "in-transit" | "arrived" | "completed";
 
-interface Service {
-  id: string;
-  type: "coleta" | "entrega";
+interface Delivery {
   service_id: string;
   customer_name: string;
   address: string;
   phone: string;
-  email?: string;
-  complement?: string;
-  time_window?: string;
-  observations?: string;
   status: ValidStatus;
-  latitude?: number;
-  longitude?: number;
-  created_at?: string;
 }
 
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [services, setServices] = useState<Service[]>([]);
-
-  useEffect(() => {
-    fetchServices();
-  }, []);
-
-  const fetchServices = async () => {
-    const { data, error } = await supabase
-      .from("services")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching services:", error);
-      return;
-    }
-
-    if (data) {
-      setServices(data as Service[]);
-    }
-  };
+  const deliveries: Delivery[] = []; // Temporariamente vazio até reimplementarmos
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
@@ -81,19 +50,16 @@ export const KanbanBoard = () => {
                 {column.title}
               </h2>
               <span className="bg-muted text-secondary text-sm px-2 py-1 rounded">
-                {services.filter(s => s.status === column.id).length}
+                {column.id === "not-assigned" ? deliveries.length : 0}
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg flex-1 min-h-[calc(100vh-12rem)] overflow-y-auto">
-              {services
-                .filter(service => service.status === column.id)
-                .map((service) => (
-                  <ServiceCard 
-                    key={service.id}
-                    service={service}
-                    onUpdate={fetchServices}
-                  />
-                ))}
+              {column.id === "not-assigned" && deliveries.map((delivery) => (
+                <DeliveryCard 
+                  key={delivery.service_id}
+                  {...delivery}
+                />
+              ))}
             </div>
           </div>
         ))}
@@ -101,10 +67,12 @@ export const KanbanBoard = () => {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px] bg-white">
-          <DeliveryCard onSuccess={() => {
-            setIsDialogOpen(false);
-            fetchServices();
-          }} />
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Criar Novo Serviço</h2>
+            <p className="text-muted-foreground">
+              O formulário de criação de serviço será implementado em breve.
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
