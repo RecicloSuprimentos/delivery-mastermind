@@ -25,13 +25,18 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   const onLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
+    console.log('Autocomplete loaded');
     setAutocomplete(autocomplete);
   }, []);
 
   const onPlaceChanged = useCallback(() => {
+    console.log('Place changed');
     if (autocomplete) {
       const place = autocomplete.getPlace();
+      console.log('Selected place:', place);
+      
       if (place.formatted_address) {
+        console.log('Setting address:', place.formatted_address);
         form.setValue('address', place.formatted_address, {
           shouldValidate: true,
           shouldDirty: true,
