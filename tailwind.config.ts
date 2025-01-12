@@ -18,16 +18,6 @@ export default {
       },
     },
     extend: {
-      fontSize: {
-        'xs': '0.675rem',    // 90% of 0.75rem
-        'sm': '0.765rem',    // 90% of 0.85rem
-        'base': '0.81rem',   // 90% of 0.9rem
-        'lg': '0.9rem',      // 90% of 1rem
-        'xl': '1.08rem',     // 90% of 1.2rem
-        '2xl': '1.35rem',    // 90% of 1.5rem
-        '3xl': '1.71rem',    // 90% of 1.9rem
-        '4xl': '2.16rem',    // 90% of 2.4rem
-      },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
@@ -61,6 +51,7 @@ export default {
           DEFAULT: "#2A2D35",
           foreground: "#FFFFFF",
         },
+        // Adicionando cores suaves
         soft: {
           green: "#F2FCE2",
           yellow: "#FEF7CD",
