@@ -1,4 +1,4 @@
-import { DeliveryCard } from "./DeliveryCard";
+import DeliveryCard from "./DeliveryCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
