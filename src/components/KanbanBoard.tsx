@@ -1,8 +1,10 @@
 import DeliveryCard from "./DeliveryCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CirclePlus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -25,13 +27,32 @@ interface Delivery {
 
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const deliveries: Delivery[] = []; // Temporariamente vazio até reimplementarmos
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, []);
+
+  const fetchDeliveries = async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('status', 'not-assigned');
+
+    if (error) {
+      console.error('Error fetching deliveries:', error);
+      return;
+    }
+
+    setDeliveries(data || []);
+  };
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
       <div className="fixed top-20 right-8 z-10">
         <Button
-          onClick={() => setIsDialogOpen(true)}
+          onClick={() => navigate('/address-search')}
           size="default"
           className="bg-success hover:bg-success/90 text-white font-medium shadow-lg"
         >
