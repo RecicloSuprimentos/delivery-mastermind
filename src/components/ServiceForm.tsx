@@ -17,6 +17,8 @@ const serviceSchema = z.object({
   type: z.string(),
   customer: z.string().min(1, "Nome do cliente é obrigatório"),
   address: z.string().min(1, "Endereço é obrigatório"),
+  addressComplement: z.string().optional(),
+  email: z.string().email("E-mail inválido").optional(),
   phone: z.string().min(1, "Telefone é obrigatório"),
   timeWindow: z.string().optional(),
   notes: z.string().optional(),
@@ -35,6 +37,8 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
       code: "",
       customer: "",
       address: "",
+      addressComplement: "",
+      email: "",
       phone: "",
       timeWindow: "",
       notes: "",
@@ -85,12 +89,12 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleAddService)} className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               <ServiceTypeSection form={form} />
               <CustomerInfoSection form={form} />
             </div>
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
               <AddressSection form={form} />
               <AdditionalInfoSection form={form} />
             </div>

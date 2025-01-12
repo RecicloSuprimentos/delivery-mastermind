@@ -1,5 +1,4 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
 import { ServiceFormValues } from "./types";
@@ -11,7 +10,7 @@ interface AdditionalInfoSectionProps {
 
 export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
   return (
-    <div className="grid gap-6 p-4 bg-soft-purple rounded-lg">
+    <div className="grid grid-cols-2 gap-6 p-4 bg-soft-purple rounded-lg">
       <FormField
         control={form.control}
         name="timeWindow"
@@ -38,12 +37,12 @@ export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
         name="notes"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="font-medium">Observação</FormLabel>
+            <FormLabel className="font-medium">Observações</FormLabel>
             <FormControl>
               <Textarea
                 {...field}
                 placeholder="Digite uma observação (opcional)"
-                className="bg-white"
+                className="bg-white h-10"
               />
             </FormControl>
             <FormMessage />

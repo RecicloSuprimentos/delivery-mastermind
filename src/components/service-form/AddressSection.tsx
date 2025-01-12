@@ -9,7 +9,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
 const mapContainerStyle = {
   width: '100%',
-  height: '200px'
+  height: '300px'
 };
 
 const center = {
@@ -38,39 +38,58 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
   }, []);
 
   return (
-    <div className="p-4 bg-soft-green rounded-lg">
-      <FormField
-        control={form.control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="font-medium">Endereço *</FormLabel>
-            <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
-              <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="Digite o endereço completo"
-                    className="bg-white mb-2"
-                  />
-                </FormControl>
-              </Autocomplete>
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                zoom={13}
-                center={center}
-                options={{
-                  zoomControl: true,
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false,
-                }}
-              />
-            </LoadScript>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+    <div className="grid gap-6 p-4 bg-soft-green rounded-lg">
+      <div className="grid grid-cols-[2fr,1fr] gap-4">
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-medium">Endereço *</FormLabel>
+              <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
+                <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Digite o endereço completo"
+                      className="bg-white"
+                    />
+                  </FormControl>
+                </Autocomplete>
+              </LoadScript>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="addressComplement"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-medium">Complemento</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Apto, Sala, etc." className="bg-white" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          zoom={13}
+          center={center}
+          options={{
+            zoomControl: true,
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: false,
+          }}
+        />
+      </LoadScript>
     </div>
   );
 };

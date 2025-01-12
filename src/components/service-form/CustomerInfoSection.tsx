@@ -38,19 +38,35 @@ export const CustomerInfoSection = ({ form }: CustomerInfoSectionProps) => {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="phone"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="font-medium">Telefone *</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="Digite o telefone" className="bg-white" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-medium">Telefone *</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Digite o telefone" className="bg-white" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="font-medium">E-mail</FormLabel>
+              <FormControl>
+                <Input {...field} type="email" placeholder="Digite o e-mail" className="bg-white" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </div>
   );
 };
