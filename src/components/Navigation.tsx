@@ -1,7 +1,7 @@
 import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle, LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { ServiceForm } from "./ServiceForm";
 
 export const Navigation = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -46,11 +47,14 @@ export const Navigation = () => {
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="default" className="gap-2">
+                <Button variant="default" className="gap-2 bg-black hover:bg-black/90">
                   <PlusCircle className="h-5 w-5" />
                   SERVIÇO
                 </Button>
               </DialogTrigger>
+              <DialogContent className="w-[90vw] h-[95vh] p-0">
+                <ServiceForm onClose={() => setIsDialogOpen(false)} onSuccess={() => setIsDialogOpen(false)} />
+              </DialogContent>
             </Dialog>
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />

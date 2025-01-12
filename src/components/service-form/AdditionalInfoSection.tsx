@@ -1,8 +1,8 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
 import { ServiceFormValues } from "./types";
-import { IMaskInput } from "react-imask";
 
 interface AdditionalInfoSectionProps {
   form: UseFormReturn<ServiceFormValues>;
@@ -10,7 +10,7 @@ interface AdditionalInfoSectionProps {
 
 export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
   return (
-    <div className="grid gap-4">
+    <div className="space-y-4">
       <FormField
         control={form.control}
         name="timeWindow"
@@ -18,14 +18,7 @@ export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
           <FormItem>
             <FormLabel className="font-medium">Intervalo de Horário</FormLabel>
             <FormControl>
-              <IMaskInput
-                mask="00:00 hs às 00:00 hs"
-                unmask={false}
-                value={field.value}
-                onAccept={(value) => field.onChange(value)}
-                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Ex: 08:00 hs às 12:00 hs"
-              />
+              <Input {...field} placeholder="Ex: 09:00 - 12:00" className="bg-white" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -39,10 +32,10 @@ export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
           <FormItem>
             <FormLabel className="font-medium">Observações</FormLabel>
             <FormControl>
-              <Textarea
-                {...field}
-                placeholder="Digite uma observação (opcional)"
-                className="resize-none h-[120px]"
+              <Textarea 
+                {...field} 
+                placeholder="Digite observações adicionais"
+                className="min-h-[100px] bg-white resize-none"
               />
             </FormControl>
             <FormMessage />
