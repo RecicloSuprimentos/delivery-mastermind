@@ -91,12 +91,14 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
         <form onSubmit={form.handleSubmit(handleAddService)} className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
             <div className="grid grid-cols-2 gap-6">
-              <ServiceTypeSection form={form} />
-              <CustomerInfoSection form={form} />
-            </div>
-            <div className="grid grid-cols-1 gap-6">
-              <AddressSection form={form} />
-              <AdditionalInfoSection form={form} />
+              <div className="space-y-6">
+                <ServiceTypeSection form={form} />
+                <CustomerInfoSection form={form} />
+              </div>
+              <div className="space-y-6">
+                <AddressSection form={form} />
+                <AdditionalInfoSection form={form} />
+              </div>
             </div>
           </div>
 

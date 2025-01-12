@@ -10,7 +10,7 @@ interface AdditionalInfoSectionProps {
 
 export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
   return (
-    <div className="grid grid-cols-2 gap-6 p-4 bg-soft-purple rounded-lg">
+    <div className="grid gap-4 p-4 bg-soft-purple rounded-lg">
       <FormField
         control={form.control}
         name="timeWindow"
@@ -42,7 +42,7 @@ export const AdditionalInfoSection = ({ form }: AdditionalInfoSectionProps) => {
               <Textarea
                 {...field}
                 placeholder="Digite uma observação (opcional)"
-                className="bg-white h-10"
+                className="bg-white resize-none h-[120px]"
               />
             </FormControl>
             <FormMessage />

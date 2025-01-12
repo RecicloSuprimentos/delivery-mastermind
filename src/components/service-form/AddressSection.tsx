@@ -38,7 +38,7 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
   }, []);
 
   return (
-    <div className="grid gap-6 p-4 bg-soft-green rounded-lg">
+    <div className="grid gap-4 p-4 bg-soft-green rounded-lg">
       <div className="grid grid-cols-[2fr,1fr] gap-4">
         <FormField
           control={form.control}
