@@ -18,7 +18,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
 const mapContainerStyle = {
   width: '100%',
-  height: '240px'
+  height: '240px' // Reduced by 20% from original 300px
 };
 
 const center = {
@@ -99,7 +99,7 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg w-[90vw] h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg w-[80vw] h-[95vh] overflow-hidden flex flex-col">
         <div className="space-y-6 p-6 flex-1 overflow-y-auto">
           <div className="flex items-center justify-between border-b pb-4">
             <div>
@@ -120,116 +120,168 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleAddService)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-8">
-                {/* Left Column */}
-                <div className="space-y-6">
-                  {/* Service Type and ID */}
-                  <div className="grid grid-cols-[1fr,2fr] gap-6">
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-medium">Tipo</FormLabel>
-                          <FormControl>
-                            <div className="flex gap-4">
-                              <label className="flex items-center gap-2">
-                                <input
-                                  type="radio"
-                                  value="pickup"
-                                  checked={field.value === "pickup"}
-                                  onChange={(e) => field.onChange(e.target.value)}
-                                  className="h-4 w-4"
-                                />
-                                Coleta
-                              </label>
-                              <label className="flex items-center gap-2">
-                                <input
-                                  type="radio"
-                                  value="delivery"
-                                  checked={field.value === "delivery"}
-                                  onChange={(e) => field.onChange(e.target.value)}
-                                  className="h-4 w-4"
-                                />
-                                Entrega
-                              </label>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+              <div className="space-y-6">
+                {/* Primeira linha: Tipo e ID do serviço */}
+                <div className="grid grid-cols-[1fr,2fr] gap-6">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">Tipo</FormLabel>
+                        <FormControl>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                value="pickup"
+                                checked={field.value === "pickup"}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                className="h-4 w-4"
+                              />
+                              Coleta
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                value="delivery"
+                                checked={field.value === "delivery"}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                className="h-4 w-4"
+                              />
+                              Entrega
+                            </label>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="code"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-medium">ID do Serviço *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Digite o ID" className="bg-white" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">ID do Serviço *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Digite o ID" className="bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                  {/* Customer Info */}
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="customer"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-medium">Nome do Cliente *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Digite o nome do cliente" className="bg-white" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                {/* Segunda linha: Nome do Cliente, Telefone e Email */}
+                <div className="grid grid-cols-[2fr,1fr,2fr] gap-6">
+                  <FormField
+                    control={form.control}
+                    name="customer"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">Nome do Cliente *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Digite o nome do cliente" className="bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">Telefone *</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">Telefone *</FormLabel>
+                        <FormControl>
+                          <IMaskInput
+                            mask="(00) 00000-0000"
+                            unmask={false}
+                            value={field.value}
+                            onAccept={(value) => field.onChange(value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="(00) 00000-0000"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">E-mail</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="Digite o e-mail" className="bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Terceira linha: Endereço e Complemento */}
+                <div className="grid grid-cols-[2fr,1fr] gap-6">
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">Endereço *</FormLabel>
+                        <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
+                          <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
                             <FormControl>
-                              <IMaskInput
-                                mask="(00) 00000-0000"
-                                unmask={false}
-                                value={field.value}
-                                onAccept={(value) => field.onChange(value)}
-                                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="(00) 00000-0000"
+                              <Input
+                                {...field}
+                                placeholder="Digite o endereço completo"
+                                className="bg-white"
                               />
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </Autocomplete>
+                        </LoadScript>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">E-mail</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="email" placeholder="Digite o e-mail" className="bg-white" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                  <FormField
+                    control={form.control}
+                    name="addressComplement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">Complemento</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Apto, Sala, etc." className="bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Quarta linha: Mapa e Informações Adicionais */}
+                <div className="grid grid-cols-[2fr,1fr] gap-6">
+                  <div className="bg-muted rounded-lg overflow-hidden">
+                    <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
+                      <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        zoom={13}
+                        center={center}
+                        options={{
+                          zoomControl: true,
+                          streetViewControl: false,
+                          mapTypeControl: false,
+                          fullscreenControl: false,
+                        }}
                       />
-                    </div>
+                    </LoadScript>
                   </div>
 
-                  {/* Time Window and Notes */}
                   <div className="space-y-4">
                     <FormField
                       control={form.control}
@@ -269,67 +321,6 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
                         </FormItem>
                       )}
                     />
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  {/* Address Section */}
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-medium">Endereço *</FormLabel>
-                          <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
-                            <Autocomplete
-                              onLoad={onLoad}
-                              onPlaceChanged={onPlaceChanged}
-                            >
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="Digite o endereço completo"
-                                  className="bg-white"
-                                />
-                              </FormControl>
-                            </Autocomplete>
-                          </LoadScript>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="addressComplement"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-medium">Complemento</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Apto, Sala, etc." className="bg-white" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="bg-muted rounded-lg overflow-hidden">
-                      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
-                        <GoogleMap
-                          mapContainerStyle={mapContainerStyle}
-                          zoom={13}
-                          center={center}
-                          options={{
-                            zoomControl: true,
-                            streetViewControl: false,
-                            mapTypeControl: false,
-                            fullscreenControl: false,
-                          }}
-                        />
-                      </LoadScript>
-                    </div>
                   </div>
                 </div>
               </div>
