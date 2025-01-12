@@ -17,6 +17,12 @@ const columns = [
   { id: "completed", title: "Finalizado hoje", count: 0 },
 ];
 
+type ValidStatus = "not-assigned" | "assigned" | "accepted" | "in-transit" | "arrived" | "completed";
+
+const isValidStatus = (status: string): status is ValidStatus => {
+  return ["not-assigned", "assigned", "accepted", "in-transit", "arrived", "completed"].includes(status);
+};
+
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newDelivery, setNewDelivery] = useState({
@@ -85,9 +91,23 @@ export const KanbanBoard = () => {
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg min-h-[calc(100vh-12rem)]">
-              {column.id === "not-assigned" && deliveries.map((delivery) => (
-                <DeliveryCard key={delivery.code} {...delivery} />
-              ))}
+              {column.id === "not-assigned" && deliveries.map((delivery) => {
+                // Ensure the status is valid before rendering the card
+                if (!isValidStatus(delivery.status)) {
+                  console.warn(`Invalid status found: ${delivery.status}`);
+                  return null;
+                }
+                return (
+                  <DeliveryCard 
+                    key={delivery.code}
+                    code={delivery.code}
+                    customer={delivery.customer}
+                    address={delivery.address}
+                    phone={delivery.phone}
+                    status={delivery.status as ValidStatus}
+                  />
+                );
+              })}
             </div>
           </div>
         ))}
