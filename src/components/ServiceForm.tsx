@@ -10,6 +10,7 @@ import { AddressSection } from "./service-form/AddressSection";
 import { AdditionalInfoSection } from "./service-form/AdditionalInfoSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { ServiceFormValues } from "./service-form/types";
 
 const formSchema = z.object({
   code: z.string().min(1, "Código é obrigatório"),
@@ -29,7 +30,7 @@ interface ServiceFormProps {
 }
 
 export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ServiceFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       code: "",
@@ -52,7 +53,7 @@ export const ServiceForm = ({ onClose, onSuccess }: ServiceFormProps) => {
     generateCode();
   }, [form]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: ServiceFormValues) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
