@@ -15,13 +15,17 @@ const columns = [
 
 type ValidStatus = "not-assigned" | "assigned" | "accepted" | "in-transit" | "arrived" | "completed";
 
-const isValidStatus = (status: string): status is ValidStatus => {
-  return ["not-assigned", "assigned", "accepted", "in-transit", "arrived", "completed"].includes(status);
-};
+interface Delivery {
+  service_id: string;
+  customer_name: string;
+  address: string;
+  phone: string;
+  status: ValidStatus;
+}
 
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const deliveries: any[] = []; // Temporariamente vazio até reimplementarmos
+  const deliveries: Delivery[] = []; // Temporariamente vazio até reimplementarmos
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
@@ -50,22 +54,12 @@ export const KanbanBoard = () => {
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg flex-1 min-h-[calc(100vh-12rem)] overflow-y-auto">
-              {column.id === "not-assigned" && deliveries.map((delivery) => {
-                if (!isValidStatus(delivery.status)) {
-                  console.warn(`Invalid status found: ${delivery.status}`);
-                  return null;
-                }
-                return (
-                  <DeliveryCard 
-                    key={delivery.code}
-                    code={delivery.code}
-                    customer={delivery.customer}
-                    address={delivery.address}
-                    phone={delivery.phone}
-                    status={delivery.status as ValidStatus}
-                  />
-                );
-              })}
+              {column.id === "not-assigned" && deliveries.map((delivery) => (
+                <DeliveryCard 
+                  key={delivery.service_id}
+                  {...delivery}
+                />
+              ))}
             </div>
           </div>
         ))}

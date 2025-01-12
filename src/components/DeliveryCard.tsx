@@ -7,6 +7,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import InputMask from 'react-input-mask';
 
 interface Location {
   lat: number;
@@ -14,6 +15,7 @@ interface Location {
 }
 
 const DeliveryCard = () => {
+  const [serviceId, setServiceId] = useState("");
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Location | null>(null);
   const [customerName, setCustomerName] = useState("");
@@ -22,7 +24,7 @@ const DeliveryCard = () => {
   const [complement, setComplement] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [observations, setObservations] = useState("");
-  const [type, setType] = useState<"coleta" | "entrega">("entrega");
+  const [serviceType, setServiceType] = useState<"coleta" | "entrega" | "ambos">("entrega");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -43,11 +45,11 @@ const DeliveryCard = () => {
     }
 
     try {
-      const serviceId = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const generatedServiceId = serviceId || Math.random().toString(36).substring(2, 8).toUpperCase();
       
       const { error } = await supabase.from("services").insert({
-        type,
-        service_id: serviceId,
+        type: serviceType,
+        service_id: generatedServiceId,
         customer_name: customerName,
         phone,
         email,
@@ -78,28 +80,45 @@ const DeliveryCard = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto bg-white">
       <CardHeader>
         <CardTitle>Novo Serviço</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">ID do Serviço</label>
+            <Input
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              placeholder="ID do serviço (opcional)"
+            />
+          </div>
+
           <div className="flex gap-4">
             <Button
               type="button"
-              variant={type === "coleta" ? "default" : "outline"}
-              onClick={() => setType("coleta")}
+              variant={serviceType === "coleta" ? "default" : "outline"}
+              onClick={() => setServiceType("coleta")}
               className="w-full"
             >
               Coleta
             </Button>
             <Button
               type="button"
-              variant={type === "entrega" ? "default" : "outline"}
-              onClick={() => setType("entrega")}
+              variant={serviceType === "entrega" ? "default" : "outline"}
+              onClick={() => setServiceType("entrega")}
               className="w-full"
             >
               Entrega
+            </Button>
+            <Button
+              type="button"
+              variant={serviceType === "ambos" ? "default" : "outline"}
+              onClick={() => setServiceType("ambos")}
+              className="w-full"
+            >
+              Ambos
             </Button>
           </div>
 
@@ -116,12 +135,19 @@ const DeliveryCard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Telefone</label>
-              <Input
-                required
+              <InputMask
+                mask="(99) 99999-9999"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="(00) 00000-0000"
-              />
+              >
+                {(inputProps: any) => (
+                  <Input
+                    {...inputProps}
+                    required
+                    placeholder="(00) 00000-0000"
+                  />
+                )}
+              </InputMask>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">E-mail</label>
@@ -154,11 +180,18 @@ const DeliveryCard = () => {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Janela de Horário</label>
-            <Input
+            <InputMask
+              mask="99:99 às 99:99"
               value={timeWindow}
               onChange={(e) => setTimeWindow(e.target.value)}
-              placeholder="Ex: 14h às 18h"
-            />
+            >
+              {(inputProps: any) => (
+                <Input
+                  {...inputProps}
+                  placeholder="14:00 às 18:00"
+                />
+              )}
+            </InputMask>
           </div>
 
           <div className="space-y-2">
