@@ -8,18 +8,24 @@ interface DeliveryCardProps {
   customer: string;
   address: string;
   phone: string;
-  status: "success" | "closed" | "pending";
+  status: "not-assigned" | "assigned" | "accepted" | "in-transit" | "arrived" | "completed";
 }
 
 export const DeliveryCard = ({ code, customer, address, phone, status }: DeliveryCardProps) => {
   const getStatusBadge = () => {
     switch (status) {
-      case "success":
-        return <Badge className="bg-success">Sucesso</Badge>;
-      case "closed":
-        return <Badge className="bg-destructive">Fechado</Badge>;
+      case "completed":
+        return <Badge className="bg-success">Finalizado</Badge>;
+      case "arrived":
+        return <Badge className="bg-success">Chegou</Badge>;
+      case "in-transit":
+        return <Badge className="bg-warning">Em trânsito</Badge>;
+      case "accepted":
+        return <Badge className="bg-info">Aceito</Badge>;
+      case "assigned":
+        return <Badge className="bg-primary">Atribuído</Badge>;
       default:
-        return <Badge className="bg-secondary">Pendente</Badge>;
+        return <Badge className="bg-secondary">Não atribuído</Badge>;
     }
   };
 
