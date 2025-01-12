@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import AddressSearch from "./AddressSearch";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,32 +87,32 @@ const DeliveryCard = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center gap-8">
-            <RadioGroup
-              value={serviceType}
-              onValueChange={(value) => setServiceType(value as "coleta" | "entrega")}
-              className="flex items-center gap-8"
+          <div className="space-y-2">
+            <label className="text-sm font-medium">ID do Serviço</label>
+            <Input
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              placeholder="ID do serviço (opcional)"
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant={serviceType === "coleta" ? "default" : "outline"}
+              onClick={() => setServiceType("coleta")}
+              className="w-full"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="coleta" id="coleta" />
-                <label htmlFor="coleta" className="text-sm font-medium">
-                  Coleta
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="entrega" id="entrega" />
-                <label htmlFor="entrega" className="text-sm font-medium">
-                  Entrega
-                </label>
-              </div>
-            </RadioGroup>
-            <div className="flex-1">
-              <Input
-                value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
-                placeholder="ID do serviço (opcional)"
-              />
-            </div>
+              Coleta
+            </Button>
+            <Button
+              type="button"
+              variant={serviceType === "entrega" ? "default" : "outline"}
+              onClick={() => setServiceType("entrega")}
+              className="w-full"
+            >
+              Entrega
+            </Button>
           </div>
 
           <div className="space-y-2">
@@ -130,12 +129,7 @@ const DeliveryCard = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Telefone</label>
               <InputMask
-                mask="(99) 9999*-9999"
-                formatChars={{
-                  '9': '[0-9]',
-                  '*': '[0-9]?'
-                }}
-                maskChar={null}
+                mask="(99) 99999-9999"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               >
@@ -143,7 +137,7 @@ const DeliveryCard = () => {
                   <Input
                     {...inputProps}
                     required
-                    placeholder="(00) 0000-0000"
+                    placeholder="(00) 00000-0000"
                   />
                 )}
               </InputMask>
