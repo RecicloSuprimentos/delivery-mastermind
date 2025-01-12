@@ -5,8 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { LoadScript } from "@react-google-maps/api";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import AddressSearchPage from "./pages/AddressSearchPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,7 +37,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
@@ -45,21 +47,31 @@ const App = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </TooltipProvider>
+        <LoadScript googleMapsApiKey="AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI" libraries={["places"]}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/address-search"
+                element={
+                  <ProtectedRoute>
+                    <AddressSearchPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </TooltipProvider>
+        </LoadScript>
       </QueryClientProvider>
     </BrowserRouter>
   );
