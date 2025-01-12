@@ -28,16 +28,9 @@ export const KanbanBoard = () => {
   const { data: deliveries = [], refetch } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -84,8 +77,6 @@ export const KanbanBoard = () => {
                     customer={delivery.customer}
                     address={delivery.address}
                     phone={delivery.phone}
-                    timeWindow={delivery.time_window}
-                    notes={delivery.notes}
                     status={delivery.status as ValidStatus}
                   />
                 );
