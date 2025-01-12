@@ -60,11 +60,14 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
     }
 
     const location = place.geometry.location;
-    map.setCenter(location);
+    
+    // Centraliza o mapa na localização selecionada com uma animação suave
+    map.panTo(location);
     map.setZoom(16);
 
     clearMarker();
 
+    // Adiciona um marcador com animação de queda
     const newMarker = new google.maps.Marker({
       map,
       position: location,
@@ -92,19 +95,19 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
 
       console.log("Setting address:", place.formatted_address);
 
-      // Update form value
+      // Atualiza o valor no formulário
       form.setValue('address', place.formatted_address, {
         shouldValidate: true,
         shouldDirty: true,
         shouldTouch: true
       });
 
-      // Ensure the input field shows the selected address
+      // Garante que o campo de input mostre o endereço selecionado
       if (inputRef.current) {
         inputRef.current.value = place.formatted_address;
       }
 
-      // Update map
+      // Atualiza o mapa
       updateMapLocation(place);
 
       toast.success("Endereço selecionado com sucesso!");
