@@ -1,8 +1,11 @@
 import DeliveryCard from "./DeliveryCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CirclePlus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -21,7 +24,27 @@ const isValidStatus = (status: string): status is ValidStatus => {
 
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const deliveries: any[] = []; // Temporariamente vazio até reimplementarmos
+  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const fetchDeliveries = async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching services:', error);
+      return;
+    }
+
+    setDeliveries(data || []);
+  };
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, []);
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
@@ -46,25 +69,27 @@ export const KanbanBoard = () => {
                 {column.title}
               </h2>
               <span className="bg-muted text-secondary text-sm px-2 py-1 rounded">
-                {column.id === "not-assigned" ? deliveries.length : 0}
+                {deliveries.filter(d => d.status === column.id).length}
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg flex-1 min-h-[calc(100vh-12rem)] overflow-y-auto">
-              {column.id === "not-assigned" && deliveries.map((delivery) => {
-                if (!isValidStatus(delivery.status)) {
-                  console.warn(`Invalid status found: ${delivery.status}`);
-                  return null;
-                }
-                return (
-                  <DeliveryCard 
-                    key={delivery.code}
-                    code={delivery.code}
-                    customer={delivery.customer}
-                    address={delivery.address}
-                    phone={delivery.phone}
-                    status={delivery.status as ValidStatus}
-                  />
-                );
+              {deliveries
+                .filter(delivery => delivery.status === column.id)
+                .map((delivery) => {
+                  if (!isValidStatus(delivery.status)) {
+                    console.warn(`Invalid status found: ${delivery.status}`);
+                    return null;
+                  }
+                  return (
+                    <DeliveryCard 
+                      key={delivery.service_id}
+                      code={delivery.service_id}
+                      customer={delivery.customer_name}
+                      address={delivery.address}
+                      phone={delivery.phone}
+                      status={delivery.status as ValidStatus}
+                    />
+                  );
               })}
             </div>
           </div>
@@ -75,9 +100,14 @@ export const KanbanBoard = () => {
         <DialogContent className="sm:max-w-[600px] bg-white">
           <div className="p-6">
             <h2 className="text-lg font-semibold mb-4">Criar Novo Serviço</h2>
-            <p className="text-muted-foreground">
-              O formulário de criação de serviço será implementado em breve.
-            </p>
+            <DeliveryCard onSuccess={() => {
+              setIsDialogOpen(false);
+              fetchDeliveries();
+              toast({
+                title: "Sucesso",
+                description: "Serviço criado com sucesso!",
+              });
+            }} />
           </div>
         </DialogContent>
       </Dialog>
