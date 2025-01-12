@@ -2,13 +2,13 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { ServiceFormValues } from "./types";
-import { GoogleMap, LoadScript, Autocomplete, Libraries } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Autocomplete } from '@react-google-maps/api';
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
-const libraries: Libraries = ['places'];
+const libraries: ("places")[] = ['places'];
 
 const mapContainerStyle = {
   width: '100%',
@@ -41,24 +41,19 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
       return;
     }
 
-    // Atualiza o formulário com o endereço selecionado
     form.setValue('address', place.formatted_address, {
       shouldValidate: true
     });
 
-    // Atualiza o mapa
     if (map) {
-      // Remove o marcador anterior se existir
       if (marker) {
         marker.setMap(null);
       }
 
-      // Centraliza o mapa na nova localização
       const location = place.geometry.location;
       map.panTo(location);
       map.setZoom(16);
 
-      // Adiciona um novo marcador
       const newMarker = new google.maps.Marker({
         map,
         position: location,
@@ -100,30 +95,26 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
                     className="bg-white"
                   />
                 </Autocomplete>
+                <div className="mt-4">
+                  <GoogleMap
+                    mapContainerStyle={mapContainerStyle}
+                    center={defaultCenter}
+                    zoom={13}
+                    onLoad={(map) => setMap(map)}
+                    options={{
+                      zoomControl: true,
+                      streetViewControl: false,
+                      mapTypeControl: false,
+                      fullscreenControl: false,
+                    }}
+                  />
+                </div>
               </LoadScript>
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-
-      <LoadScript 
-        googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-        libraries={libraries}
-      >
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={defaultCenter}
-          zoom={13}
-          onLoad={(map) => setMap(map)}
-          options={{
-            zoomControl: true,
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: false,
-          }}
-        />
-      </LoadScript>
     </div>
   );
 };
