@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Plus, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -32,6 +34,7 @@ export const KanbanBoard = () => {
     address: "",
     phone: "",
     timeWindow: "",
+    notes: "",
   });
 
   const { data: deliveries = [], refetch } = useQuery({
@@ -49,7 +52,7 @@ export const KanbanBoard = () => {
 
   const handleAddDelivery = async () => {
     if (!newDelivery.code || !newDelivery.customer || !newDelivery.address || !newDelivery.phone) {
-      toast.error("Por favor, preencha todos os campos");
+      toast.error("Por favor, preencha todos os campos obrigatórios");
       return;
     }
 
@@ -67,7 +70,15 @@ export const KanbanBoard = () => {
 
       if (error) throw error;
 
-      setNewDelivery({ code: "", type: "delivery", customer: "", address: "", phone: "", timeWindow: "" });
+      setNewDelivery({
+        code: "",
+        type: "delivery",
+        customer: "",
+        address: "",
+        phone: "",
+        timeWindow: "",
+        notes: "",
+      });
       setIsDialogOpen(false);
       refetch();
       toast.success("Serviço adicionado com sucesso!");
@@ -79,6 +90,16 @@ export const KanbanBoard = () => {
 
   return (
     <div className="flex-1 overflow-x-auto">
+      <div className="fixed bottom-8 right-8 z-10">
+        <Button
+          onClick={() => setIsDialogOpen(true)}
+          size="lg"
+          className="rounded-full shadow-lg"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Serviços
+        </Button>
+      </div>
+
       <div className="flex h-full p-4 space-x-4">
         {columns.map((column) => (
           <div key={column.id} className="flex-1 min-w-[300px]">
@@ -92,7 +113,6 @@ export const KanbanBoard = () => {
             </div>
             <div className="bg-muted p-4 rounded-lg min-h-[calc(100vh-12rem)]">
               {column.id === "not-assigned" && deliveries.map((delivery) => {
-                // Ensure the status is valid before rendering the card
                 if (!isValidStatus(delivery.status)) {
                   console.warn(`Invalid status found: ${delivery.status}`);
                   return null;
@@ -115,8 +135,16 @@ export const KanbanBoard = () => {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+          <DialogHeader className="flex flex-row items-center justify-between">
             <DialogTitle>Novo Serviço</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 absolute right-4 top-4"
+              onClick={() => setIsDialogOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -135,7 +163,7 @@ export const KanbanBoard = () => {
               </Select>
             </div>
             <div className="grid gap-2">
-              <label htmlFor="code">ID do Serviço</label>
+              <label htmlFor="code">ID do Serviço *</label>
               <Input
                 id="code"
                 value={newDelivery.code}
@@ -144,7 +172,7 @@ export const KanbanBoard = () => {
               />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="customer">Nome do Cliente</label>
+              <label htmlFor="customer">Nome do Cliente *</label>
               <Input
                 id="customer"
                 value={newDelivery.customer}
@@ -153,21 +181,21 @@ export const KanbanBoard = () => {
               />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="address">Endereço</label>
-              <Input
-                id="address"
-                value={newDelivery.address}
-                onChange={(e) => setNewDelivery({ ...newDelivery, address: e.target.value })}
-                placeholder="Digite o endereço completo"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="phone">Telefone</label>
+              <label htmlFor="phone">Telefone *</label>
               <Input
                 id="phone"
                 value={newDelivery.phone}
                 onChange={(e) => setNewDelivery({ ...newDelivery, phone: e.target.value })}
                 placeholder="Digite o telefone"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="address">Endereço *</label>
+              <Input
+                id="address"
+                value={newDelivery.address}
+                onChange={(e) => setNewDelivery({ ...newDelivery, address: e.target.value })}
+                placeholder="Digite o endereço completo"
               />
             </div>
             <div className="grid gap-2">
@@ -177,6 +205,15 @@ export const KanbanBoard = () => {
                 value={newDelivery.timeWindow}
                 onChange={(e) => setNewDelivery({ ...newDelivery, timeWindow: e.target.value })}
                 placeholder="Ex: 14:00 - 16:00"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="notes">Observação</label>
+              <Textarea
+                id="notes"
+                value={newDelivery.notes}
+                onChange={(e) => setNewDelivery({ ...newDelivery, notes: e.target.value })}
+                placeholder="Digite uma observação (opcional)"
               />
             </div>
           </div>
