@@ -9,7 +9,7 @@ const GOOGLE_MAPS_API_KEY = "AIzaSyB30rumsKJs3dV_NZ8N0khyf-n4yWDjQKI";
 
 const mapContainerStyle = {
   width: '100%',
-  height: '300px'
+  height: '240px'
 };
 
 const center = {
@@ -24,18 +24,22 @@ interface AddressSectionProps {
 export const AddressSection = ({ form }: AddressSectionProps) => {
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
-  const onPlaceChanged = () => {
-    if (autocomplete) {
-      const place = autocomplete.getPlace();
-      if (place.formatted_address) {
-        form.setValue('address', place.formatted_address);
-      }
-    }
-  };
-
   const onLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
     setAutocomplete(autocomplete);
   }, []);
+
+  const onPlaceChanged = useCallback(() => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      if (place.formatted_address) {
+        form.setValue('address', place.formatted_address, {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true
+        });
+      }
+    }
+  }, [autocomplete, form]);
 
   return (
     <div className="grid gap-4 p-4 bg-soft-green rounded-lg">
@@ -47,7 +51,10 @@ export const AddressSection = ({ form }: AddressSectionProps) => {
             <FormItem>
               <FormLabel className="font-medium">Endereço *</FormLabel>
               <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} libraries={["places"]}>
-                <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
+                <Autocomplete
+                  onLoad={onLoad}
+                  onPlaceChanged={onPlaceChanged}
+                >
                   <FormControl>
                     <Input
                       {...field}
