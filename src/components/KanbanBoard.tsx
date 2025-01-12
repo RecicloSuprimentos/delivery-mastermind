@@ -1,14 +1,11 @@
 import { DeliveryCard } from "./DeliveryCard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, X } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { Plus } from "lucide-react";
+import { ServiceForm } from "./ServiceForm";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -27,15 +24,6 @@ const isValidStatus = (status: string): status is ValidStatus => {
 
 export const KanbanBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newDelivery, setNewDelivery] = useState({
-    code: "",
-    type: "delivery",
-    customer: "",
-    address: "",
-    phone: "",
-    timeWindow: "",
-    notes: "",
-  });
 
   const { data: deliveries = [], refetch } = useQuery({
     queryKey: ['services'],
@@ -49,44 +37,6 @@ export const KanbanBoard = () => {
       return data;
     }
   });
-
-  const handleAddDelivery = async () => {
-    if (!newDelivery.code || !newDelivery.customer || !newDelivery.address || !newDelivery.phone) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('services')
-        .insert([{
-          code: newDelivery.code,
-          customer: newDelivery.customer,
-          address: newDelivery.address,
-          phone: newDelivery.phone,
-          status: 'not-assigned',
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        }]);
-
-      if (error) throw error;
-
-      setNewDelivery({
-        code: "",
-        type: "delivery",
-        customer: "",
-        address: "",
-        phone: "",
-        timeWindow: "",
-        notes: "",
-      });
-      setIsDialogOpen(false);
-      refetch();
-      toast.success("Serviço adicionado com sucesso!");
-    } catch (error) {
-      console.error('Error adding service:', error);
-      toast.error("Erro ao adicionar serviço");
-    }
-  };
 
   return (
     <div className="flex-1 overflow-x-auto w-full">
@@ -134,100 +84,14 @@ export const KanbanBoard = () => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
-            <DialogTitle className="text-xl font-semibold">Novo Serviço</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 absolute right-4 top-4"
-              onClick={() => setIsDialogOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="type" className="font-medium">Tipo de Serviço</label>
-              <Select
-                value={newDelivery.type}
-                onValueChange={(value) => setNewDelivery({ ...newDelivery, type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="delivery">Entrega</SelectItem>
-                  <SelectItem value="pickup">Coleta</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="code" className="font-medium">ID do Serviço *</label>
-              <Input
-                id="code"
-                value={newDelivery.code}
-                onChange={(e) => setNewDelivery({ ...newDelivery, code: e.target.value })}
-                placeholder="Digite o ID"
-                className="bg-white"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="customer" className="font-medium">Nome do Cliente *</label>
-              <Input
-                id="customer"
-                value={newDelivery.customer}
-                onChange={(e) => setNewDelivery({ ...newDelivery, customer: e.target.value })}
-                placeholder="Digite o nome do cliente"
-                className="bg-white"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="phone" className="font-medium">Telefone *</label>
-              <Input
-                id="phone"
-                value={newDelivery.phone}
-                onChange={(e) => setNewDelivery({ ...newDelivery, phone: e.target.value })}
-                placeholder="Digite o telefone"
-                className="bg-white"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="address" className="font-medium">Endereço *</label>
-              <Input
-                id="address"
-                value={newDelivery.address}
-                onChange={(e) => setNewDelivery({ ...newDelivery, address: e.target.value })}
-                placeholder="Digite o endereço completo"
-                className="bg-white"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="timeWindow" className="font-medium">Intervalo de Horário</label>
-              <Input
-                id="timeWindow"
-                value={newDelivery.timeWindow}
-                onChange={(e) => setNewDelivery({ ...newDelivery, timeWindow: e.target.value })}
-                placeholder="Ex: 14:00 - 16:00"
-                className="bg-white"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="notes" className="font-medium">Observação</label>
-              <Textarea
-                id="notes"
-                value={newDelivery.notes}
-                onChange={(e) => setNewDelivery({ ...newDelivery, notes: e.target.value })}
-                placeholder="Digite uma observação (opcional)"
-                className="bg-white"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end pt-4 border-t">
-            <Button onClick={handleAddDelivery} className="bg-success hover:bg-success/90 text-white">
-              Adicionar Serviço
-            </Button>
-          </div>
+        <DialogContent className="sm:max-w-[600px] bg-white">
+          <ServiceForm 
+            onClose={() => setIsDialogOpen(false)}
+            onSuccess={() => {
+              setIsDialogOpen(false);
+              refetch();
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

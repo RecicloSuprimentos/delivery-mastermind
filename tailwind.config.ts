@@ -18,6 +18,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,6 +50,16 @@ export default {
         accent: {
           DEFAULT: "#2A2D35",
           foreground: "#FFFFFF",
+        },
+        // Adicionando cores suaves
+        soft: {
+          green: "#F2FCE2",
+          yellow: "#FEF7CD",
+          purple: "#E5DEFF",
+          pink: "#FFDEE2",
+          peach: "#FDE1D3",
+          blue: "#D3E4FD",
+          gray: "#F1F0FB",
         },
       },
       borderRadius: {
