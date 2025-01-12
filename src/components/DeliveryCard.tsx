@@ -20,11 +20,11 @@ interface DeliveryCardProps {
   onSuccess?: () => void;
 }
 
-const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
-  const [address, setAddress] = useState("");
+const DeliveryCard = ({ code, customer, address, phone, status, onSuccess }: DeliveryCardProps) => {
+  const [addressValue, setAddress] = useState("");
   const [location, setLocation] = useState<Location | null>(null);
   const [customerName, setCustomerName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneValue, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [complement, setComplement] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
@@ -50,9 +50,9 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
         type,
         service_id: serviceId,
         customer_name: customerName,
-        phone,
+        phone: phoneValue,
         email,
-        address,
+        address: addressValue,
         complement,
         time_window: timeWindow,
         observations,
@@ -76,7 +76,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
     return (
       <Card className="mb-4">
         <CardContent className="p-4">
-          <h3 className="font-semibold">{customerName}</h3>
+          <h3 className="font-semibold">{customer}</h3>
           <p className="text-sm text-gray-600">{address}</p>
           <p className="text-sm text-gray-600">{phone}</p>
         </CardContent>
@@ -121,7 +121,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
           <label className="text-sm font-medium">Telefone</label>
           <Input
             required
-            value={phone}
+            value={phoneValue}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="(00) 00000-0000"
           />
@@ -140,7 +140,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
       <div className="space-y-2">
         <label className="text-sm font-medium">Endereço</label>
         <AddressSearch
-          value={address}
+          value={addressValue}
           onChange={setAddress}
           onLocationSelect={handleLocationSelect}
         />
