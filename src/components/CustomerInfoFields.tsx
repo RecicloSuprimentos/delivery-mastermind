@@ -22,25 +22,28 @@ const CustomerInfoFields = ({
   const [mask, setMask] = useState("(99) 9999-9999");
 
   useEffect(() => {
-    // Atualiza a máscara baseado no número de dígitos
     const digits = phone.replace(/\D/g, '');
     setMask(digits.length <= 10 ? "(99) 9999-9999" : "(99) 99999-9999");
   }, [phone]);
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onCustomerNameChange(e.target.value.toUpperCase());
+  };
+
   return (
-    <div className="space-y-3">
-      <div className="space-y-2">
+    <div className="space-y-2">
+      <div className="space-y-1">
         <label className="text-sm font-medium">Nome do Cliente</label>
         <Input
           required
           value={customerName}
-          onChange={(e) => onCustomerNameChange(e.target.value)}
+          onChange={handleNameChange}
           placeholder="Nome completo"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium">Telefone</label>
           <InputMask
             mask={mask}
@@ -56,7 +59,7 @@ const CustomerInfoFields = ({
             )}
           </InputMask>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium">E-mail</label>
           <Input
             type="email"
