@@ -1,10 +1,6 @@
-import { useEffect, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { CirclePlus } from "lucide-react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ServiceCard from "./ServiceCard";
-import DeliveryCard from "./DeliveryCard";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -35,12 +31,7 @@ interface Service {
 }
 
 export const KanbanBoard = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
-
-  useEffect(() => {
-    fetchServices();
-  }, []);
 
   const fetchServices = async () => {
     const { data, error } = await supabase
@@ -60,16 +51,6 @@ export const KanbanBoard = () => {
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
-      <div className="fixed top-20 right-8 z-10">
-        <Button
-          onClick={() => setIsDialogOpen(true)}
-          size="default"
-          className="bg-success hover:bg-success/90 text-white font-medium shadow-lg"
-        >
-          <CirclePlus className="mr-2 h-5 w-5" /> SERVIÇO
-        </Button>
-      </div>
-
       <div className="flex h-full p-4 space-x-4 overflow-x-auto min-w-full">
         {columns.map((column) => (
           <div 
@@ -98,15 +79,6 @@ export const KanbanBoard = () => {
           </div>
         ))}
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white">
-          <DeliveryCard onSuccess={() => {
-            setIsDialogOpen(false);
-            fetchServices();
-          }} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
