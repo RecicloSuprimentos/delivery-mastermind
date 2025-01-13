@@ -2,25 +2,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import AddressSearch from "./AddressSearch";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import InputMask from 'react-input-mask';
-import { Label } from "@/components/ui/label";
 
 interface Location {
   lat: number;
   lng: number;
 }
 
-interface DeliveryCardProps {
-  onSuccess?: () => void;
-}
-
-const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
+const DeliveryCard = () => {
   const [serviceId, setServiceId] = useState("");
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Location | null>(null);
@@ -75,11 +69,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
         description: "Serviço criado com sucesso!",
       });
 
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        navigate("/");
-      }
+      navigate("/");
     } catch (error) {
       console.error("Error creating service:", error);
       toast({
@@ -97,29 +87,32 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center gap-6">
-            <RadioGroup
-              value={serviceType}
-              onValueChange={(value) => setServiceType(value as "coleta" | "entrega")}
-              className="flex items-center gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="coleta" id="coleta" />
-                <Label htmlFor="coleta">Coleta</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="entrega" id="entrega" />
-                <Label htmlFor="entrega">Entrega</Label>
-              </div>
-            </RadioGroup>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">ID do Serviço</label>
+            <Input
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              placeholder="ID do serviço (opcional)"
+            />
+          </div>
 
-            <div className="flex-1">
-              <Input
-                value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
-                placeholder="ID do serviço (opcional)"
-              />
-            </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant={serviceType === "coleta" ? "default" : "outline"}
+              onClick={() => setServiceType("coleta")}
+              className="w-full"
+            >
+              Coleta
+            </Button>
+            <Button
+              type="button"
+              variant={serviceType === "entrega" ? "default" : "outline"}
+              onClick={() => setServiceType("entrega")}
+              className="w-full"
+            >
+              Entrega
+            </Button>
           </div>
 
           <div className="space-y-2">
@@ -136,8 +129,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Telefone</label>
               <InputMask
-                mask="(99) 9999*-9999"
-                maskChar={null}
+                mask="(99) 99999-9999"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               >
@@ -145,7 +137,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
                   <Input
                     {...inputProps}
                     required
-                    placeholder="(00) 0000-0000"
+                    placeholder="(00) 00000-0000"
                   />
                 )}
               </InputMask>
