@@ -96,10 +96,6 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
     }
   };
 
-  const handleObservationsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setObservations(e.target.value.toUpperCase());
-  };
-
   return (
     <Card className="w-full max-w-2xl mx-auto bg-white">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -116,8 +112,8 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
         )}
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <div className="flex items-center gap-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="flex items-center gap-6">
             <ServiceTypeSelector
               value={serviceType}
               onChange={setServiceType}
@@ -150,11 +146,11 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
             onTimeWindowChange={setTimeWindow}
           />
 
-          <div className="space-y-1">
+          <div className="space-y-2">
             <label className="text-sm font-medium">Observações</label>
             <Textarea
               value={observations}
-              onChange={handleObservationsChange}
+              onChange={(e) => setObservations(e.target.value)}
               placeholder="Informações adicionais"
               className="resize-none"
             />
