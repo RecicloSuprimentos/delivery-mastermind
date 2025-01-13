@@ -9,18 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import InputMask from 'react-input-mask';
-import { Label } from "@/components/ui/label";
 
 interface Location {
   lat: number;
   lng: number;
 }
 
-interface DeliveryCardProps {
-  onSuccess?: () => void;
-}
-
-const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
+const DeliveryCard = () => {
   const [serviceId, setServiceId] = useState("");
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Location | null>(null);
@@ -75,11 +70,7 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
         description: "Serviço criado com sucesso!",
       });
 
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        navigate("/");
-      }
+      navigate("/");
     } catch (error) {
       console.error("Error creating service:", error);
       toast({
@@ -97,22 +88,25 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-8">
             <RadioGroup
               value={serviceType}
               onValueChange={(value) => setServiceType(value as "coleta" | "entrega")}
-              className="flex items-center gap-4"
+              className="flex items-center gap-8"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="coleta" id="coleta" />
-                <Label htmlFor="coleta">Coleta</Label>
+                <label htmlFor="coleta" className="text-sm font-medium">
+                  Coleta
+                </label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="entrega" id="entrega" />
-                <Label htmlFor="entrega">Entrega</Label>
+                <label htmlFor="entrega" className="text-sm font-medium">
+                  Entrega
+                </label>
               </div>
             </RadioGroup>
-
             <div className="flex-1">
               <Input
                 value={serviceId}
@@ -137,6 +131,10 @@ const DeliveryCard = ({ onSuccess }: DeliveryCardProps) => {
               <label className="text-sm font-medium">Telefone</label>
               <InputMask
                 mask="(99) 9999*-9999"
+                formatChars={{
+                  '9': '[0-9]',
+                  '*': '[0-9]?'
+                }}
                 maskChar={null}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
