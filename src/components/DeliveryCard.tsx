@@ -163,7 +163,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="bg-success hover:bg-success/90">
               Criar Serviço
             </Button>
           </div>

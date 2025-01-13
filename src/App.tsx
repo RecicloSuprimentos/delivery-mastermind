@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoadScript } from "@react-google-maps/api";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
-import AddressSearchPage from "./pages/AddressSearchPage";
+import NewServicePage from "./pages/NewServicePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,10 +62,10 @@ const App = () => {
                 }
               />
               <Route
-                path="/address-search"
+                path="/new-service"
                 element={
                   <ProtectedRoute>
-                    <AddressSearchPage />
+                    <NewServicePage />
                   </ProtectedRoute>
                 }
               />

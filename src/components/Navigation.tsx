@@ -19,7 +19,7 @@ export const Navigation = () => {
   };
 
   const handleServiceClick = () => {
-    navigate('/address-search');
+    navigate('/new-service');
   };
 
   return (

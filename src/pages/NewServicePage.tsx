@@ -1,0 +1,21 @@
+import { Navigation } from "@/components/Navigation";
+import DeliveryCard from "@/components/DeliveryCard";
+import { useNavigate } from "react-router-dom";
+
+const NewServicePage = () => {
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    navigate('/');
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <DeliveryCard onClose={handleClose} onSuccess={handleClose} />
+      </div>
+    </div>
+  );
+};
+
+export default NewServicePage;
