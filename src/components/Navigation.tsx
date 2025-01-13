@@ -1,8 +1,6 @@
 import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle, LogOut, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,14 +45,6 @@ export const Navigation = () => {
               />
               <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
-            <Button 
-              variant="default" 
-              className="gap-2 bg-black hover:bg-black/90"
-              onClick={handleServiceClick}
-            >
-              <PlusCircle className="h-5 w-5" />
-              SERVIÇO
-            </Button>
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
