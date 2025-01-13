@@ -156,9 +156,16 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Criar Serviço
-          </Button>
+          <div className="flex justify-end gap-2">
+            {onClose && (
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+            )}
+            <Button type="submit">
+              Criar Serviço
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

@@ -22,13 +22,14 @@ const CustomerInfoFields = ({
   const [mask, setMask] = useState("(99) 9999-9999");
 
   useEffect(() => {
-    // Atualiza a máscara baseado no número de dígitos
+    // Remove todos os caracteres não numéricos
     const digits = phone.replace(/\D/g, '');
+    // Atualiza a máscara baseado no número de dígitos
     setMask(digits.length <= 10 ? "(99) 9999-9999" : "(99) 99999-9999");
   }, [phone]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="space-y-2">
         <label className="text-sm font-medium">Nome do Cliente</label>
         <Input
