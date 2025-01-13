@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ServiceCard from "./ServiceCard";
 
@@ -48,6 +48,30 @@ export const KanbanBoard = () => {
       setServices(data as Service[]);
     }
   };
+
+  useEffect(() => {
+    fetchServices();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('services_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'services'
+        },
+        () => {
+          fetchServices();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
