@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import ServiceTypeSelector from "./ServiceTypeSelector";
 import CustomerInfoFields from "./CustomerInfoFields";
 import AddressFields from "./AddressFields";
+import InputMask from 'react-input-mask';
 
 interface Location {
   lat: number;
@@ -96,20 +97,22 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
     }
   };
 
+  const handleObservationsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setObservations(e.target.value.toUpperCase());
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto bg-white">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>Novo Serviço</CardTitle>
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="h-8 w-8 p-0"
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -150,18 +153,16 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
             <label className="text-sm font-medium">Observações</label>
             <Textarea
               value={observations}
-              onChange={(e) => setObservations(e.target.value)}
+              onChange={handleObservationsChange}
               placeholder="Informações adicionais"
               className="resize-none"
             />
           </div>
 
           <div className="flex justify-end gap-2">
-            {onClose && (
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancelar
-              </Button>
-            )}
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
             <Button type="submit">
               Criar Serviço
             </Button>

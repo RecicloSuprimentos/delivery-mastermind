@@ -28,6 +28,10 @@ const CustomerInfoFields = ({
     setMask(digits.length <= 10 ? "(99) 9999-9999" : "(99) 99999-9999");
   }, [phone]);
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onCustomerNameChange(e.target.value.toUpperCase());
+  };
+
   return (
     <div className="space-y-2">
       <div className="space-y-2">
@@ -35,7 +39,7 @@ const CustomerInfoFields = ({
         <Input
           required
           value={customerName}
-          onChange={(e) => onCustomerNameChange(e.target.value)}
+          onChange={handleNameChange}
           placeholder="Nome completo"
         />
       </div>

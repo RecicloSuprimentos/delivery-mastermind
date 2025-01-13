@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import AddressSearch from "./AddressSearch";
+import InputMask from 'react-input-mask';
 
 interface Location {
   lat: number;
@@ -47,11 +48,18 @@ const AddressFields = ({
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">Janela de Horário</label>
-          <Input
+          <InputMask
+            mask="99:99 às 99:99"
             value={timeWindow}
             onChange={(e) => onTimeWindowChange(e.target.value)}
-            placeholder="14:00 às 18:00"
-          />
+          >
+            {(inputProps: any) => (
+              <Input
+                {...inputProps}
+                placeholder="14:00 às 18:00"
+              />
+            )}
+          </InputMask>
         </div>
       </div>
     </div>
