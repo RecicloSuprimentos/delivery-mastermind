@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ServiceCard from "./ServiceCard";
+import { Button } from "./ui/button";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -32,6 +33,7 @@ interface Service {
 
 export const KanbanBoard = () => {
   const [services, setServices] = useState<Service[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const fetchServices = async () => {
     const { data, error } = await supabase
@@ -52,7 +54,6 @@ export const KanbanBoard = () => {
   useEffect(() => {
     fetchServices();
 
-    // Subscribe to realtime changes
     const channel = supabase
       .channel('services_changes')
       .on(
@@ -72,6 +73,15 @@ export const KanbanBoard = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const handleServiceSelect = (serviceId: string) => {
+    setSelectedServices(prev => {
+      if (prev.includes(serviceId)) {
+        return prev.filter(id => id !== serviceId);
+      }
+      return [...prev, serviceId];
+    });
+  };
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
@@ -97,6 +107,8 @@ export const KanbanBoard = () => {
                     key={service.id}
                     service={service}
                     onUpdate={fetchServices}
+                    isSelected={selectedServices.includes(service.id)}
+                    onSelect={handleServiceSelect}
                   />
                 ))}
             </div>
