@@ -99,12 +99,21 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleEdit}>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-48 bg-white shadow-lg border border-gray-200 rounded-md z-50"
+              >
+                <DropdownMenuItem 
+                  onClick={handleEdit}
+                  className="hover:bg-gray-100 cursor-pointer"
+                >
                   <FileEdit className="h-4 w-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                <DropdownMenuItem 
+                  onClick={handleDelete} 
+                  className="text-destructive hover:bg-gray-100 cursor-pointer"
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Excluir
                 </DropdownMenuItem>
