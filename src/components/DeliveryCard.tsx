@@ -1,16 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
-import ServiceTypeSelector from "./ServiceTypeSelector";
 import CustomerInfoFields from "./CustomerInfoFields";
 import AddressFields from "./AddressFields";
-import InputMask from 'react-input-mask';
+import ServiceCardHeader from "./ServiceCardHeader";
+import ServiceIdField from "./ServiceIdField";
+import ServiceFormActions from "./ServiceFormActions";
 
 interface Location {
   lat: number;
@@ -103,32 +101,15 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto bg-white">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle>Novo Serviço</CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="h-8 w-8 p-0"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </CardHeader>
+      <ServiceCardHeader onClose={onClose} />
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="flex items-center gap-6">
-            <ServiceTypeSelector
-              value={serviceType}
-              onChange={setServiceType}
-            />
-            <div className="flex-1">
-              <Input
-                value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
-                placeholder="ID do serviço (opcional)"
-              />
-            </div>
-          </div>
+          <ServiceIdField
+            serviceId={serviceId}
+            serviceType={serviceType}
+            onServiceIdChange={setServiceId}
+            onServiceTypeChange={setServiceType}
+          />
 
           <CustomerInfoFields
             customerName={customerName}
@@ -159,14 +140,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
             />
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" className="bg-success hover:bg-success/90">
-              Criar Serviço
-            </Button>
-          </div>
+          <ServiceFormActions onClose={onClose} />
         </form>
       </CardContent>
     </Card>
