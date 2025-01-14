@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { MapPin, Phone, Clock, FileEdit, ChevronDown, ChevronUp, Trash2, Check } from "lucide-react";
+import { MapPin, Phone, Clock, FileEdit, ChevronDown, ChevronUp, Trash2, Check, MoreVertical } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { useToast } from "./ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Service {
   id: string;
@@ -70,52 +76,41 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
     <Card className={`mb-2 overflow-hidden ${isSelected ? 'border-primary border-2' : 'bg-white'}`}>
       <div className="p-3">
         <div className="flex justify-between items-start mb-1">
-          <div className="flex-1">
+          {service.status === "not-assigned" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSelect}
+              className={`${isSelected ? "text-primary" : "text-gray-500"} -ml-2`}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          )}
+          <div className="flex-1 ml-2">
             <div className="font-medium text-base">
               {service.type.toUpperCase()} {service.service_id}
             </div>
             <div className="font-medium text-base">{service.customer_name}</div>
           </div>
-          <div className="flex items-center gap-2">
-            {service.status === "not-assigned" && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSelect}
-                  className={isSelected ? "text-primary" : "text-gray-500"}
-                >
-                  <Check className="h-4 w-4" />
+          {service.status === "not-assigned" && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-700">
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleEdit}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <FileEdit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleDelete}
-                  className="text-gray-500 hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </>
-            )}
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </button>
-          </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleEdit}>
+                  <FileEdit className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         <div className="flex items-center gap-2 text-gray-600 mb-1">
@@ -123,9 +118,21 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
           <span className="text-sm">{service.address}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-gray-600">
-          <Phone className="h-4 w-4 shrink-0" />
-          <span className="text-sm">{service.phone}</span>
+        <div className="flex items-center justify-between text-gray-600">
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4 shrink-0" />
+            <span className="text-sm">{service.phone}</span>
+          </div>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-500 hover:text-gray-700 -mr-1"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5" />
+            ) : (
+              <ChevronDown className="h-5 w-5" />
+            )}
+          </button>
         </div>
 
         {isExpanded && (
