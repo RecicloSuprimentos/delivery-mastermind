@@ -26,6 +26,10 @@ const AddressFields = ({
   timeWindow,
   onTimeWindowChange,
 }: AddressFieldsProps) => {
+  const handleComplementChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onComplementChange(e.target.value.toUpperCase());
+  };
+
   return (
     <div className="space-y-3">
       <div className="space-y-2">
@@ -42,7 +46,7 @@ const AddressFields = ({
           <label className="text-sm font-medium">Complemento</label>
           <Input
             value={complement}
-            onChange={(e) => onComplementChange(e.target.value)}
+            onChange={handleComplementChange}
             placeholder="Apartamento, sala, etc."
           />
         </div>

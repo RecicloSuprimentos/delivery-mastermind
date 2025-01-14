@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import InputMask from 'react-input-mask';
 import { useState, useEffect } from 'react';
+import { useToast } from "@/components/ui/use-toast";
 
 interface CustomerInfoFieldsProps {
   customerName: string;
@@ -20,16 +21,36 @@ const CustomerInfoFields = ({
   onEmailChange
 }: CustomerInfoFieldsProps) => {
   const [mask, setMask] = useState("(99) 9999-9999");
+  const { toast } = useToast();
 
   useEffect(() => {
     // Remove todos os caracteres não numéricos
     const digits = phone.replace(/\D/g, '');
-    // Atualiza a máscara baseado no número de dígitos
-    setMask(digits.length <= 10 ? "(99) 9999-9999" : "(99) 99999-9999");
-  }, [phone]);
+    
+    // Verifica se é celular (começa com 9) ou telefone fixo
+    if (digits.length > 2) {
+      const isCellPhone = digits.substring(2, 3) === '9';
+      setMask(isCellPhone ? "(99) 99999-9999" : "(99) 9999-9999");
+      
+      // Validação da quantidade de dígitos
+      if (digits.length > 0 && digits.length !== (isCellPhone ? 11 : 10)) {
+        toast({
+          title: "Erro no telefone",
+          description: isCellPhone 
+            ? "Celular deve ter 11 dígitos (incluindo DDD)" 
+            : "Telefone fixo deve ter 10 dígitos (incluindo DDD)",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [phone, toast]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onCustomerNameChange(e.target.value.toUpperCase());
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onEmailChange(e.target.value.toLowerCase());
   };
 
   return (
@@ -66,7 +87,7 @@ const CustomerInfoFields = ({
           <Input
             type="email"
             value={email}
-            onChange={(e) => onEmailChange(e.target.value)}
+            onChange={handleEmailChange}
             placeholder="email@exemplo.com"
           />
         </div>
