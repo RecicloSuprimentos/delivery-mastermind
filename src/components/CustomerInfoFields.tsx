@@ -21,6 +21,7 @@ const CustomerInfoFields = ({
   onEmailChange
 }: CustomerInfoFieldsProps) => {
   const [mask, setMask] = useState("(99) 9999-9999");
+  const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,18 +33,31 @@ const CustomerInfoFields = ({
       const isCellPhone = digits.substring(2, 3) === '9';
       setMask(isCellPhone ? "(99) 99999-9999" : "(99) 9999-9999");
       
-      // Validação da quantidade de dígitos
-      if (digits.length > 0 && digits.length !== (isCellPhone ? 11 : 10)) {
-        toast({
-          title: "Erro no telefone",
-          description: isCellPhone 
-            ? "Celular deve ter 11 dígitos (incluindo DDD)" 
-            : "Telefone fixo deve ter 10 dígitos (incluindo DDD)",
-          variant: "destructive",
-        });
+      // Só valida após o usuário parar de digitar
+      if (isTyping) {
+        const timeoutId = setTimeout(() => {
+          setIsTyping(false);
+          // Validação da quantidade de dígitos
+          if (digits.length > 0 && digits.length !== (isCellPhone ? 11 : 10)) {
+            toast({
+              title: "Erro no telefone",
+              description: isCellPhone 
+                ? "Celular deve ter 11 dígitos (incluindo DDD)" 
+                : "Telefone fixo deve ter 10 dígitos (incluindo DDD)",
+              variant: "destructive",
+            });
+          }
+        }, 1000); // Aguarda 1 segundo após a última digitação
+
+        return () => clearTimeout(timeoutId);
       }
     }
-  }, [phone, toast]);
+  }, [phone, toast, isTyping]);
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsTyping(true);
+    onPhoneChange(e.target.value);
+  };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onCustomerNameChange(e.target.value.toUpperCase());
@@ -71,7 +85,7 @@ const CustomerInfoFields = ({
           <InputMask
             mask={mask}
             value={phone}
-            onChange={(e) => onPhoneChange(e.target.value)}
+            onChange={handlePhoneChange}
           >
             {(inputProps: any) => (
               <Input
