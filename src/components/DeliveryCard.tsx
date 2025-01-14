@@ -1,9 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import CustomerInfoFields from "./CustomerInfoFields";
 import AddressFields from "./AddressFields";
 import ServiceCardHeader from "./ServiceCardHeader";
@@ -33,6 +33,43 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
   const [serviceType, setServiceType] = useState<"coleta" | "entrega" | "">("");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    const fetchService = async () => {
+      if (id) {
+        const { data, error } = await supabase
+          .from("services")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (error) {
+          toast({
+            title: "Erro",
+            description: "Erro ao carregar serviço",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data) {
+          setServiceId(data.service_id);
+          setAddress(data.address);
+          setLocation(data.latitude && data.longitude ? { lat: data.latitude, lng: data.longitude } : null);
+          setCustomerName(data.customer_name);
+          setPhone(data.phone);
+          setEmail(data.email || "");
+          setComplement(data.complement || "");
+          setTimeWindow(data.time_window || "");
+          setObservations(data.observations || "");
+          setServiceType(data.type);
+        }
+      }
+    };
+
+    fetchService();
+  }, [id, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +95,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
     try {
       const generatedServiceId = serviceId || Math.random().toString(36).substring(2, 8).toUpperCase();
       
-      const { error } = await supabase.from("services").insert({
+      const serviceData = {
         type: serviceType,
         service_id: generatedServiceId,
         customer_name: customerName,
@@ -71,13 +108,26 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
         latitude: location.lat,
         longitude: location.lng,
         status: "not-assigned"
-      });
+      };
+
+      let error;
+
+      if (id) {
+        ({ error } = await supabase
+          .from("services")
+          .update(serviceData)
+          .eq("id", id));
+      } else {
+        ({ error } = await supabase
+          .from("services")
+          .insert([serviceData]));
+      }
 
       if (error) throw error;
 
       toast({
         title: "Sucesso",
-        description: "Serviço criado com sucesso!",
+        description: id ? "Serviço atualizado com sucesso!" : "Serviço criado com sucesso!",
       });
 
       if (onSuccess) {
@@ -86,10 +136,10 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
         navigate("/");
       }
     } catch (error) {
-      console.error("Error creating service:", error);
+      console.error("Error saving service:", error);
       toast({
         title: "Erro",
-        description: "Erro ao criar serviço. Tente novamente.",
+        description: "Erro ao salvar serviço. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -140,7 +190,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
             />
           </div>
 
-          <ServiceFormActions onClose={onClose} />
+          <ServiceFormActions onClose={onClose} isEditing={!!id} />
         </form>
       </CardContent>
     </Card>

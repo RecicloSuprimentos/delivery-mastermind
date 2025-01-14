@@ -57,7 +57,7 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
   };
 
   const handleEdit = () => {
-    navigate(`/edit-service/${service.id}`);
+    navigate(`/new-service/${service.id}`);
   };
 
   const handleSelect = () => {

@@ -69,6 +69,14 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/new-service/:id"
+                element={
+                  <ProtectedRoute>
+                    <NewServicePage />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </TooltipProvider>
         </LoadScript>
