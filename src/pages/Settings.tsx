@@ -57,6 +57,7 @@ const SettingsPage = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [baseAddress, setBaseAddress] = useState("");
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -364,12 +365,13 @@ const SettingsPage = () => {
                   <div className="grid gap-2">
                     <Label>Endereço da Base</Label>
                     <AddressSearch
-                      defaultValue={systemSettings?.base_address || ""}
-                      onAddressSelect={(address) => {
+                      value={baseAddress}
+                      onChange={setBaseAddress}
+                      onLocationSelect={(location) => {
                         handleUpdateSettings({
-                          base_address: address.address,
-                          base_latitude: address.latitude,
-                          base_longitude: address.longitude,
+                          base_address: baseAddress,
+                          base_latitude: location.lat,
+                          base_longitude: location.lng,
                         });
                       }}
                     />
