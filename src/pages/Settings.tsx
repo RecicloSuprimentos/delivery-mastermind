@@ -49,8 +49,9 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import AddressSearch from "@/components/AddressSearch";
+import type { Database } from "@/integrations/supabase/types";
 
-type UserType = "admin" | "user" | "agent";
+type UserType = Database["public"]["Enums"]["user_type"];
 
 const SettingsPage = () => {
   const { toast } = useToast();
@@ -149,7 +150,7 @@ const SettingsPage = () => {
     setNewUser({
       name: "",
       email: "",
-      user_type: "user",
+      user_type: "user" as UserType,
       is_active: true,
     });
   };
