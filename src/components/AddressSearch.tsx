@@ -10,7 +10,7 @@ interface Location {
 interface AddressSearchProps {
   value: string;
   onChange: (address: string) => void;
-  onLocationSelect: (location: Location) => void;
+  onLocationSelect: (location: Location, address: string) => void;
 }
 
 const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps) => {
@@ -24,7 +24,7 @@ const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps
       const lng = place.geometry.location.lng();
       
       onChange(place.formatted_address || "");
-      onLocationSelect({ lat, lng });
+      onLocationSelect({ lat, lng }, place.formatted_address || "");
     }
   };
 

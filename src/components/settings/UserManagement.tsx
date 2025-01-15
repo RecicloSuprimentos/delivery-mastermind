@@ -36,7 +36,15 @@ import type { Database } from "@/integrations/supabase/types";
 
 type UserType = Database["public"]["Enums"]["user_type"];
 
-interface NewUser {
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  user_type: UserType;
+  is_active: boolean;
+}
+
+interface UserFormData {
   name: string;
   email: string;
   user_type: UserType;
@@ -47,7 +55,9 @@ export const UserManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [newUser, setNewUser] = useState<NewUser>({
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState<UserFormData>({
     name: "",
     email: "",
     user_type: "user",
@@ -68,7 +78,7 @@ export const UserManagement = () => {
   });
 
   const createUser = useMutation({
-    mutationFn: async (userData: NewUser) => {
+    mutationFn: async (userData: UserFormData) => {
       const { error } = await supabase.from("system_users").insert([userData]);
       if (error) throw error;
     },
@@ -78,6 +88,32 @@ export const UserManagement = () => {
         title: "Usuário criado com sucesso!",
         description: "O novo usuário foi adicionado ao sistema.",
       });
+      setIsOpen(false);
+      resetForm();
+    },
+  });
+
+  const updateUser = useMutation({
+    mutationFn: async (user: User) => {
+      const { error } = await supabase
+        .from("system_users")
+        .update({
+          name: user.name,
+          email: user.email,
+          user_type: user.user_type,
+          is_active: user.is_active,
+        })
+        .eq("id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["systemUsers"] });
+      toast({
+        title: "Usuário atualizado!",
+        description: "As informações do usuário foram atualizadas com sucesso.",
+      });
+      setIsOpen(false);
+      resetForm();
     },
   });
 
@@ -98,14 +134,36 @@ export const UserManagement = () => {
     },
   });
 
-  const handleCreateUser = async () => {
-    await createUser.mutateAsync(newUser);
-    setNewUser({
+  const resetForm = () => {
+    setFormData({
       name: "",
       email: "",
       user_type: "user",
       is_active: true,
     });
+    setSelectedUser(null);
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      user_type: user.user_type,
+      is_active: user.is_active,
+    });
+    setIsOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    if (selectedUser) {
+      await updateUser.mutateAsync({
+        ...selectedUser,
+        ...formData,
+      });
+    } else {
+      await createUser.mutateAsync(formData);
+    }
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -129,18 +187,25 @@ export const UserManagement = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => {
+              resetForm();
+              setIsOpen(true);
+            }}>
               <UserPlus className="h-4 w-4" />
               Novo Usuário
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Criar Novo Usuário</DialogTitle>
+              <DialogTitle>
+                {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}
+              </DialogTitle>
               <DialogDescription>
-                Preencha os dados do novo usuário do sistema.
+                {selectedUser
+                  ? "Edite os dados do usuário."
+                  : "Preencha os dados do novo usuário do sistema."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -148,9 +213,9 @@ export const UserManagement = () => {
                 <Label htmlFor="name">Nome</Label>
                 <Input
                   id="name"
-                  value={newUser.name}
+                  value={formData.name}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, name: e.target.value })
+                    setFormData({ ...formData, name: e.target.value })
                   }
                 />
               </div>
@@ -159,24 +224,24 @@ export const UserManagement = () => {
                 <Input
                   id="email"
                   type="email"
-                  value={newUser.email}
+                  value={formData.email}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, email: e.target.value })
+                    setFormData({ ...formData, email: e.target.value })
                   }
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="type">Tipo de Usuário</Label>
                 <Select
-                  value={newUser.user_type}
+                  value={formData.user_type}
                   onValueChange={(value: UserType) =>
-                    setNewUser({ ...newUser, user_type: value })
+                    setFormData({ ...formData, user_type: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="admin">Administrador</SelectItem>
                     <SelectItem value="user">Usuário</SelectItem>
                     <SelectItem value="agent">Agente</SelectItem>
@@ -187,15 +252,15 @@ export const UserManagement = () => {
                 <Label htmlFor="status">Status</Label>
                 <Switch
                   id="status"
-                  checked={newUser.is_active}
+                  checked={formData.is_active}
                   onCheckedChange={(checked) =>
-                    setNewUser({ ...newUser, is_active: checked })
+                    setFormData({ ...formData, is_active: checked })
                   }
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleCreateUser}>Salvar</Button>
+              <Button onClick={handleSubmit}>Salvar</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -231,7 +296,11 @@ export const UserManagement = () => {
                 </Badge>
               </TableCell>
               <TableCell className="text-right space-x-2">
-                <Button variant="outline" size="icon">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleEditUser(user)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
