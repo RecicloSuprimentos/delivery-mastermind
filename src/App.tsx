@@ -9,6 +9,7 @@ import { LoadScript } from "@react-google-maps/api";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NewServicePage from "./pages/NewServicePage";
+import SettingsPage from "./pages/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +75,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <NewServicePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />

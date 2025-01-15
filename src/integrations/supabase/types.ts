@@ -60,6 +60,69 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          api_key: string | null
+          average_service_duration: number | null
+          base_address: string | null
+          base_latitude: number | null
+          base_longitude: number | null
+          created_at: string | null
+          google_maps_key: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          average_service_duration?: number | null
+          base_address?: string | null
+          base_latitude?: number | null
+          base_longitude?: number | null
+          created_at?: string | null
+          google_maps_key?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          average_service_duration?: number | null
+          base_address?: string | null
+          base_latitude?: number | null
+          base_longitude?: number | null
+          created_at?: string | null
+          google_maps_key?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          name: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -69,6 +132,7 @@ export type Database = {
     }
     Enums: {
       service_type: "coleta" | "entrega"
+      user_type: "admin" | "user" | "agent"
     }
     CompositeTypes: {
       [_ in never]: never

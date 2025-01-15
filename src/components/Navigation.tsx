@@ -22,6 +22,10 @@ export const Navigation = () => {
     navigate('/new-service');
   };
 
+  const handleSettingsClick = () => {
+    navigate('/settings');
+  };
+
   return (
     <nav className="bg-white border-b border-gray-200 fixed w-full z-50">
       <div className="px-4 py-2.5">
@@ -69,14 +73,14 @@ export const Navigation = () => {
                   <MapPin className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-48 bg-white">
+                <DropdownMenuItem onClick={handleSettingsClick}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Configurações
+                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
                   Meu Perfil
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configurações
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
