@@ -59,10 +59,15 @@ const SettingsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [baseAddress, setBaseAddress] = useState("");
-  const [newUser, setNewUser] = useState({
+  const [newUser, setNewUser] = useState<{
+    name: string;
+    email: string;
+    user_type: UserType;
+    is_active: boolean;
+  }>({
     name: "",
     email: "",
-    user_type: "user" as UserType,
+    user_type: "user",
     is_active: true,
   });
 
@@ -150,7 +155,7 @@ const SettingsPage = () => {
     setNewUser({
       name: "",
       email: "",
-      user_type: "user" as UserType,
+      user_type: "user",
       is_active: true,
     });
   };
