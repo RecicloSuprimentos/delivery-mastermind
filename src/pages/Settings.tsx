@@ -48,7 +48,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { AddressSearch } from "@/components/AddressSearch";
+import AddressSearch from "@/components/AddressSearch";
+
+type UserType = "admin" | "user" | "agent";
 
 const SettingsPage = () => {
   const { toast } = useToast();
@@ -58,7 +60,7 @@ const SettingsPage = () => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
-    user_type: "user",
+    user_type: "user" as UserType,
     is_active: true,
   });
 
