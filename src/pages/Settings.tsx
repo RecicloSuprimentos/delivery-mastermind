@@ -50,8 +50,8 @@ const SettingsPage = () => {
     },
   });
 
-  const { mutate: handleUpdateSettings } = useMutation({
-    mutationFn: async (settings: SystemSettings) => {
+  const handleUpdateSettings = useMutation({
+    mutationFn: async (settings: Partial<SystemSettings> & { id: string }) => {
       const { error } = await supabase
         .from("system_settings")
         .update(settings)
@@ -140,7 +140,7 @@ const SettingsPage = () => {
                           type={showApiKey ? "text" : "password"}
                           value={systemSettings?.google_maps_key || ""}
                           onChange={(e) =>
-                            handleUpdateSettings({
+                            handleUpdateSettings.mutate({
                               id: systemSettings?.id || "1",
                               google_maps_key: e.target.value,
                             })
@@ -205,7 +205,7 @@ const SettingsPage = () => {
                         type="number"
                         value={systemSettings?.average_service_duration || 60}
                         onChange={(e) =>
-                          handleUpdateSettings({
+                          handleUpdateSettings.mutate({
                             id: systemSettings?.id || "1",
                             average_service_duration: parseInt(e.target.value),
                           })
@@ -215,7 +215,7 @@ const SettingsPage = () => {
                       />
                       <Button
                         onClick={() =>
-                          handleUpdateSettings({
+                          handleUpdateSettings.mutate({
                             id: systemSettings?.id || "1",
                             average_service_duration:
                               systemSettings?.average_service_duration || 60,
@@ -272,7 +272,7 @@ const SettingsPage = () => {
                       </Button>
                       <Button
                         onClick={() =>
-                          handleUpdateSettings({
+                          handleUpdateSettings.mutate({
                             id: systemSettings?.id || "1",
                             api_key: crypto.randomUUID(),
                           })

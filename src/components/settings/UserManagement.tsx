@@ -1,37 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Edit, Trash } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { UserForm } from "./UserForm";
+import { UserList } from "./UserList";
 import type { Database } from "@/integrations/supabase/types";
 
 type UserType = Database["public"]["Enums"]["user_type"];
@@ -40,13 +16,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  user_type: UserType;
-  is_active: boolean;
-}
-
-interface UserFormData {
-  name: string;
-  email: string;
+  password: string;
   user_type: UserType;
   is_active: boolean;
 }
@@ -57,12 +27,6 @@ export const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<UserFormData>({
-    name: "",
-    email: "",
-    user_type: "user",
-    is_active: true,
-  });
 
   const { data: users } = useQuery({
     queryKey: ["systemUsers"],
@@ -78,7 +42,7 @@ export const UserManagement = () => {
   });
 
   const createUser = useMutation({
-    mutationFn: async (userData: UserFormData) => {
+    mutationFn: async (userData: Omit<User, "id">) => {
       const { error } = await supabase.from("system_users").insert([userData]);
       if (error) throw error;
     },
@@ -89,7 +53,6 @@ export const UserManagement = () => {
         description: "O novo usuário foi adicionado ao sistema.",
       });
       setIsOpen(false);
-      resetForm();
     },
   });
 
@@ -100,6 +63,7 @@ export const UserManagement = () => {
         .update({
           name: user.name,
           email: user.email,
+          password: user.password,
           user_type: user.user_type,
           is_active: user.is_active,
         })
@@ -113,7 +77,6 @@ export const UserManagement = () => {
         description: "As informações do usuário foram atualizadas com sucesso.",
       });
       setIsOpen(false);
-      resetForm();
     },
   });
 
@@ -134,28 +97,7 @@ export const UserManagement = () => {
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      email: "",
-      user_type: "user",
-      is_active: true,
-    });
-    setSelectedUser(null);
-  };
-
-  const handleEditUser = (user: User) => {
-    setSelectedUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      user_type: user.user_type,
-      is_active: user.is_active,
-    });
-    setIsOpen(true);
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (formData: Omit<User, "id">) => {
     if (selectedUser) {
       await updateUser.mutateAsync({
         ...selectedUser,
@@ -164,6 +106,11 @@ export const UserManagement = () => {
     } else {
       await createUser.mutateAsync(formData);
     }
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsOpen(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -187,134 +134,30 @@ export const UserManagement = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            setSelectedUser(null);
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button className="gap-2" onClick={() => {
-              resetForm();
-              setIsOpen(true);
-            }}>
+            <Button className="gap-2">
               <UserPlus className="h-4 w-4" />
               Novo Usuário
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}
-              </DialogTitle>
-              <DialogDescription>
-                {selectedUser
-                  ? "Edite os dados do usuário."
-                  : "Preencha os dados do novo usuário do sistema."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Nome</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="type">Tipo de Usuário</Label>
-                <Select
-                  value={formData.user_type}
-                  onValueChange={(value: UserType) =>
-                    setFormData({ ...formData, user_type: value })
-                  }
-                >
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="admin">Administrador</SelectItem>
-                    <SelectItem value="user">Usuário</SelectItem>
-                    <SelectItem value="agent">Agente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="status">Status</Label>
-                <Switch
-                  id="status"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, is_active: checked })
-                  }
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleSubmit}>Salvar</Button>
-            </DialogFooter>
-          </DialogContent>
+          <UserForm
+            selectedUser={selectedUser}
+            onSubmit={handleSubmit}
+          />
         </Dialog>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>E-mail</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredUsers?.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Badge variant="outline">
-                  {user.user_type === "admin"
-                    ? "Administrador"
-                    : user.user_type === "agent"
-                    ? "Agente"
-                    : "Usuário"}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant={user.is_active ? "default" : "destructive"}>
-                  {user.is_active ? "Ativo" : "Inativo"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right space-x-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleEditUser(user)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDeleteUser(user.id)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <UserList
+        users={filteredUsers || []}
+        onEdit={handleEditUser}
+        onDelete={handleDeleteUser}
+      />
     </div>
   );
 };

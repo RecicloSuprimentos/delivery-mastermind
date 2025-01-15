@@ -19,6 +19,7 @@ export const OperationalBase = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [address, setAddress] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<{lat: number; lng: number} | null>(null);
   
   const { data: settings } = useQuery({
     queryKey: ["systemSettings"],
@@ -49,13 +50,27 @@ export const OperationalBase = () => {
     },
   });
 
-  const handleSave = (location: { lat: number; lng: number }, address: string) => {
+  const handleLocationSelect = (location: { lat: number; lng: number }, address: string) => {
+    setSelectedLocation(location);
+    setAddress(address);
+  };
+
+  const handleSave = () => {
+    if (!selectedLocation || !address) {
+      toast({
+        title: "Atenção",
+        description: "Por favor, selecione um endereço válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (settings) {
       updateSettings({
         id: settings.id,
         base_address: address,
-        base_latitude: location.lat,
-        base_longitude: location.lng,
+        base_latitude: selectedLocation.lat,
+        base_longitude: selectedLocation.lng,
       });
     }
   };
@@ -73,23 +88,14 @@ export const OperationalBase = () => {
           <div className="grid gap-2">
             <Label>Endereço da Base</Label>
             <div className="flex gap-2">
-              <AddressSearch
-                value={address}
-                onChange={setAddress}
-                onLocationSelect={handleSave}
-              />
-              <Button 
-                onClick={() => {
-                  if (!address) {
-                    toast({
-                      title: "Atenção",
-                      description: "Por favor, selecione um endereço válido.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                }}
-              >
+              <div className="flex-1">
+                <AddressSearch
+                  value={address}
+                  onChange={setAddress}
+                  onLocationSelect={handleLocationSelect}
+                />
+              </div>
+              <Button onClick={handleSave}>
                 Salvar
               </Button>
             </div>

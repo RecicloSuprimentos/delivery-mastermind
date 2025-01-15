@@ -103,6 +103,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          password: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
@@ -111,6 +112,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          password?: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Update: {
@@ -119,6 +121,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          password?: string
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: []
