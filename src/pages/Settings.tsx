@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Settings,
   UserPlus,
@@ -12,22 +10,23 @@ import {
   Eye,
   EyeOff,
   Copy,
-  Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { UserManagement } from "@/components/settings/UserManagement";
 import { OperationalBase } from "@/components/settings/OperationalBase";
+import { ServiceSettings } from "@/components/settings/ServiceSettings";
+import { useToast } from "@/components/ui/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SystemSettings {
   id: string;
   google_maps_key?: string | null;
-  average_service_duration?: number | null;
   api_key?: string | null;
 }
 
@@ -36,7 +35,6 @@ const SettingsPage = () => {
   const [showApiKey, setShowApiKey] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch system settings
   const { data: systemSettings } = useQuery({
     queryKey: ["systemSettings"],
     queryFn: async () => {
@@ -44,7 +42,6 @@ const SettingsPage = () => {
         .from("system_settings")
         .select("*")
         .maybeSingle();
-
       if (error) throw error;
       return data;
     },
@@ -108,18 +105,15 @@ const SettingsPage = () => {
 
         <div className="mt-6 grid gap-6">
           <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>Usuários do Sistema</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <UserManagement />
-              </CardContent>
-            </Card>
+            <UserManagement />
           </TabsContent>
 
           <TabsContent value="operational">
             <OperationalBase />
+          </TabsContent>
+
+          <TabsContent value="services">
+            <ServiceSettings />
           </TabsContent>
 
           <TabsContent value="api">
@@ -141,7 +135,7 @@ const SettingsPage = () => {
                           value={systemSettings?.google_maps_key || ""}
                           onChange={(e) =>
                             handleUpdateSettings.mutate({
-                              id: systemSettings?.id || "1",
+                              id: systemSettings?.id || "",
                               google_maps_key: e.target.value,
                             })
                           }
@@ -188,54 +182,6 @@ const SettingsPage = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="services">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Configurações de Serviços
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label>Duração Média dos Serviços (minutos)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        value={systemSettings?.average_service_duration || 60}
-                        onChange={(e) =>
-                          handleUpdateSettings.mutate({
-                            id: systemSettings?.id || "1",
-                            average_service_duration: parseInt(e.target.value),
-                          })
-                        }
-                        min="1"
-                        className="w-32"
-                      />
-                      <Button
-                        onClick={() =>
-                          handleUpdateSettings.mutate({
-                            id: systemSettings?.id || "1",
-                            average_service_duration:
-                              systemSettings?.average_service_duration || 60,
-                          })
-                        }
-                        className="gap-2"
-                      >
-                        <Save className="h-4 w-4" />
-                        Salvar
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Este tempo será utilizado como padrão no cálculo de rotas.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="integrations">
             <Card>
               <CardHeader>
@@ -273,7 +219,7 @@ const SettingsPage = () => {
                       <Button
                         onClick={() =>
                           handleUpdateSettings.mutate({
-                            id: systemSettings?.id || "1",
+                            id: systemSettings?.id || "",
                             api_key: crypto.randomUUID(),
                           })
                         }

@@ -1,26 +1,23 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin } from "lucide-react";
+import { Clock, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import AddressSearch from "@/components/AddressSearch";
 import { useToast } from "@/components/ui/use-toast";
 
-interface SystemSettings {
+interface ServiceSettings {
   id: string;
-  base_address?: string | null;
-  base_latitude?: number | null;
-  base_longitude?: number | null;
+  average_service_duration: number;
 }
 
-export const OperationalBase = () => {
+export const ServiceSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [address, setAddress] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<{lat: number; lng: number} | null>(null);
-  
+  const [duration, setDuration] = useState<number>(60);
+
   const { data: settings } = useQuery({
     queryKey: ["systemSettings"],
     queryFn: async () => {
@@ -34,19 +31,13 @@ export const OperationalBase = () => {
   });
 
   useEffect(() => {
-    if (settings?.base_address) {
-      setAddress(settings.base_address);
-      if (settings.base_latitude && settings.base_longitude) {
-        setSelectedLocation({
-          lat: settings.base_latitude,
-          lng: settings.base_longitude
-        });
-      }
+    if (settings?.average_service_duration) {
+      setDuration(settings.average_service_duration);
     }
   }, [settings]);
-  
+
   const { mutate: updateSettings } = useMutation({
-    mutationFn: async (settings: SystemSettings) => {
+    mutationFn: async (settings: ServiceSettings) => {
       const { error } = await supabase
         .from("system_settings")
         .update(settings)
@@ -57,32 +48,16 @@ export const OperationalBase = () => {
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
       toast({
         title: "Configurações atualizadas!",
-        description: "O endereço da base operacional foi atualizado com sucesso.",
+        description: "A duração média dos serviços foi atualizada com sucesso.",
       });
     },
   });
 
-  const handleLocationSelect = (location: { lat: number; lng: number }, address: string) => {
-    setSelectedLocation(location);
-    setAddress(address);
-  };
-
   const handleSave = () => {
-    if (!selectedLocation || !address) {
-      toast({
-        title: "Atenção",
-        description: "Por favor, selecione um endereço válido.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (settings) {
       updateSettings({
         id: settings.id,
-        base_address: address,
-        base_latitude: selectedLocation.lat,
-        base_longitude: selectedLocation.lng,
+        average_service_duration: duration,
       });
     }
   };
@@ -91,26 +66,30 @@ export const OperationalBase = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Base Operacional
+          <Clock className="h-5 w-5" />
+          Configurações de Serviços
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="grid gap-2">
-            <Label>Endereço da Base</Label>
+            <Label>Duração Média dos Serviços (minutos)</Label>
             <div className="flex gap-2">
-              <div className="flex-1">
-                <AddressSearch
-                  value={address}
-                  onChange={setAddress}
-                  onLocationSelect={handleLocationSelect}
-                />
-              </div>
-              <Button onClick={handleSave}>
+              <Input
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                min="1"
+                className="w-32"
+              />
+              <Button onClick={handleSave} className="gap-2">
+                <Save className="h-4 w-4" />
                 Salvar
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground">
+              Este tempo será utilizado como padrão no cálculo de rotas.
+            </p>
           </div>
         </div>
       </CardContent>
