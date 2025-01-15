@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Settings,
@@ -24,9 +24,17 @@ import { Switch } from "@/components/ui/switch";
 import { UserManagement } from "@/components/settings/UserManagement";
 import { OperationalBase } from "@/components/settings/OperationalBase";
 
+interface SystemSettings {
+  id: string;
+  google_maps_key?: string | null;
+  average_service_duration?: number | null;
+  api_key?: string | null;
+}
+
 const SettingsPage = () => {
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch system settings
   const { data: systemSettings } = useQuery({
@@ -39,6 +47,23 @@ const SettingsPage = () => {
 
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { mutate: handleUpdateSettings } = useMutation({
+    mutationFn: async (settings: SystemSettings) => {
+      const { error } = await supabase
+        .from("system_settings")
+        .update(settings)
+        .eq("id", settings.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
+      toast({
+        title: "Configurações atualizadas!",
+        description: "As configurações do sistema foram atualizadas com sucesso.",
+      });
     },
   });
 

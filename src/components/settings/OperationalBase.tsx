@@ -6,12 +6,19 @@ import { Label } from "@/components/ui/label";
 import AddressSearch from "@/components/AddressSearch";
 import { useToast } from "@/components/ui/use-toast";
 
+interface SystemSettings {
+  id: string;
+  base_address?: string | null;
+  base_latitude?: number | null;
+  base_longitude?: number | null;
+}
+
 export const OperationalBase = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const updateSettings = useMutation({
-    mutationFn: async (settings: any) => {
+  const { mutate: updateSettings } = useMutation({
+    mutationFn: async (settings: SystemSettings) => {
       const { error } = await supabase
         .from("system_settings")
         .update(settings)
@@ -44,7 +51,8 @@ export const OperationalBase = () => {
               onChange={(value) => {}}
               onLocationSelect={(location) => {
                 updateSettings({
-                  base_address: location.address,
+                  id: "1", // You should get this from your settings query
+                  base_address: value,
                   base_latitude: location.lat,
                   base_longitude: location.lng,
                 });
