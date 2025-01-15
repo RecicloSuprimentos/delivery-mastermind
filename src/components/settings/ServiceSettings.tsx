@@ -24,7 +24,7 @@ export const ServiceSettings = () => {
       const { data, error } = await supabase
         .from("system_settings")
         .select("*")
-        .maybeSingle();
+        .single();
       if (error) throw error;
       return data;
     },

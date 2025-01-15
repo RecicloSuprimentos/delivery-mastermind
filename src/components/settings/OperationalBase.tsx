@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin } from "lucide-react";
+import { MapPin, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export const OperationalBase = () => {
       const { data, error } = await supabase
         .from("system_settings")
         .select("*")
-        .maybeSingle();
+        .single();
       if (error) throw error;
       return data;
     },
@@ -62,9 +62,8 @@ export const OperationalBase = () => {
     },
   });
 
-  const handleLocationSelect = (location: { lat: number; lng: number }, address: string) => {
+  const handleLocationSelect = (location: { lat: number; lng: number }) => {
     setSelectedLocation(location);
-    setAddress(address);
   };
 
   const handleSave = () => {
@@ -107,7 +106,8 @@ export const OperationalBase = () => {
                   onLocationSelect={handleLocationSelect}
                 />
               </div>
-              <Button onClick={handleSave}>
+              <Button onClick={handleSave} className="whitespace-nowrap gap-2">
+                <Save className="h-4 w-4" />
                 Salvar
               </Button>
             </div>

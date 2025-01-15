@@ -10,6 +10,7 @@ import {
   Eye,
   EyeOff,
   Copy,
+  Save,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ interface SystemSettings {
 const SettingsPage = () => {
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
+  const [googleMapsKey, setGoogleMapsKey] = useState("");
   const queryClient = useQueryClient();
 
   const { data: systemSettings } = useQuery({
@@ -41,7 +43,7 @@ const SettingsPage = () => {
       const { data, error } = await supabase
         .from("system_settings")
         .select("*")
-        .maybeSingle();
+        .single();
       if (error) throw error;
       return data;
     },
@@ -132,13 +134,8 @@ const SettingsPage = () => {
                       <div className="relative flex-1">
                         <Input
                           type={showApiKey ? "text" : "password"}
-                          value={systemSettings?.google_maps_key || ""}
-                          onChange={(e) =>
-                            handleUpdateSettings.mutate({
-                              id: systemSettings?.id || "",
-                              google_maps_key: e.target.value,
-                            })
-                          }
+                          value={googleMapsKey || systemSettings?.google_maps_key || ""}
+                          onChange={(e) => setGoogleMapsKey(e.target.value)}
                         />
                         <Button
                           variant="ghost"
@@ -170,6 +167,20 @@ const SettingsPage = () => {
                         }}
                       >
                         <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (systemSettings?.id) {
+                            handleUpdateSettings.mutate({
+                              id: systemSettings.id,
+                              google_maps_key: googleMapsKey,
+                            });
+                          }
+                        }}
+                        className="gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Salvar
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground">
