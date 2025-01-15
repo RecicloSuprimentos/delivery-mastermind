@@ -141,6 +141,7 @@ const SettingsPage = () => {
                           value={systemSettings?.google_maps_key || ""}
                           onChange={(e) =>
                             handleUpdateSettings({
+                              id: systemSettings?.id || "1",
                               google_maps_key: e.target.value,
                             })
                           }
@@ -205,6 +206,7 @@ const SettingsPage = () => {
                         value={systemSettings?.average_service_duration || 60}
                         onChange={(e) =>
                           handleUpdateSettings({
+                            id: systemSettings?.id || "1",
                             average_service_duration: parseInt(e.target.value),
                           })
                         }
@@ -214,6 +216,7 @@ const SettingsPage = () => {
                       <Button
                         onClick={() =>
                           handleUpdateSettings({
+                            id: systemSettings?.id || "1",
                             average_service_duration:
                               systemSettings?.average_service_duration || 60,
                           })
@@ -270,6 +273,7 @@ const SettingsPage = () => {
                       <Button
                         onClick={() =>
                           handleUpdateSettings({
+                            id: systemSettings?.id || "1",
                             api_key: crypto.randomUUID(),
                           })
                         }

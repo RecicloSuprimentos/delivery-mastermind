@@ -49,10 +49,10 @@ export const OperationalBase = () => {
             <AddressSearch
               value=""
               onChange={(value) => {}}
-              onLocationSelect={(location) => {
+              onLocationSelect={(location, address) => {
                 updateSettings({
                   id: "1", // You should get this from your settings query
-                  base_address: value,
+                  base_address: address,
                   base_latitude: location.lat,
                   base_longitude: location.lng,
                 });
