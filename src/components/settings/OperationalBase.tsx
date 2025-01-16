@@ -9,26 +9,24 @@ import AddressSearch from "@/components/AddressSearch";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface SystemSettings {
-  id: string;
-  base_address?: string | null;
-  base_latitude?: number | null;
-  base_longitude?: number | null;
+interface Location {
+  lat: number;
+  lng: number;
 }
 
 export const OperationalBase = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [address, setAddress] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<{lat: number; lng: number} | null>(null);
-  
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+
   const { data: settings } = useQuery({
     queryKey: ["systemSettings"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("system_settings")
         .select("*")
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -45,13 +43,20 @@ export const OperationalBase = () => {
       }
     }
   }, [settings]);
-  
+
   const { mutate: updateSettings } = useMutation({
-    mutationFn: async (settings: SystemSettings) => {
+    mutationFn: async () => {
+      if (!settings?.id || !selectedLocation) throw new Error("Dados inválidos");
+      
       const { error } = await supabase
         .from("system_settings")
-        .update(settings)
+        .update({
+          base_address: address,
+          base_latitude: selectedLocation.lat,
+          base_longitude: selectedLocation.lng,
+        })
         .eq("id", settings.id);
+      
       if (error) throw error;
     },
     onSuccess: () => {
@@ -63,7 +68,7 @@ export const OperationalBase = () => {
     },
   });
 
-  const handleLocationSelect = (location: { lat: number; lng: number }) => {
+  const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
   };
 
@@ -77,14 +82,7 @@ export const OperationalBase = () => {
       return;
     }
 
-    if (settings) {
-      updateSettings({
-        id: settings.id,
-        base_address: address,
-        base_latitude: selectedLocation.lat,
-        base_longitude: selectedLocation.lng,
-      });
-    }
+    updateSettings();
   };
 
   return (

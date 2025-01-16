@@ -8,11 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 
-interface ServiceSettings {
-  id: string;
-  average_service_duration: number;
-}
-
 export const ServiceSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -24,7 +19,7 @@ export const ServiceSettings = () => {
       const { data, error } = await supabase
         .from("system_settings")
         .select("*")
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -37,30 +32,24 @@ export const ServiceSettings = () => {
   }, [settings]);
 
   const { mutate: updateSettings } = useMutation({
-    mutationFn: async (settings: ServiceSettings) => {
+    mutationFn: async (newDuration: number) => {
+      if (!settings?.id) throw new Error("Configurações não encontradas");
+      
       const { error } = await supabase
         .from("system_settings")
-        .update(settings)
+        .update({ average_service_duration: newDuration })
         .eq("id", settings.id);
+      
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
       toast({
-        title: "Configurações atualizadas!",
+        title: "Duração atualizada!",
         description: "A duração média dos serviços foi atualizada com sucesso.",
       });
     },
   });
-
-  const handleSave = () => {
-    if (settings) {
-      updateSettings({
-        id: settings.id,
-        average_service_duration: duration,
-      });
-    }
-  };
 
   return (
     <Card>
@@ -82,7 +71,7 @@ export const ServiceSettings = () => {
                 min="1"
                 className="w-32"
               />
-              <Button onClick={handleSave} className="gap-2">
+              <Button onClick={() => updateSettings(duration)} className="gap-2">
                 <Save className="h-4 w-4" />
                 Salvar
               </Button>
