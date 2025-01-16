@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import AddressSearch from "@/components/AddressSearch";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SystemSettings {
   id: string;
@@ -56,8 +57,8 @@ export const OperationalBase = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
       toast({
-        title: "Configurações atualizadas!",
-        description: "O endereço da base operacional foi atualizado com sucesso.",
+        title: "Base operacional atualizada!",
+        description: "O endereço da base foi salvo com sucesso.",
       });
     },
   });
@@ -87,33 +88,52 @@ export const OperationalBase = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Base Operacional
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid gap-2">
-            <Label>Endereço da Base</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <AddressSearch
-                  value={address}
-                  onChange={setAddress}
-                  onLocationSelect={handleLocationSelect}
-                />
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Base Operacional
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label>Endereço da Base</Label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <AddressSearch
+                    value={address}
+                    onChange={setAddress}
+                    onLocationSelect={handleLocationSelect}
+                  />
+                </div>
+                <Button onClick={handleSave} className="whitespace-nowrap gap-2">
+                  <Save className="h-4 w-4" />
+                  Salvar
+                </Button>
               </div>
-              <Button onClick={handleSave} className="whitespace-nowrap gap-2">
-                <Save className="h-4 w-4" />
-                Salvar
-              </Button>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {settings?.base_address && (
+        <Card>
+          <CardContent className="pt-6">
+            <Alert>
+              <AlertDescription className="flex flex-col gap-2">
+                <div>
+                  <strong>Endereço atual:</strong> {settings.base_address}
+                </div>
+                <div>
+                  <strong>Coordenadas:</strong> {settings.base_latitude}, {settings.base_longitude}
+                </div>
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };

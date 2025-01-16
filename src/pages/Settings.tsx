@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Settings,
   UserPlus,
@@ -11,6 +12,7 @@ import {
   EyeOff,
   Copy,
   Save,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ interface SystemSettings {
 }
 
 const SettingsPage = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
   const [googleMapsKey, setGoogleMapsKey] = useState("");
@@ -78,6 +81,13 @@ const SettingsPage = () => {
               className="pl-10"
             />
           </div>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/')}
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 

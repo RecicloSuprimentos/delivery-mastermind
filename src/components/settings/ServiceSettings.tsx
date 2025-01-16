@@ -16,7 +16,7 @@ interface ServiceSettings {
 export const ServiceSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [duration, setDuration] = useState<number>(60);
+  const [duration, setDuration] = useState<number>(10);
 
   const { data: settings } = useQuery({
     queryKey: ["systemSettings"],
