@@ -62,36 +62,27 @@ export type Database = {
       }
       system_settings: {
         Row: {
-          api_key: string | null
-          average_service_duration: number | null
-          base_address: string | null
-          base_latitude: number | null
-          base_longitude: number | null
+          api_keys: Json | null
           created_at: string | null
-          google_maps_key: string | null
           id: string
+          operational_base: Json | null
+          service_settings: Json | null
           updated_at: string | null
         }
         Insert: {
-          api_key?: string | null
-          average_service_duration?: number | null
-          base_address?: string | null
-          base_latitude?: number | null
-          base_longitude?: number | null
+          api_keys?: Json | null
           created_at?: string | null
-          google_maps_key?: string | null
           id?: string
+          operational_base?: Json | null
+          service_settings?: Json | null
           updated_at?: string | null
         }
         Update: {
-          api_key?: string | null
-          average_service_duration?: number | null
-          base_address?: string | null
-          base_latitude?: number | null
-          base_longitude?: number | null
+          api_keys?: Json | null
           created_at?: string | null
-          google_maps_key?: string | null
           id?: string
+          operational_base?: Json | null
+          service_settings?: Json | null
           updated_at?: string | null
         }
         Relationships: []

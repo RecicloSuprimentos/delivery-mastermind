@@ -33,12 +33,13 @@ export const OperationalBase = () => {
   });
 
   useEffect(() => {
-    if (settings?.base_address) {
-      setAddress(settings.base_address);
-      if (settings.base_latitude && settings.base_longitude) {
+    if (settings?.operational_base) {
+      const base = settings.operational_base;
+      setAddress(base.address || "");
+      if (base.latitude && base.longitude) {
         setSelectedLocation({
-          lat: settings.base_latitude,
-          lng: settings.base_longitude
+          lat: base.latitude,
+          lng: base.longitude,
         });
       }
     }
@@ -51,9 +52,12 @@ export const OperationalBase = () => {
       const { error } = await supabase
         .from("system_settings")
         .update({
-          base_address: address,
-          base_latitude: selectedLocation.lat,
-          base_longitude: selectedLocation.lng,
+          operational_base: {
+            address,
+            latitude: selectedLocation.lat,
+            longitude: selectedLocation.lng,
+          },
+          updated_at: new Date().toISOString(),
         })
         .eq("id", settings.id);
       
@@ -116,16 +120,16 @@ export const OperationalBase = () => {
         </CardContent>
       </Card>
 
-      {settings?.base_address && (
+      {settings?.operational_base?.address && (
         <Card>
           <CardContent className="pt-6">
             <Alert>
               <AlertDescription className="flex flex-col gap-2">
                 <div>
-                  <strong>Endereço atual:</strong> {settings.base_address}
+                  <strong>Endereço atual:</strong> {settings.operational_base.address}
                 </div>
                 <div>
-                  <strong>Coordenadas:</strong> {settings.base_latitude}, {settings.base_longitude}
+                  <strong>Coordenadas:</strong> {settings.operational_base.latitude}, {settings.operational_base.longitude}
                 </div>
               </AlertDescription>
             </Alert>

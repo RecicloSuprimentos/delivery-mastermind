@@ -26,8 +26,8 @@ export const ServiceSettings = () => {
   });
 
   useEffect(() => {
-    if (settings?.average_service_duration) {
-      setDuration(settings.average_service_duration);
+    if (settings?.service_settings?.default_duration) {
+      setDuration(settings.service_settings.default_duration);
     }
   }, [settings]);
 
@@ -37,7 +37,12 @@ export const ServiceSettings = () => {
       
       const { error } = await supabase
         .from("system_settings")
-        .update({ average_service_duration: newDuration })
+        .update({
+          service_settings: {
+            default_duration: newDuration
+          },
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", settings.id);
       
       if (error) throw error;
