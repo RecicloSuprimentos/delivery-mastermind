@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import AddressSearch from "@/components/AddressSearch";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { Database } from "@/integrations/supabase/types";
+
+type SystemSettings = Database["public"]["Tables"]["system_settings"]["Row"];
 
 interface Location {
   lat: number;
@@ -28,7 +31,7 @@ export const OperationalBase = () => {
         .select("*")
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as SystemSettings;
     },
   });
 

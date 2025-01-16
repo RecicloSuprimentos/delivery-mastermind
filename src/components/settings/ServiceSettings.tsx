@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import type { Database } from "@/integrations/supabase/types";
+
+type SystemSettings = Database["public"]["Tables"]["system_settings"]["Row"];
 
 export const ServiceSettings = () => {
   const { toast } = useToast();
@@ -21,7 +24,7 @@ export const ServiceSettings = () => {
         .select("*")
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as SystemSettings;
     },
   });
 
