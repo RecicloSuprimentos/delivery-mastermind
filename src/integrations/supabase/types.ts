@@ -62,27 +62,33 @@ export type Database = {
       }
       system_settings: {
         Row: {
-          api_keys: Json | null
           created_at: string | null
+          google_maps_key: string | null
           id: string
-          operational_base: Json | null
-          service_settings: Json | null
+          operational_base_address: string | null
+          operational_base_latitude: number | null
+          operational_base_longitude: number | null
+          service_default_duration: number | null
           updated_at: string | null
         }
         Insert: {
-          api_keys?: Json | null
           created_at?: string | null
+          google_maps_key?: string | null
           id?: string
-          operational_base?: Json | null
-          service_settings?: Json | null
+          operational_base_address?: string | null
+          operational_base_latitude?: number | null
+          operational_base_longitude?: number | null
+          service_default_duration?: number | null
           updated_at?: string | null
         }
         Update: {
-          api_keys?: Json | null
           created_at?: string | null
+          google_maps_key?: string | null
           id?: string
-          operational_base?: Json | null
-          service_settings?: Json | null
+          operational_base_address?: string | null
+          operational_base_latitude?: number | null
+          operational_base_longitude?: number | null
+          service_default_duration?: number | null
           updated_at?: string | null
         }
         Relationships: []

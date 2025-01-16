@@ -36,13 +36,12 @@ export const OperationalBase = () => {
   });
 
   useEffect(() => {
-    if (settings?.operational_base) {
-      const base = settings.operational_base;
-      setAddress(base.address || "");
-      if (base.latitude && base.longitude) {
+    if (settings) {
+      setAddress(settings.operational_base_address || "");
+      if (settings.operational_base_latitude && settings.operational_base_longitude) {
         setSelectedLocation({
-          lat: base.latitude,
-          lng: base.longitude,
+          lat: settings.operational_base_latitude,
+          lng: settings.operational_base_longitude,
         });
       }
     }
@@ -55,11 +54,9 @@ export const OperationalBase = () => {
       const { error } = await supabase
         .from("system_settings")
         .update({
-          operational_base: {
-            address,
-            latitude: selectedLocation.lat,
-            longitude: selectedLocation.lng,
-          },
+          operational_base_address: address,
+          operational_base_latitude: selectedLocation.lat,
+          operational_base_longitude: selectedLocation.lng,
           updated_at: new Date().toISOString(),
         })
         .eq("id", settings.id);
@@ -123,16 +120,16 @@ export const OperationalBase = () => {
         </CardContent>
       </Card>
 
-      {settings?.operational_base?.address && (
+      {settings?.operational_base_address && (
         <Card>
           <CardContent className="pt-6">
             <Alert>
               <AlertDescription className="flex flex-col gap-2">
                 <div>
-                  <strong>Endereço atual:</strong> {settings.operational_base.address}
+                  <strong>Endereço atual:</strong> {settings.operational_base_address}
                 </div>
                 <div>
-                  <strong>Coordenadas:</strong> {settings.operational_base.latitude}, {settings.operational_base.longitude}
+                  <strong>Coordenadas:</strong> {settings.operational_base_latitude}, {settings.operational_base_longitude}
                 </div>
               </AlertDescription>
             </Alert>

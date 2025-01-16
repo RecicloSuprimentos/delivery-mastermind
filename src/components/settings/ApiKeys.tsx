@@ -36,9 +36,7 @@ export const ApiKeys = () => {
       const { error } = await supabase
         .from("system_settings")
         .update({
-          api_keys: {
-            google_maps: key
-          },
+          google_maps_key: key,
           updated_at: new Date().toISOString(),
         })
         .eq("id", settings.id);
@@ -70,7 +68,7 @@ export const ApiKeys = () => {
               <div className="relative flex-1">
                 <Input
                   type={showApiKey ? "text" : "password"}
-                  value={googleMapsKey || settings?.api_keys?.google_maps || ""}
+                  value={googleMapsKey || settings?.google_maps_key || ""}
                   onChange={(e) => setGoogleMapsKey(e.target.value)}
                 />
                 <Button
@@ -90,8 +88,8 @@ export const ApiKeys = () => {
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  if (settings?.api_keys?.google_maps) {
-                    navigator.clipboard.writeText(settings.api_keys.google_maps);
+                  if (settings?.google_maps_key) {
+                    navigator.clipboard.writeText(settings.google_maps_key);
                     toast({
                       title: "Chave copiada!",
                       description: "A chave API foi copiada para a área de transferência.",
