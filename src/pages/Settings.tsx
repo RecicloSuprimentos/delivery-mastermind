@@ -5,6 +5,7 @@ import { OperationalBase } from "@/components/settings/OperationalBase";
 import { ServiceSettings } from "@/components/settings/ServiceSettings";
 import { ApiKeys } from "@/components/settings/ApiKeys";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
+import { UserPlus, MapPin, Key, Clock } from "lucide-react";
 
 const SettingsPage = () => {
   return (
