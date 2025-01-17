@@ -12,7 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, MapPin } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
 
@@ -34,6 +34,7 @@ interface Service {
 }
 
 interface SystemSettings {
+  id: string;
   operational_base_address: string;
   operational_base_latitude: number;
   operational_base_longitude: number;
@@ -83,7 +84,7 @@ export const RouteForm = () => {
       const { data, error } = await supabase
         .from("system_settings")
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as SystemSettings;
@@ -224,7 +225,6 @@ export const RouteForm = () => {
                 <Select 
                   value={selectedStartService} 
                   onValueChange={setSelectedStartService}
-                  className="mt-2"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um serviço" />
@@ -260,7 +260,6 @@ export const RouteForm = () => {
                 <Select 
                   value={selectedEndService} 
                   onValueChange={setSelectedEndService}
-                  className="mt-2"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um serviço" />

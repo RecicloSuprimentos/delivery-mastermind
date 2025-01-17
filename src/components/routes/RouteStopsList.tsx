@@ -8,6 +8,8 @@ interface Service {
   service_id: string;
   customer_name: string;
   address: string;
+  latitude: number;
+  longitude: number;
   time_window?: string;
 }
 
