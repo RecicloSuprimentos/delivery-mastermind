@@ -37,6 +37,7 @@ interface SystemSettings {
   operational_base_address: string;
   operational_base_latitude: number;
   operational_base_longitude: number;
+  service_default_duration: number;
 }
 
 export const RouteForm = () => {
