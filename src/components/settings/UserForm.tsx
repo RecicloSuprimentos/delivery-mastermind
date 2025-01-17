@@ -66,7 +66,7 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[90vw] max-w-[425px] bg-background rounded-lg shadow-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>
             {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}

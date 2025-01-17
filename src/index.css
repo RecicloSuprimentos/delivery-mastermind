@@ -76,19 +76,6 @@
   }
 }
 
-/* Center all dialog boxes and alerts */
-[role="dialog"] {
-  @apply fixed inset-0 z-50 flex items-center justify-center;
-}
-
-.dialog-overlay {
-  @apply fixed inset-0 bg-black/50;
-}
-
-.dialog-content {
-  @apply bg-background p-6 rounded-lg shadow-lg max-w-md w-full mx-4;
-}
-
 /* Alert styling for consistency */
 .alert-dialog {
   @apply fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4;
