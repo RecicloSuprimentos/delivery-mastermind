@@ -1,4 +1,4 @@
-import { Bell, Map, MessageSquare, Search, Settings, User, PlusCircle, LogOut, MapPin } from "lucide-react";
+import { MapPin, Settings, User, PlusCircle, LogOut, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -47,7 +47,6 @@ export const Navigation = () => {
                 placeholder="Pesquisar..."
                 className="pl-10 pr-4 py-2 w-64"
               />
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
             <Button 
               variant="default" 
@@ -57,14 +56,12 @@ export const Navigation = () => {
               <PlusCircle className="h-5 w-5" />
               SERVIÇO
             </Button>
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MessageSquare className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Map className="h-5 w-5" />
+            <Button 
+              variant="default" 
+              className="gap-2 bg-black hover:bg-black/90"
+            >
+              <Route className="h-5 w-5" />
+              CRIAR ROTA
             </Button>
             
             <DropdownMenu>

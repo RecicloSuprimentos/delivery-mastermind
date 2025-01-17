@@ -37,7 +37,6 @@ export const OperationalBase = () => {
 
   useEffect(() => {
     if (settings) {
-      setAddress(settings.operational_base_address || "");
       if (settings.operational_base_latitude && settings.operational_base_longitude) {
         setSelectedLocation({
           lat: settings.operational_base_latitude,
@@ -69,6 +68,7 @@ export const OperationalBase = () => {
         title: "Base operacional atualizada!",
         description: "O endereço da base foi salvo com sucesso.",
       });
+      setAddress(""); // Clear the address field after successful save
     },
   });
 
