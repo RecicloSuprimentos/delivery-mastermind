@@ -1,20 +1,121 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
 
-const center = { lat: -23.5505, lng: -46.6333 }; // São Paulo
+interface Location {
+  lat: number;
+  lng: number;
+}
 
-export const RouteMap = () => {
+interface Service {
+  id: string;
+  type: "coleta" | "entrega";
+  service_id: string;
+  customer_name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  time_window?: string;
+}
+
+interface SystemSettings {
+  operational_base_address: string;
+  operational_base_latitude: number;
+  operational_base_longitude: number;
+}
+
+interface RouteMapProps {
+  settings?: SystemSettings;
+  selectedStops: Service[];
+  startLocationType: string;
+  endLocationType: string;
+  selectedStartService?: Service;
+  selectedEndService?: Service;
+}
+
+export const RouteMap = ({ 
+  settings,
+  selectedStops,
+  startLocationType,
+  endLocationType,
+  selectedStartService,
+  selectedEndService,
+}: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+
+  const getStartLocation = (): Location | null => {
+    if (startLocationType === "operational_base" && settings) {
+      return {
+        lat: settings.operational_base_latitude,
+        lng: settings.operational_base_longitude,
+      };
+    } else if (startLocationType === "service" && selectedStartService) {
+      return {
+        lat: selectedStartService.latitude,
+        lng: selectedStartService.longitude,
+      };
+    }
+    return null;
+  };
+
+  const getEndLocation = (): Location | null => {
+    if (endLocationType === "operational_base" && settings) {
+      return {
+        lat: settings.operational_base_latitude,
+        lng: settings.operational_base_longitude,
+      };
+    } else if (endLocationType === "service" && selectedEndService) {
+      return {
+        lat: selectedEndService.latitude,
+        lng: selectedEndService.longitude,
+      };
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (!window.google || selectedStops.length === 0) return;
+
+    const directionsService = new google.maps.DirectionsService();
+    const startLocation = getStartLocation();
+    const endLocation = getEndLocation();
+
+    if (!startLocation || !endLocation) return;
+
+    const waypoints = selectedStops.map(stop => ({
+      location: { lat: stop.latitude, lng: stop.longitude },
+      stopover: true,
+    }));
+
+    directionsService.route(
+      {
+        origin: startLocation,
+        destination: endLocation,
+        waypoints,
+        optimizeWaypoints: true,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          setDirections(result);
+        } else {
+          console.error(`Erro ao calcular rota: ${status}`);
+        }
+      }
+    );
+  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService]);
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
   };
 
+  const defaultCenter = { lat: -23.5505, lng: -46.6333 }; // São Paulo
+
   return (
     <div className="h-full rounded-lg overflow-hidden border border-gray-200">
       <GoogleMap
         zoom={12}
-        center={center}
+        center={defaultCenter}
         mapContainerClassName="w-full h-full"
         options={{
           zoomControl: true,
@@ -24,7 +125,32 @@ export const RouteMap = () => {
         }}
         onLoad={onLoad}
       >
-        {/* Markers e DirectionsRenderer serão adicionados aqui */}
+        {directions && (
+          <DirectionsRenderer
+            directions={directions}
+            options={{
+              suppressMarkers: true,
+            }}
+          />
+        )}
+        
+        {settings && startLocationType === "operational_base" && (
+          <Marker
+            position={{
+              lat: settings.operational_base_latitude,
+              lng: settings.operational_base_longitude,
+            }}
+            label="Base"
+          />
+        )}
+
+        {selectedStops.map((stop, index) => (
+          <Marker
+            key={stop.id}
+            position={{ lat: stop.latitude, lng: stop.longitude }}
+            label={`${index + 1}`}
+          />
+        ))}
       </GoogleMap>
     </div>
   );
