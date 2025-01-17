@@ -9,6 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      route_stops: {
+        Row: {
+          created_at: string | null
+          distance_from_previous: number | null
+          duration_from_previous: number | null
+          estimated_arrival_time: string | null
+          estimated_departure_time: string | null
+          id: string
+          route_id: string | null
+          sequence_number: number
+          service_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          distance_from_previous?: number | null
+          duration_from_previous?: number | null
+          estimated_arrival_time?: string | null
+          estimated_departure_time?: string | null
+          id?: string
+          route_id?: string | null
+          sequence_number: number
+          service_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          distance_from_previous?: number | null
+          duration_from_previous?: number | null
+          estimated_arrival_time?: string | null
+          estimated_departure_time?: string | null
+          id?: string
+          route_id?: string | null
+          sequence_number?: number
+          service_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_stops_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routes: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          end_location_reference: string
+          end_location_type: Database["public"]["Enums"]["location_type"]
+          id: string
+          name: string
+          start_location_reference: string
+          start_location_type: Database["public"]["Enums"]["location_type"]
+          start_time: string
+          status: string | null
+          total_distance: number | null
+          total_duration: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          end_location_reference: string
+          end_location_type: Database["public"]["Enums"]["location_type"]
+          id?: string
+          name: string
+          start_location_reference: string
+          start_location_type: Database["public"]["Enums"]["location_type"]
+          start_time: string
+          status?: string | null
+          total_distance?: number | null
+          total_duration?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          end_location_reference?: string
+          end_location_type?: Database["public"]["Enums"]["location_type"]
+          id?: string
+          name?: string
+          start_location_reference?: string
+          start_location_type?: Database["public"]["Enums"]["location_type"]
+          start_time?: string
+          status?: string | null
+          total_distance?: number | null
+          total_duration?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routes_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           address: string
@@ -131,6 +241,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      location_type: "operational_base" | "service"
       service_type: "coleta" | "entrega"
       user_type: "admin" | "user" | "agent"
     }

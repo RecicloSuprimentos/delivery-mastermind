@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NewServicePage from "./pages/NewServicePage";
 import SettingsPage from "./pages/Settings";
+import RoutesPage from "./pages/RoutesPage";
+import CreateRoutePage from "./pages/CreateRoutePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,6 +85,22 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/routes"
+                element={
+                  <ProtectedRoute>
+                    <RoutesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/routes/new"
+                element={
+                  <ProtectedRoute>
+                    <CreateRoutePage />
                   </ProtectedRoute>
                 }
               />
