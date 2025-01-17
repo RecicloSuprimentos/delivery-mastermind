@@ -18,6 +18,7 @@ import { RouteStopsList } from "./RouteStopsList";
 import type { Database } from "@/integrations/supabase/types";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
+type LocationType = RouteInsert["start_location_type"];
 
 interface Agent {
   id: string;
@@ -47,8 +48,8 @@ export const RouteForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [date, setDate] = useState<Date>();
-  const [startLocationType, setStartLocationType] = useState<RouteInsert["start_location_type"]>("operational_base");
-  const [endLocationType, setEndLocationType] = useState<RouteInsert["end_location_type"]>("operational_base");
+  const [startLocationType, setStartLocationType] = useState<LocationType>("operational_base");
+  const [endLocationType, setEndLocationType] = useState<LocationType>("operational_base");
   const [selectedStartService, setSelectedStartService] = useState<string>();
   const [selectedEndService, setSelectedEndService] = useState<string>();
   const [routeName, setRouteName] = useState("");
@@ -152,6 +153,14 @@ export const RouteForm = () => {
     }
   };
 
+  const handleStartLocationChange = (value: string) => {
+    setStartLocationType(value as LocationType);
+  };
+
+  const handleEndLocationChange = (value: string) => {
+    setEndLocationType(value as LocationType);
+  };
+
   return (
     <div className="grid grid-cols-2 gap-8">
       <div className="space-y-8">
@@ -214,7 +223,7 @@ export const RouteForm = () => {
               <Label>Local de Início</Label>
               <RadioGroup
                 value={startLocationType}
-                onValueChange={setStartLocationType}
+                onValueChange={handleStartLocationChange}
                 className="flex items-center space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -249,7 +258,7 @@ export const RouteForm = () => {
               <Label>Local de Término</Label>
               <RadioGroup
                 value={endLocationType}
-                onValueChange={setEndLocationType}
+                onValueChange={handleEndLocationChange}
                 className="flex items-center space-x-4"
               >
                 <div className="flex items-center space-x-2">
