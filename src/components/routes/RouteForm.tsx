@@ -15,6 +15,9 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
+import type { Database } from "@/integrations/supabase/types";
+
+type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 
 interface Agent {
   id: string;
@@ -44,8 +47,8 @@ export const RouteForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [date, setDate] = useState<Date>();
-  const [startLocationType, setStartLocationType] = useState("operational_base");
-  const [endLocationType, setEndLocationType] = useState("operational_base");
+  const [startLocationType, setStartLocationType] = useState<RouteInsert["start_location_type"]>("operational_base");
+  const [endLocationType, setEndLocationType] = useState<RouteInsert["end_location_type"]>("operational_base");
   const [selectedStartService, setSelectedStartService] = useState<string>();
   const [selectedEndService, setSelectedEndService] = useState<string>();
   const [routeName, setRouteName] = useState("");
@@ -102,19 +105,21 @@ export const RouteForm = () => {
     }
 
     try {
+      const routeData: RouteInsert = {
+        name: routeName,
+        agent_id: selectedAgent,
+        start_time: date.toISOString(),
+        start_location_type: startLocationType,
+        start_location_reference: startLocationType === "operational_base" ? 
+          settings?.id : selectedStartService!,
+        end_location_type: endLocationType,
+        end_location_reference: endLocationType === "operational_base" ? 
+          settings?.id : selectedEndService!,
+      };
+
       const { data: route, error: routeError } = await supabase
         .from("routes")
-        .insert({
-          name: routeName,
-          agent_id: selectedAgent,
-          start_time: date.toISOString(),
-          start_location_type: startLocationType,
-          start_location_reference: startLocationType === "operational_base" ? 
-            settings?.id : selectedStartService,
-          end_location_type: endLocationType,
-          end_location_reference: endLocationType === "operational_base" ? 
-            settings?.id : selectedEndService,
-        })
+        .insert(routeData)
         .select()
         .single();
 
@@ -303,4 +308,4 @@ export const RouteForm = () => {
       </div>
     </div>
   );
-};
+});
