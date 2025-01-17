@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { RouteStats } from "./RouteStats";
+import { Package, ArrowDown } from "lucide-react";
 
 interface Location {
   lat: number;
@@ -22,6 +23,7 @@ interface SystemSettings {
   operational_base_address: string;
   operational_base_latitude: number;
   operational_base_longitude: number;
+  service_default_duration: number;
 }
 
 interface RouteMapProps {
@@ -98,6 +100,16 @@ export const RouteMap = ({
       },
       (result, status) => {
         if (status === google.maps.DirectionsStatus.OK) {
+          // Add service duration to the total duration
+          if (result && settings?.service_default_duration) {
+            const totalServiceDuration = (selectedStops.length + 2) * settings.service_default_duration * 60; // Convert minutes to seconds
+            const legs = result.routes[0].legs;
+            const totalDuration = legs.reduce((acc, leg) => acc + leg.duration!.value, 0) + totalServiceDuration;
+            result.routes[0].legs[0].duration = {
+              text: `${Math.round(totalDuration / 60)} mins`,
+              value: totalDuration
+            };
+          }
           setDirections(result);
         } else {
           console.error(`Erro ao calcular rota: ${status}`);
@@ -149,6 +161,14 @@ export const RouteMap = ({
               lat: settings.operational_base_latitude,
               lng: settings.operational_base_longitude,
             }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: "#0EA5E9",
+              fillOpacity: 1,
+              strokeColor: "#0369A1",
+              strokeWeight: 2,
+            }}
             label="Base"
           />
         )}
@@ -158,6 +178,14 @@ export const RouteMap = ({
             key={stop.id}
             position={{ lat: stop.latitude, lng: stop.longitude }}
             label={`${index + 1}`}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: stop.type === "coleta" ? "#F97316" : "#9333EA",
+              fillOpacity: 1,
+              strokeColor: stop.type === "coleta" ? "#C2410C" : "#6B21A8",
+              strokeWeight: 2,
+            }}
           />
         ))}
       </GoogleMap>

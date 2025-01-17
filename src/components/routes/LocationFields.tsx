@@ -27,7 +27,7 @@ export const LocationFields = ({
   services,
 }: LocationFieldsProps) => {
   return (
-    <div>
+    <div className="space-y-4">
       <Label>{label}</Label>
       <RadioGroup
         value={locationType}
@@ -48,13 +48,13 @@ export const LocationFields = ({
           value={selectedService} 
           onValueChange={onServiceChange}
         >
-          <SelectTrigger className="bg-white">
+          <SelectTrigger className="bg-white mt-2">
             <SelectValue placeholder="Selecione um serviço" />
           </SelectTrigger>
           <SelectContent className="bg-white">
             {services?.map((service) => (
               <SelectItem key={service.id} value={service.id}>
-                {service.type.toUpperCase()} {service.service_id} - {service.customer_name}
+                {service.type === "coleta" ? "🔸" : "🔹"} {service.type.toUpperCase()} {service.service_id} - {service.customer_name}
               </SelectItem>
             ))}
           </SelectContent>

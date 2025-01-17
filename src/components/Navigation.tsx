@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -35,7 +35,9 @@ export const Navigation = () => {
       <div className="px-4 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <span className="text-2xl font-bold text-primary">ROTERIZADOR</span>
+            <Link to="/" className="text-2xl font-bold text-primary hover:opacity-90 transition-opacity">
+              ROTERIZADOR
+            </Link>
             <div className="ml-8 flex space-x-4">
               <Button variant="ghost">PLANEJAMENTO</Button>
               <Button variant="ghost">TEMPO REAL</Button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Clock } from "lucide-react";
@@ -15,7 +15,15 @@ interface DateTimePickerProps {
 }
 
 export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
-  const [time, setTime] = useState(date ? format(date, "HH:mm") : "");
+  const [time, setTime] = useState(date ? format(date, "HH:mm") : format(new Date(), "HH:mm"));
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!date) {
+      const now = new Date();
+      onDateChange(now);
+    }
+  }, [date, onDateChange]);
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTime(e.target.value);
@@ -31,20 +39,21 @@ export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
     if (newDate && time) {
       const [hours, minutes] = time.split(":");
       newDate.setHours(parseInt(hours), parseInt(minutes));
+      onDateChange(newDate);
+      setIsCalendarOpen(false);
     }
-    onDateChange(newDate);
   };
 
   return (
     <div>
       <Label>Data e Hora de Início</Label>
       <div className="flex gap-2">
-        <Popover>
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
-                "justify-start text-left font-normal",
+                "justify-start text-left font-normal bg-white",
                 !date && "text-muted-foreground"
               )}
             >
@@ -52,7 +61,7 @@ export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
               {date ? format(date, "PPP", { locale: ptBR }) : "Selecione uma data"}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 bg-white" align="start">
             <Calendar
               mode="single"
               selected={date}
@@ -68,7 +77,7 @@ export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
             type="time"
             value={time}
             onChange={handleTimeChange}
-            className="w-32"
+            className="w-32 bg-white"
           />
         </div>
       </div>
