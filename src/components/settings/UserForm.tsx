@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+  Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -31,11 +32,13 @@ interface User {
 }
 
 interface UserFormProps {
+  isOpen: boolean;
+  onClose: () => void;
   selectedUser: User | null;
   onSubmit: (formData: Omit<User, "id">) => void;
 }
 
-export const UserForm = ({ selectedUser, onSubmit }: UserFormProps) => {
+export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormProps) => {
   const [formData, setFormData] = useState<Omit<User, "id">>({
     name: "",
     email: "",
@@ -56,83 +59,96 @@ export const UserForm = ({ selectedUser, onSubmit }: UserFormProps) => {
     }
   }, [selectedUser]);
 
+  const handleSubmit = () => {
+    onSubmit(formData);
+    onClose();
+  };
+
   return (
-    <DialogContent className="top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] bg-background p-6 shadow-lg sm:max-w-[425px] sm:rounded-lg">
-      <DialogHeader>
-        <DialogTitle>
-          {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}
-        </DialogTitle>
-        <DialogDescription>
-          {selectedUser
-            ? "Edite os dados do usuário."
-            : "Preencha os dados do novo usuário do sistema."}
-        </DialogDescription>
-      </DialogHeader>
-      <div className="grid gap-4 py-4">
-        <div className="grid gap-2">
-          <Label htmlFor="name">Nome</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
-          />
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] w-[90vw] max-w-[425px] bg-background rounded-lg shadow-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}
+          </DialogTitle>
+          <DialogDescription>
+            {selectedUser
+              ? "Edite os dados do usuário."
+              : "Preencha os dados do novo usuário do sistema."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Nome</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="email">E-mail</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="type">Tipo de Usuário</Label>
+            <Select
+              value={formData.user_type}
+              onValueChange={(value: UserType) =>
+                setFormData({ ...formData, user_type: value })
+              }
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="user">Usuário</SelectItem>
+                <SelectItem value="agent">Agente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label htmlFor="status">Status</Label>
+            <Switch
+              id="status"
+              checked={formData.is_active}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, is_active: checked })
+              }
+            />
+          </div>
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="email">E-mail</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="password">Senha</Label>
-          <Input
-            id="password"
-            type="password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="type">Tipo de Usuário</Label>
-          <Select
-            value={formData.user_type}
-            onValueChange={(value: UserType) =>
-              setFormData({ ...formData, user_type: value })
-            }
-          >
-            <SelectTrigger className="bg-white">
-              <SelectValue placeholder="Selecione o tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="admin">Administrador</SelectItem>
-              <SelectItem value="user">Usuário</SelectItem>
-              <SelectItem value="agent">Agente</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="status">Status</Label>
-          <Switch
-            id="status"
-            checked={formData.is_active}
-            onCheckedChange={(checked) =>
-              setFormData({ ...formData, is_active: checked })
-            }
-          />
-        </div>
-      </div>
-      <DialogFooter>
-        <Button onClick={() => onSubmit(formData)}>Salvar</Button>
-      </DialogFooter>
-    </DialogContent>
+
+        <DialogFooter>
+          <Button onClick={handleSubmit}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

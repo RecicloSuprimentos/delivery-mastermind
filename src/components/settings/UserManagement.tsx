@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { UserForm } from "./UserForm";
 import { UserList } from "./UserList";
@@ -25,7 +24,7 @@ export const UserManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const { data: users } = useQuery({
@@ -52,7 +51,7 @@ export const UserManagement = () => {
         title: "Usuário criado com sucesso!",
         description: "O novo usuário foi adicionado ao sistema.",
       });
-      setIsOpen(false);
+      setIsFormOpen(false);
     },
   });
 
@@ -76,7 +75,7 @@ export const UserManagement = () => {
         title: "Usuário atualizado!",
         description: "As informações do usuário foram atualizadas com sucesso.",
       });
-      setIsOpen(false);
+      setIsFormOpen(false);
     },
   });
 
@@ -110,13 +109,23 @@ export const UserManagement = () => {
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
-    setIsOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
     if (confirm("Tem certeza que deseja remover este usuário?")) {
       await deleteUser.mutateAsync(userId);
     }
+  };
+
+  const handleOpenForm = () => {
+    setSelectedUser(null);
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setSelectedUser(null);
   };
 
   const filteredUsers = users?.filter(
@@ -134,29 +143,23 @@ export const UserManagement = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Dialog open={isOpen} onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) {
-            setSelectedUser(null);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              Novo Usuário
-            </Button>
-          </DialogTrigger>
-          <UserForm
-            selectedUser={selectedUser}
-            onSubmit={handleSubmit}
-          />
-        </Dialog>
+        <Button className="gap-2" onClick={handleOpenForm}>
+          <UserPlus className="h-4 w-4" />
+          Novo Usuário
+        </Button>
       </div>
 
       <UserList
         users={filteredUsers || []}
         onEdit={handleEditUser}
         onDelete={handleDeleteUser}
+      />
+
+      <UserForm
+        isOpen={isFormOpen}
+        onClose={handleCloseForm}
+        selectedUser={selectedUser}
+        onSubmit={handleSubmit}
       />
     </div>
   );
