@@ -3,18 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
+import { RouteNameField } from "./RouteNameField";
+import { AgentSelect } from "./AgentSelect";
+import { DateTimePicker } from "./DateTimePicker";
+import { LocationFields } from "./LocationFields";
 import type { Database } from "@/integrations/supabase/types";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
@@ -161,14 +156,6 @@ export const RouteForm = () => {
     }
   };
 
-  const handleStartLocationChange = (value: string) => {
-    setStartLocationType(value as LocationType);
-  };
-
-  const handleEndLocationChange = (value: string) => {
-    setEndLocationType(value as LocationType);
-  };
-
   return (
     <div className="grid grid-cols-2 gap-8">
       <div className="space-y-8">
@@ -176,125 +163,27 @@ export const RouteForm = () => {
           <h1 className="text-2xl font-bold mb-6">Criar Rota</h1>
           
           <div className="space-y-4">
-            <div>
-              <Label>Nome da Rota</Label>
-              <Input 
-                placeholder="Digite o nome da rota" 
-                value={routeName}
-                onChange={(e) => setRouteName(e.target.value)}
+            <RouteNameField value={routeName} onChange={setRouteName} />
+            <AgentSelect agents={agents} value={selectedAgent} onChange={setSelectedAgent} />
+            <DateTimePicker date={date} onDateChange={setDate} />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <LocationFields
+                label="Local de Início"
+                locationType={startLocationType}
+                onLocationTypeChange={setStartLocationType}
+                selectedService={selectedStartService}
+                onServiceChange={setSelectedStartService}
+                services={services}
               />
-            </div>
-
-            <div>
-              <Label>Agente Responsável</Label>
-              <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um agente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {agents?.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Data e Hora de Início</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : "Selecione uma data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div>
-              <Label>Local de Início</Label>
-              <RadioGroup
-                value={startLocationType}
-                onValueChange={handleStartLocationChange}
-                className="flex items-center space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="operational_base" id="start-base" />
-                  <Label htmlFor="start-base">Base Operacional</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="service" id="start-service" />
-                  <Label htmlFor="start-service">Serviço</Label>
-                </div>
-              </RadioGroup>
-              {startLocationType === "service" && (
-                <Select 
-                  value={selectedStartService} 
-                  onValueChange={setSelectedStartService}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um serviço" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services?.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.type.toUpperCase()} {service.service_id} - {service.customer_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            <div>
-              <Label>Local de Término</Label>
-              <RadioGroup
-                value={endLocationType}
-                onValueChange={handleEndLocationChange}
-                className="flex items-center space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="operational_base" id="end-base" />
-                  <Label htmlFor="end-base">Base Operacional</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="service" id="end-service" />
-                  <Label htmlFor="end-service">Serviço</Label>
-                </div>
-              </RadioGroup>
-              {endLocationType === "service" && (
-                <Select 
-                  value={selectedEndService} 
-                  onValueChange={setSelectedEndService}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um serviço" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services?.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.type.toUpperCase()} {service.service_id} - {service.customer_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <LocationFields
+                label="Local de Término"
+                locationType={endLocationType}
+                onLocationTypeChange={setEndLocationType}
+                selectedService={selectedEndService}
+                onServiceChange={setSelectedEndService}
+                services={services}
+              />
             </div>
           </div>
         </div>

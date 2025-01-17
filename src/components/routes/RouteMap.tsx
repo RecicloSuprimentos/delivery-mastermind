@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
+import { RouteStats } from "./RouteStats";
 
 interface Location {
   lat: number;
@@ -107,15 +108,23 @@ export const RouteMap = ({
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
+    if (settings) {
+      map.setCenter({
+        lat: settings.operational_base_latitude,
+        lng: settings.operational_base_longitude,
+      });
+      map.setZoom(13);
+    }
   };
 
-  const defaultCenter = { lat: -23.5505, lng: -46.6333 }; // São Paulo
-
   return (
-    <div className="h-full rounded-lg overflow-hidden border border-gray-200">
+    <div className="h-full rounded-lg overflow-hidden border border-gray-200 relative">
       <GoogleMap
-        zoom={12}
-        center={defaultCenter}
+        zoom={13}
+        center={settings ? {
+          lat: settings.operational_base_latitude,
+          lng: settings.operational_base_longitude,
+        } : { lat: -23.5505, lng: -46.6333 }}
         mapContainerClassName="w-full h-full"
         options={{
           zoomControl: true,
@@ -152,6 +161,12 @@ export const RouteMap = ({
           />
         ))}
       </GoogleMap>
+      {directions?.routes[0]?.legs && (
+        <RouteStats
+          distance={directions.routes[0].legs.reduce((acc, leg) => acc + leg.distance.value, 0)}
+          duration={directions.routes[0].legs.reduce((acc, leg) => acc + leg.duration.value, 0)}
+        />
+      )}
     </div>
   );
 };
