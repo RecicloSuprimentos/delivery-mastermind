@@ -57,7 +57,7 @@ export const UserForm = ({ selectedUser, onSubmit }: UserFormProps) => {
   }, [selectedUser]);
 
   return (
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-full max-w-[425px] bg-white rounded-lg shadow-lg">
       <DialogHeader>
         <DialogTitle>
           {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}
