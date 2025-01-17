@@ -17,13 +17,8 @@ interface Location {
   lng: number;
 }
 
-export const OperationalBase = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [address, setAddress] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-
-  const { data: settings } = useQuery({
+const useSystemSettings = () => {
+  return useQuery({
     queryKey: ["systemSettings"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,6 +29,72 @@ export const OperationalBase = () => {
       return data as SystemSettings;
     },
   });
+};
+
+const useUpdateSettings = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      address,
+      location,
+    }: {
+      id: string;
+      address: string;
+      location: Location;
+    }) => {
+      const { error } = await supabase
+        .from("system_settings")
+        .update({
+          operational_base_address: address,
+          operational_base_latitude: location.lat,
+          operational_base_longitude: location.lng,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
+      toast({
+        title: "Base operacional atualizada!",
+        description: "O endereço da base foi salvo com sucesso.",
+      });
+    },
+  });
+};
+
+const CurrentBaseInfo = ({ settings }: { settings: SystemSettings }) => {
+  if (!settings?.operational_base_address) return null;
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <Alert>
+          <AlertDescription className="flex flex-col gap-2">
+            <div>
+              <strong>Endereço atual:</strong> {settings.operational_base_address}
+            </div>
+            <div>
+              <strong>Coordenadas:</strong> {settings.operational_base_latitude},{" "}
+              {settings.operational_base_longitude}
+            </div>
+          </AlertDescription>
+        </Alert>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const OperationalBase = () => {
+  const [address, setAddress] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const { data: settings } = useSystemSettings();
+  const updateSettings = useUpdateSettings();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (settings) {
@@ -46,38 +107,8 @@ export const OperationalBase = () => {
     }
   }, [settings]);
 
-  const { mutate: updateSettings } = useMutation({
-    mutationFn: async () => {
-      if (!settings?.id || !selectedLocation) throw new Error("Dados inválidos");
-      
-      const { error } = await supabase
-        .from("system_settings")
-        .update({
-          operational_base_address: address,
-          operational_base_latitude: selectedLocation.lat,
-          operational_base_longitude: selectedLocation.lng,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", settings.id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
-      toast({
-        title: "Base operacional atualizada!",
-        description: "O endereço da base foi salvo com sucesso.",
-      });
-      setAddress(""); // Clear the address field after successful save
-    },
-  });
-
-  const handleLocationSelect = (location: Location) => {
-    setSelectedLocation(location);
-  };
-
   const handleSave = () => {
-    if (!selectedLocation || !address) {
+    if (!selectedLocation || !address || !settings?.id) {
       toast({
         title: "Atenção",
         description: "Por favor, selecione um endereço válido.",
@@ -86,7 +117,12 @@ export const OperationalBase = () => {
       return;
     }
 
-    updateSettings();
+    updateSettings.mutate({
+      id: settings.id,
+      address,
+      location: selectedLocation,
+    });
+    setAddress("");
   };
 
   return (
@@ -107,7 +143,7 @@ export const OperationalBase = () => {
                   <AddressSearch
                     value={address}
                     onChange={setAddress}
-                    onLocationSelect={handleLocationSelect}
+                    onLocationSelect={setSelectedLocation}
                   />
                 </div>
                 <Button onClick={handleSave} className="whitespace-nowrap gap-2">
@@ -120,22 +156,7 @@ export const OperationalBase = () => {
         </CardContent>
       </Card>
 
-      {settings?.operational_base_address && (
-        <Card>
-          <CardContent className="pt-6">
-            <Alert>
-              <AlertDescription className="flex flex-col gap-2">
-                <div>
-                  <strong>Endereço atual:</strong> {settings.operational_base_address}
-                </div>
-                <div>
-                  <strong>Coordenadas:</strong> {settings.operational_base_latitude}, {settings.operational_base_longitude}
-                </div>
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      )}
+      {settings && <CurrentBaseInfo settings={settings} />}
     </div>
   );
 };

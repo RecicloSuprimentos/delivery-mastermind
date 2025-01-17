@@ -57,7 +57,7 @@ export const UserForm = ({ selectedUser, onSubmit }: UserFormProps) => {
   }, [selectedUser]);
 
   return (
-    <DialogContent className="sm:max-w-[425px] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+    <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>
           {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}
@@ -112,7 +112,7 @@ export const UserForm = ({ selectedUser, onSubmit }: UserFormProps) => {
             <SelectTrigger className="bg-white">
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
-            <SelectContent className="bg-white">
+            <SelectContent>
               <SelectItem value="admin">Administrador</SelectItem>
               <SelectItem value="user">Usuário</SelectItem>
               <SelectItem value="agent">Agente</SelectItem>
