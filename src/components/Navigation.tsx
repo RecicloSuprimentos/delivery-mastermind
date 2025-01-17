@@ -22,6 +22,10 @@ export const Navigation = () => {
     navigate('/new-service');
   };
 
+  const handleRouteClick = () => {
+    navigate('/routes/new');
+  };
+
   const handleSettingsClick = () => {
     navigate('/settings');
   };
@@ -59,6 +63,7 @@ export const Navigation = () => {
             <Button 
               variant="default" 
               className="gap-2 bg-black hover:bg-black/90"
+              onClick={handleRouteClick}
             >
               <Route className="h-5 w-5" />
               CRIAR ROTA

@@ -138,6 +138,14 @@ export const RouteForm = () => {
 
       if (stopsError) throw stopsError;
 
+      // Update services status to "assigned"
+      const { error: updateError } = await supabase
+        .from("services")
+        .update({ status: "assigned" })
+        .in("id", selectedStops.map(s => s.id));
+
+      if (updateError) throw updateError;
+
       toast({
         title: "Rota criada com sucesso!",
         description: "A rota foi salva e está pronta para ser utilizada.",
