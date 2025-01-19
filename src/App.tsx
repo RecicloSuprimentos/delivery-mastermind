@@ -12,6 +12,7 @@ import NewServicePage from "./pages/NewServicePage";
 import SettingsPage from "./pages/Settings";
 import RoutesPage from "./pages/RoutesPage";
 import CreateRoutePage from "./pages/CreateRoutePage";
+import AgentPage from "./pages/AgentPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,6 +102,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <CreateRoutePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/agent"
+                element={
+                  <ProtectedRoute>
+                    <AgentPage />
                   </ProtectedRoute>
                 }
               />
