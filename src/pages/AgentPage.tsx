@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Package, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -24,12 +23,12 @@ interface Route {
 }
 
 const AgentPage = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: routes = [], isLoading } = useQuery({
+  const { data: routes = [], isLoading, error } = useQuery({
     queryKey: ['agent-routes'],
     queryFn: async () => {
+      console.log("Fetching agent routes...");
       const { data: routesData, error } = await supabase
         .from("routes")
         .select(`
@@ -53,23 +52,28 @@ const AgentPage = () => {
 
       if (error) {
         console.error("Error fetching routes:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar as rotas",
-        });
-        return [];
+        throw new Error("Não foi possível carregar as rotas");
       }
+
+      console.log("Routes data:", routesData);
 
       return routesData.map(route => ({
         ...route,
         services: route.route_stops
-          .map(stop => stop.service)
+          ?.map(stop => stop.service)
           .filter(Boolean)
-          .sort((a, b) => a.service_id.localeCompare(b.service_id))
+          .sort((a, b) => a.service_id.localeCompare(b.service_id)) || []
       }));
     }
   });
+
+  if (error) {
+    toast({
+      variant: "destructive",
+      title: "Erro",
+      description: "Não foi possível carregar as rotas",
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -90,55 +94,52 @@ const AgentPage = () => {
           ) : (
             routes.map((route) => (
               <Card key={route.id} className="p-4">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className="text-lg font-semibold">{route.name}</h2>
-                      <div className="text-sm text-gray-500 space-y-1">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-2" />
-                          {new Date(route.start_time).toLocaleDateString()} às{" "}
-                          {new Date(route.start_time).toLocaleTimeString()}
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-2" />
-                          {route.total_distance?.toFixed(1)} km
-                        </div>
+                <CardHeader>
+                  <CardTitle>{route.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-500 space-y-1">
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-2" />
+                        {new Date(route.start_time).toLocaleDateString()} às{" "}
+                        {new Date(route.start_time).toLocaleTimeString()}
+                      </div>
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {route.total_distance?.toFixed(1)} km
                       </div>
                     </div>
-                    <Button onClick={() => navigate(`/agent/route/${route.id}`)}>
-                      Ver Detalhes
-                    </Button>
-                  </div>
 
-                  <div className="space-y-2">
-                    {route.services.map((service) => (
-                      <div
-                        key={service.id}
-                        className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
-                      >
-                        <Package className="h-5 w-5 text-primary mt-1" />
-                        <div>
-                          <div className="font-medium">
-                            {service.type === "coleta" ? "Coleta" : "Entrega"}{" "}
-                            #{service.service_id}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {service.customer_name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {service.address}
-                          </div>
-                          {service.time_window && (
-                            <div className="text-sm text-gray-500">
-                              {service.time_window}
+                    <div className="space-y-2">
+                      {route.services.map((service) => (
+                        <div
+                          key={service.id}
+                          className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+                        >
+                          <Package className="h-5 w-5 text-primary mt-1" />
+                          <div>
+                            <div className="font-medium">
+                              {service.type === "coleta" ? "Coleta" : "Entrega"}{" "}
+                              #{service.service_id}
                             </div>
-                          )}
+                            <div className="text-sm text-gray-500">
+                              {service.customer_name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {service.address}
+                            </div>
+                            {service.time_window && (
+                              <div className="text-sm text-gray-500">
+                                {service.time_window}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </CardContent>
               </Card>
             ))
           )}
