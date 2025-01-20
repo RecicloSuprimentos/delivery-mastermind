@@ -33,6 +33,7 @@ interface RouteMapProps {
   endLocationType: string;
   selectedStartService?: Service;
   selectedEndService?: Service;
+  onRouteStats?: (distance: number, duration: number) => void;
 }
 
 export const RouteMap = ({ 
@@ -42,6 +43,7 @@ export const RouteMap = ({
   endLocationType,
   selectedStartService,
   selectedEndService,
+  onRouteStats,
 }: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
@@ -104,11 +106,17 @@ export const RouteMap = ({
           if (result && settings?.service_default_duration) {
             const totalServiceDuration = (selectedStops.length + 2) * settings.service_default_duration * 60; // Convert minutes to seconds
             const legs = result.routes[0].legs;
-            const totalDuration = legs.reduce((acc, leg) => acc + leg.duration!.value, 0) + totalServiceDuration;
+            const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
+            const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0) + totalServiceDuration;
+            
             result.routes[0].legs[0].duration = {
               text: `${Math.round(totalDuration / 60)} mins`,
               value: totalDuration
             };
+
+            if (onRouteStats) {
+              onRouteStats(totalDistance, Math.round(totalDuration / 60));
+            }
           }
           setDirections(result);
         } else {
@@ -116,7 +124,7 @@ export const RouteMap = ({
         }
       }
     );
-  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService]);
+  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats]);
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;

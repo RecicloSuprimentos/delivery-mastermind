@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,8 +40,24 @@ interface SystemSettings {
   service_default_duration: number;
 }
 
+interface Route {
+  id: string;
+  name: string;
+  agent_id: string;
+  start_time: string;
+  start_location_type: LocationType;
+  start_location_reference: string;
+  end_location_type: LocationType;
+  end_location_reference: string;
+  total_distance?: number;
+  total_duration?: number;
+}
+
 export const RouteForm = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const routeId = searchParams.get("id");
+  const mode = searchParams.get("mode");
   const { toast } = useToast();
   const [date, setDate] = useState<Date>();
   const [startLocationType, setStartLocationType] = useState<LocationType>("operational_base");
@@ -51,6 +67,7 @@ export const RouteForm = () => {
   const [routeName, setRouteName] = useState("");
   const [selectedAgent, setSelectedAgent] = useState<string>();
   const [selectedStops, setSelectedStops] = useState<Service[]>([]);
+  const [routeStats, setRouteStats] = useState<{ distance: number; duration: number } | null>(null);
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -91,6 +108,46 @@ export const RouteForm = () => {
     },
   });
 
+  useEffect(() => {
+    if (routeId) {
+      const fetchRoute = async () => {
+        const { data, error } = await supabase
+          .from("routes")
+          .select("*")
+          .eq("id", routeId)
+          .single();
+
+        if (error) {
+          console.error("Error fetching route:", error);
+          return;
+        }
+
+        if (data) {
+          setRouteName(data.name);
+          setSelectedAgent(data.agent_id);
+          setDate(new Date(data.start_time));
+          setStartLocationType(data.start_location_type);
+          setEndLocationType(data.end_location_type);
+          setSelectedStartService(data.start_location_reference);
+          setSelectedEndService(data.end_location_reference);
+          
+          // Fetch route stops
+          const { data: stopsData } = await supabase
+            .from("route_stops")
+            .select("*, service:services(*)")
+            .eq("route_id", routeId)
+            .order("sequence_number");
+
+          if (stopsData) {
+            setSelectedStops(stopsData.map((stop: any) => stop.service));
+          }
+        }
+      };
+
+      fetchRoute();
+    }
+  }, [routeId]);
+
   const handleSave = async () => {
     if (!date || !selectedAgent || !routeName || selectedStops.length === 0) {
       toast({
@@ -112,15 +169,38 @@ export const RouteForm = () => {
         end_location_type: endLocationType,
         end_location_reference: endLocationType === "operational_base" ? 
           settings?.id : selectedEndService!,
+        total_distance: routeStats?.distance,
+        total_duration: routeStats?.duration,
+        status: "assigned",
       };
 
-      const { data: route, error: routeError } = await supabase
-        .from("routes")
-        .insert(routeData)
-        .select()
-        .single();
+      let route;
+      if (routeId) {
+        const { data: updatedRoute, error: routeError } = await supabase
+          .from("routes")
+          .update(routeData)
+          .eq("id", routeId)
+          .select()
+          .single();
 
-      if (routeError) throw routeError;
+        if (routeError) throw routeError;
+        route = updatedRoute;
+
+        // Delete existing stops
+        await supabase
+          .from("route_stops")
+          .delete()
+          .eq("route_id", routeId);
+      } else {
+        const { data: newRoute, error: routeError } = await supabase
+          .from("routes")
+          .insert(routeData)
+          .select()
+          .single();
+
+        if (routeError) throw routeError;
+        route = newRoute;
+      }
 
       const stops = selectedStops.map((service, index) => ({
         route_id: route.id,
@@ -143,7 +223,7 @@ export const RouteForm = () => {
       if (updateError) throw updateError;
 
       toast({
-        title: "Rota criada com sucesso!",
+        title: routeId ? "Rota atualizada com sucesso!" : "Rota criada com sucesso!",
         description: "A rota foi salva e está pronta para ser utilizada.",
       });
       navigate("/routes");
@@ -157,16 +237,37 @@ export const RouteForm = () => {
     }
   };
 
+  const handleRouteStats = (distance: number, duration: number) => {
+    setRouteStats({ distance, duration });
+  };
+
+  const isViewMode = mode === "view";
+
   return (
     <div className="grid grid-cols-2 gap-8">
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold mb-6">Criar Rota</h1>
+          <h1 className="text-2xl font-bold mb-6">
+            {routeId ? (isViewMode ? "Visualizar Rota" : "Editar Rota") : "Criar Rota"}
+          </h1>
           
           <div className="space-y-4">
-            <RouteNameField value={routeName} onChange={setRouteName} />
-            <AgentSelect agents={agents} value={selectedAgent} onChange={setSelectedAgent} />
-            <DateTimePicker date={date} onDateChange={setDate} />
+            <RouteNameField 
+              value={routeName} 
+              onChange={setRouteName}
+              disabled={isViewMode}
+            />
+            <AgentSelect 
+              agents={agents} 
+              value={selectedAgent} 
+              onChange={setSelectedAgent}
+              disabled={isViewMode}
+            />
+            <DateTimePicker 
+              date={date} 
+              onDateChange={setDate}
+              disabled={isViewMode}
+            />
             
             <div className="grid grid-cols-2 gap-4">
               <LocationFields
@@ -176,6 +277,7 @@ export const RouteForm = () => {
                 selectedService={selectedStartService}
                 onServiceChange={setSelectedStartService}
                 services={services}
+                disabled={isViewMode}
               />
               <LocationFields
                 label="Local de Término"
@@ -184,6 +286,7 @@ export const RouteForm = () => {
                 selectedService={selectedEndService}
                 onServiceChange={setSelectedEndService}
                 services={services}
+                disabled={isViewMode}
               />
             </div>
           </div>
@@ -193,13 +296,14 @@ export const RouteForm = () => {
           services={services || []}
           selectedStops={selectedStops}
           onStopsChange={setSelectedStops}
+          disabled={isViewMode}
         />
 
         <div className="flex justify-end space-x-4">
           <Button variant="outline" onClick={() => navigate("/routes")}>
-            Cancelar
+            {isViewMode ? "Fechar" : "Cancelar"}
           </Button>
-          <Button onClick={handleSave}>Salvar</Button>
+          {!isViewMode && <Button onClick={handleSave}>Salvar</Button>}
         </div>
       </div>
 
@@ -211,6 +315,7 @@ export const RouteForm = () => {
           endLocationType={endLocationType}
           selectedStartService={services?.find(s => s.id === selectedStartService)}
           selectedEndService={services?.find(s => s.id === selectedEndService)}
+          onRouteStats={handleRouteStats}
         />
       </div>
     </div>
