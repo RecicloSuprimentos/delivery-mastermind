@@ -2,14 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
-import { RouteNameField } from "./RouteNameField";
-import { AgentSelect } from "./AgentSelect";
-import { DateTimePicker } from "./DateTimePicker";
-import { LocationFields } from "./LocationFields";
+import { RouteFormHeader } from "./RouteFormHeader";
+import { RouteBasicFields } from "./RouteBasicFields";
 import type { Database } from "@/integrations/supabase/types";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
@@ -38,19 +35,6 @@ interface SystemSettings {
   operational_base_latitude: number;
   operational_base_longitude: number;
   service_default_duration: number;
-}
-
-interface Route {
-  id: string;
-  name: string;
-  agent_id: string;
-  start_time: string;
-  start_location_type: LocationType;
-  start_location_reference: string;
-  end_location_type: LocationType;
-  end_location_reference: string;
-  total_distance?: number;
-  total_duration?: number;
 }
 
 export const RouteForm = () => {
@@ -244,53 +228,29 @@ export const RouteForm = () => {
   const isViewMode = mode === "view";
 
   return (
-    <div className="grid grid-cols-2 gap-8">
+    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="grid grid-cols-2 gap-8">
       <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold mb-6">
-            {routeId ? (isViewMode ? "Visualizar Rota" : "Editar Rota") : "Criar Rota"}
-          </h1>
-          
-          <div className="space-y-4">
-            <RouteNameField 
-              value={routeName} 
-              onChange={setRouteName}
-              disabled={isViewMode}
-            />
-            <AgentSelect 
-              agents={agents} 
-              value={selectedAgent} 
-              onChange={setSelectedAgent}
-              disabled={isViewMode}
-            />
-            <DateTimePicker 
-              date={date} 
-              onDateChange={setDate}
-              disabled={isViewMode}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <LocationFields
-                label="Local de Início"
-                locationType={startLocationType}
-                onLocationTypeChange={setStartLocationType}
-                selectedService={selectedStartService}
-                onServiceChange={setSelectedStartService}
-                services={services}
-                disabled={isViewMode}
-              />
-              <LocationFields
-                label="Local de Término"
-                locationType={endLocationType}
-                onLocationTypeChange={setEndLocationType}
-                selectedService={selectedEndService}
-                onServiceChange={setSelectedEndService}
-                services={services}
-                disabled={isViewMode}
-              />
-            </div>
-          </div>
-        </div>
+        <RouteFormHeader routeId={routeId} isViewMode={isViewMode} />
+        
+        <RouteBasicFields
+          routeName={routeName}
+          setRouteName={setRouteName}
+          selectedAgent={selectedAgent}
+          setSelectedAgent={setSelectedAgent}
+          date={date}
+          setDate={setDate}
+          startLocationType={startLocationType}
+          setStartLocationType={setStartLocationType}
+          endLocationType={endLocationType}
+          setEndLocationType={setEndLocationType}
+          selectedStartService={selectedStartService}
+          setSelectedStartService={setSelectedStartService}
+          selectedEndService={selectedEndService}
+          setSelectedEndService={setSelectedEndService}
+          agents={agents}
+          services={services}
+          disabled={isViewMode}
+        />
 
         <RouteStopsList 
           services={services || []}
@@ -298,13 +258,6 @@ export const RouteForm = () => {
           onStopsChange={setSelectedStops}
           disabled={isViewMode}
         />
-
-        <div className="flex justify-end space-x-4">
-          <Button variant="outline" onClick={() => navigate("/routes")}>
-            {isViewMode ? "Fechar" : "Cancelar"}
-          </Button>
-          {!isViewMode && <Button onClick={handleSave}>Salvar</Button>}
-        </div>
       </div>
 
       <div className="h-[calc(100vh-6rem)] sticky top-24">
@@ -318,6 +271,6 @@ export const RouteForm = () => {
           onRouteStats={handleRouteStats}
         />
       </div>
-    </div>
+    </form>
   );
 };
