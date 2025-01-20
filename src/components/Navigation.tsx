@@ -6,6 +6,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
@@ -39,7 +42,16 @@ export const Navigation = () => {
               ROTERIZADOR
             </Link>
             <div className="ml-8 flex space-x-4">
-              <Button variant="ghost">PLANEJAMENTO</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost">PLANEJAMENTO</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => navigate('/routes')}>
+                    Rotas
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost">TEMPO REAL</Button>
               <Button variant="ghost">ANÁLISE</Button>
               <Button variant="ghost">COMUNICAÇÃO</Button>

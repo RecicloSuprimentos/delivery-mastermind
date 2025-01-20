@@ -61,11 +61,9 @@ export const RoutesList = () => {
   };
 
   const handlePrint = (route: Route) => {
-    // Criar uma nova janela para impressão
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    // Estilo CSS para impressão
     const printStyles = `
       <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
@@ -80,7 +78,6 @@ export const RoutesList = () => {
       </style>
     `;
 
-    // Conteúdo HTML para impressão
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -125,12 +122,12 @@ export const RoutesList = () => {
         {routes?.map((route) => (
           <div
             key={route.id}
-            className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"
+            className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
           >
-            <div className="flex flex-col space-y-3">
+            <div className="flex flex-col space-y-2">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-base font-semibold">{route.name}</h3>
+                  <h3 className="text-sm font-semibold">{route.name}</h3>
                   <p className="text-xs text-gray-500">
                     {formatDateTime(route.start_time)}
                   </p>
@@ -140,52 +137,48 @@ export const RoutesList = () => {
                     variant="ghost" 
                     size="sm" 
                     onClick={() => handlePrint(route)}
-                    className="h-8 w-8 p-0"
+                    className="h-7 w-7 p-0"
                   >
                     <Printer className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => navigate(`/routes/${route.id}?mode=view`)}
-                    className="h-8 w-8 p-0"
+                    onClick={() => navigate(`/routes/new?id=${route.id}&mode=view`)}
+                    className="h-7 w-7 p-0"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => navigate(`/routes/${route.id}/edit`)}
-                    className="h-8 w-8 p-0"
+                    onClick={() => navigate(`/routes/new?id=${route.id}&mode=edit`)}
+                    className="h-7 w-7 p-0"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="grid grid-cols-5 gap-2 text-xs">
                 <div>
-                  <p className="text-xs text-gray-500">Agente</p>
+                  <p className="text-gray-500">Agente</p>
                   <p className="font-medium truncate">{route.agent?.name || "Não atribuído"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Status</p>
+                  <p className="text-gray-500">Status</p>
                   <p className="font-medium">{statusTranslations[route.status] || route.status}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Serviços</p>
+                  <p className="text-gray-500">Serviços</p>
                   <p className="font-medium">{route.route_stops?.length || 0}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Km estimada</p>
+                  <p className="text-gray-500">Km estimada</p>
                   <p className="font-medium">{route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Km percorrida</p>
-                  <p className="font-medium text-gray-400">Pendente</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Tempo total</p>
+                  <p className="text-gray-500">Tempo total</p>
                   <p className="font-medium">
                     {route.total_duration ? formatDuration(route.total_duration) : "N/A"}
                   </p>
