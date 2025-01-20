@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Phone, Clock, FileEdit, ChevronDown, ChevronUp, Trash2, Check, MoreVertical } from "lucide-react";
+import { MapPin, Phone, Clock, FileEdit, ChevronDown, ChevronUp, Trash2, Check, MoreVertical, Undo } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { useToast } from "./ui/use-toast";
@@ -62,6 +62,30 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
     }
   };
 
+  const handleUnassign = async () => {
+    if (window.confirm("Tem certeza que deseja desatribuir este serviço?")) {
+      const { error } = await supabase
+        .from("services")
+        .update({ status: "not-assigned" })
+        .eq("id", service.id);
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao desatribuir serviço",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Serviço desatribuído com sucesso",
+      });
+      onUpdate();
+    }
+  };
+
   const handleEdit = () => {
     navigate(`/new-service/${service.id}`);
   };
@@ -88,11 +112,11 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
           )}
           <div className="flex-1 ml-2">
             <div className="font-medium text-base">
-              {service.type.toUpperCase()} {service.service_id}
+              {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
             </div>
             <div className="font-medium text-base">{service.customer_name}</div>
           </div>
-          {service.status === "not-assigned" && (
+          {(service.status === "not-assigned" || service.status === "assigned") && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-700">
@@ -110,6 +134,15 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
                   <FileEdit className="h-4 w-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
+                {service.status === "assigned" && (
+                  <DropdownMenuItem 
+                    onClick={handleUnassign}
+                    className="hover:bg-gray-100 cursor-pointer"
+                  >
+                    <Undo className="h-4 w-4 mr-2" />
+                    Desatribuir
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem 
                   onClick={handleDelete} 
                   className="text-destructive hover:bg-gray-100 cursor-pointer"

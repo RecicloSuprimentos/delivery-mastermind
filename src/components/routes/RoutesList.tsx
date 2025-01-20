@@ -24,10 +24,10 @@ interface Route {
 
 const statusTranslations: Record<string, string> = {
   'draft': 'Rascunho',
-  'pending': 'Pendente',
-  'in-progress': 'Em Progresso',
-  'completed': 'Finalizado',
-  'cancelled': 'Cancelado'
+  'assigned': 'Atribuída',
+  'in-progress': 'Em Andamento',
+  'completed': 'Finalizada',
+  'cancelled': 'Cancelada'
 };
 
 export const RoutesList = () => {
@@ -58,48 +58,6 @@ export const RoutesList = () => {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return `${hours}h${remainingMinutes}min`;
-  };
-
-  const handlePrint = (route: Route) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Rota: ${route.name}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { font-size: 18px; margin-bottom: 10px; }
-            .header { margin-bottom: 20px; }
-            .info { margin-bottom: 5px; font-size: 14px; }
-            .section { margin-bottom: 15px; }
-            @media print {
-              body { padding: 0; }
-              button { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Detalhes da Rota: ${route.name}</h1>
-            <div class="info">Data: ${formatDateTime(route.start_time)}</div>
-            <div class="info">Agente: ${route.agent?.name || 'Não atribuído'}</div>
-            <div class="info">Status: ${statusTranslations[route.status] || route.status}</div>
-          </div>
-          <div class="section">
-            <div class="info">Quantidade de Serviços: ${route.route_stops?.length || 0}</div>
-            <div class="info">Distância Estimada: ${route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : 'N/A'}</div>
-            <div class="info">Tempo Total Estimado: ${route.total_duration ? formatDuration(route.total_duration) : 'N/A'}</div>
-          </div>
-          <button onclick="window.print()">Imprimir</button>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(printContent);
-    printWindow.document.close();
   };
 
   return (
@@ -154,7 +112,7 @@ export const RoutesList = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-6 gap-2 text-xs">
+              <div className="grid grid-cols-7 gap-2 text-xs">
                 <div>
                   <p className="text-gray-500">Agente</p>
                   <p className="font-medium truncate">{route.agent?.name || "Não atribuído"}</p>
@@ -176,10 +134,14 @@ export const RoutesList = () => {
                   <p className="font-medium">Em breve</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Tempo total</p>
+                  <p className="text-gray-500">Tempo estimado</p>
                   <p className="font-medium">
                     {route.total_duration ? formatDuration(route.total_duration) : "N/A"}
                   </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Tempo gasto</p>
+                  <p className="font-medium">Em breve</p>
                 </div>
               </div>
             </div>

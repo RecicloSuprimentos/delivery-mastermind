@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { RouteStats } from "./RouteStats";
-import { Package, ArrowDown } from "lucide-react";
 
 interface Location {
   lat: number;
@@ -102,9 +101,8 @@ export const RouteMap = ({
       },
       (result, status) => {
         if (status === google.maps.DirectionsStatus.OK) {
-          // Add service duration to the total duration
           if (result && settings?.service_default_duration) {
-            const totalServiceDuration = (selectedStops.length + 2) * settings.service_default_duration * 60; // Convert minutes to seconds
+            const totalServiceDuration = (selectedStops.length + 2) * settings.service_default_duration * 60;
             const legs = result.routes[0].legs;
             const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
             const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0) + totalServiceDuration;
