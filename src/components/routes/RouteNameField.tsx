@@ -4,9 +4,10 @@ import { Label } from "@/components/ui/label";
 interface RouteNameFieldProps {
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export const RouteNameField = ({ value, onChange }: RouteNameFieldProps) => {
+export const RouteNameField = ({ value, onChange, disabled }: RouteNameFieldProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value.toUpperCase());
   };
@@ -18,6 +19,7 @@ export const RouteNameField = ({ value, onChange }: RouteNameFieldProps) => {
         placeholder="Digite o nome da rota" 
         value={value}
         onChange={handleChange}
+        disabled={disabled}
       />
     </div>
   );

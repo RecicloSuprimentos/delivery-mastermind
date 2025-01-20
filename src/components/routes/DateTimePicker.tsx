@@ -12,9 +12,10 @@ import { Input } from "@/components/ui/input";
 interface DateTimePickerProps {
   date?: Date;
   onDateChange: (date: Date | undefined) => void;
+  disabled?: boolean;
 }
 
-export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
+export const DateTimePicker = ({ date, onDateChange, disabled }: DateTimePickerProps) => {
   const [time, setTime] = useState(date ? format(date, "HH:mm") : format(new Date(), "HH:mm"));
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -56,6 +57,7 @@ export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
                 "justify-start text-left font-normal bg-white",
                 !date && "text-muted-foreground"
               )}
+              disabled={disabled}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {date ? format(date, "PPP", { locale: ptBR }) : "Selecione uma data"}
@@ -68,6 +70,7 @@ export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
               onSelect={handleDateSelect}
               locale={ptBR}
               initialFocus
+              disabled={disabled}
             />
           </PopoverContent>
         </Popover>
@@ -78,6 +81,7 @@ export const DateTimePicker = ({ date, onDateChange }: DateTimePickerProps) => {
             value={time}
             onChange={handleTimeChange}
             className="w-32 bg-white"
+            disabled={disabled}
           />
         </div>
       </div>

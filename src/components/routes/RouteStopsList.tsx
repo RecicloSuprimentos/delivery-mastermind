@@ -17,15 +17,17 @@ interface RouteStopsListProps {
   services: Service[];
   selectedStops: Service[];
   onStopsChange: (stops: Service[]) => void;
+  disabled?: boolean;
 }
 
 export const RouteStopsList = ({ 
   services,
   selectedStops,
   onStopsChange,
+  disabled,
 }: RouteStopsListProps) => {
   const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+    if (!result.destination || disabled) return;
 
     const items = Array.from(selectedStops);
     const [reorderedItem] = items.splice(result.source.index, 1);
@@ -35,17 +37,21 @@ export const RouteStopsList = ({
   };
 
   const handleAddStop = (service: Service) => {
-    if (!selectedStops.find(s => s.id === service.id)) {
+    if (!selectedStops.find(s => s.id === service.id) && !disabled) {
       onStopsChange([...selectedStops, service]);
     }
   };
 
   const handleRemoveStop = (serviceId: string) => {
-    onStopsChange(selectedStops.filter(s => s.id !== serviceId));
+    if (!disabled) {
+      onStopsChange(selectedStops.filter(s => s.id !== serviceId));
+    }
   };
 
   const handleInvertStops = () => {
-    onStopsChange([...selectedStops].reverse());
+    if (!disabled) {
+      onStopsChange([...selectedStops].reverse());
+    }
   };
 
   return (
@@ -53,7 +59,12 @@ export const RouteStopsList = ({
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Paradas da Rota</h2>
         <div className="space-x-2">
-          <Button variant="outline" size="sm" onClick={handleInvertStops}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleInvertStops}
+            disabled={disabled}
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Inverter
           </Button>
@@ -70,7 +81,12 @@ export const RouteStopsList = ({
                 className="space-y-2"
               >
                 {selectedStops.map((stop, index) => (
-                  <Draggable key={stop.id} draggableId={stop.id} index={index}>
+                  <Draggable 
+                    key={stop.id} 
+                    draggableId={stop.id} 
+                    index={index}
+                    isDragDisabled={disabled}
+                  >
                     {(provided) => (
                       <div
                         ref={provided.innerRef}
@@ -104,6 +120,7 @@ export const RouteStopsList = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemoveStop(stop.id)}
+                            disabled={disabled}
                           >
                             Remover
                           </Button>
@@ -149,6 +166,7 @@ export const RouteStopsList = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => handleAddStop(service)}
+                  disabled={disabled}
                 >
                   Adicionar
                 </Button>

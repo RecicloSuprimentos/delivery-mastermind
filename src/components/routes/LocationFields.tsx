@@ -16,6 +16,7 @@ interface LocationFieldsProps {
   selectedService?: string;
   onServiceChange: (value: string) => void;
   services?: Service[];
+  disabled?: boolean;
 }
 
 export const LocationFields = ({
@@ -25,6 +26,7 @@ export const LocationFields = ({
   selectedService,
   onServiceChange,
   services,
+  disabled,
 }: LocationFieldsProps) => {
   return (
     <div className="space-y-4">
@@ -33,6 +35,7 @@ export const LocationFields = ({
         value={locationType}
         onValueChange={onLocationTypeChange}
         className="flex items-center space-x-4"
+        disabled={disabled}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="operational_base" id={`${label}-base`} />
@@ -47,6 +50,7 @@ export const LocationFields = ({
         <Select 
           value={selectedService} 
           onValueChange={onServiceChange}
+          disabled={disabled}
         >
           <SelectTrigger className="bg-white mt-2">
             <SelectValue placeholder="Selecione um serviço" />

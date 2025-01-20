@@ -11,13 +11,14 @@ interface AgentSelectProps {
   agents?: Agent[];
   value?: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export const AgentSelect = ({ agents, value, onChange }: AgentSelectProps) => {
+export const AgentSelect = ({ agents, value, onChange, disabled }: AgentSelectProps) => {
   return (
     <div>
       <Label>Agente Responsável</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger className="bg-white">
           <SelectValue placeholder="Selecione um agente" />
         </SelectTrigger>
