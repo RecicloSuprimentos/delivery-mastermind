@@ -57,33 +57,29 @@ export const RoutesList = () => {
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return `${hours}h${remainingMinutes > 0 ? ` ${remainingMinutes}min` : ''}`;
+    return `${hours}h${remainingMinutes}min`;
   };
 
   const handlePrint = (route: Route) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const printStyles = `
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h1 { font-size: 18px; margin-bottom: 10px; }
-        .header { margin-bottom: 20px; }
-        .info { margin-bottom: 5px; font-size: 14px; }
-        .section { margin-bottom: 15px; }
-        @media print {
-          body { padding: 0; }
-          button { display: none; }
-        }
-      </style>
-    `;
-
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Rota: ${route.name}</title>
-          ${printStyles}
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { font-size: 18px; margin-bottom: 10px; }
+            .header { margin-bottom: 20px; }
+            .info { margin-bottom: 5px; font-size: 14px; }
+            .section { margin-bottom: 15px; }
+            @media print {
+              body { padding: 0; }
+              button { display: none; }
+            }
+          </style>
         </head>
         <body>
           <div class="header">
@@ -97,9 +93,7 @@ export const RoutesList = () => {
             <div class="info">Distância Estimada: ${route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : 'N/A'}</div>
             <div class="info">Tempo Total Estimado: ${route.total_duration ? formatDuration(route.total_duration) : 'N/A'}</div>
           </div>
-          <div class="section">
-            <button onclick="window.print()">Imprimir</button>
-          </div>
+          <button onclick="window.print()">Imprimir</button>
         </body>
       </html>
     `;
@@ -122,7 +116,7 @@ export const RoutesList = () => {
         {routes?.map((route) => (
           <div
             key={route.id}
-            className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
+            className="bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm"
           >
             <div className="flex flex-col space-y-2">
               <div className="flex justify-between items-start">
@@ -137,30 +131,30 @@ export const RoutesList = () => {
                     variant="ghost" 
                     size="sm" 
                     onClick={() => handlePrint(route)}
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 p-0"
                   >
-                    <Printer className="h-4 w-4" />
+                    <Printer className="h-3.5 w-3.5" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={() => navigate(`/routes/new?id=${route.id}&mode=view`)}
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 p-0"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5" />
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={() => navigate(`/routes/new?id=${route.id}&mode=edit`)}
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 p-0"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-5 gap-2 text-xs">
+              <div className="grid grid-cols-6 gap-2 text-xs">
                 <div>
                   <p className="text-gray-500">Agente</p>
                   <p className="font-medium truncate">{route.agent?.name || "Não atribuído"}</p>
@@ -176,6 +170,10 @@ export const RoutesList = () => {
                 <div>
                   <p className="text-gray-500">Km estimada</p>
                   <p className="font-medium">{route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Km percorrida</p>
+                  <p className="font-medium">Em breve</p>
                 </div>
                 <div>
                   <p className="text-gray-500">Tempo total</p>

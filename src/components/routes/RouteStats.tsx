@@ -9,7 +9,7 @@ export const RouteStats = ({ distance, duration }: RouteStatsProps) => {
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return `${hours}h${remainingMinutes > 0 ? ` ${remainingMinutes}min` : ''}`;
+    return `${hours}h${remainingMinutes}min`;
   };
 
   return (
@@ -18,7 +18,7 @@ export const RouteStats = ({ distance, duration }: RouteStatsProps) => {
         <div>Distância total: {(distance / 1000).toFixed(1)} km</div>
       )}
       {duration && (
-        <div>Tempo estimado: {formatDuration(duration / 60)}</div>
+        <div>Tempo estimado: {formatDuration(Math.round(duration / 60))}</div>
       )}
     </div>
   );

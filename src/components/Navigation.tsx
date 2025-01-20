@@ -46,8 +46,9 @@ export const Navigation = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost">PLANEJAMENTO</Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="bg-white">
                   <DropdownMenuItem onClick={() => navigate('/routes')}>
+                    <Route className="mr-2 h-4 w-4" />
                     Rotas
                   </DropdownMenuItem>
                 </DropdownMenuContent>
