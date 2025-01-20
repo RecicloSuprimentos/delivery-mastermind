@@ -46,6 +46,10 @@ export const RouteMap = ({
 }: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [center, setCenter] = useState<Location>({ 
+    lat: settings?.operational_base_latitude || -23.5505, 
+    lng: settings?.operational_base_longitude || -46.6333 
+  });
 
   const getStartLocation = (): Location | null => {
     if (startLocationType === "operational_base" && settings) {
@@ -117,8 +121,6 @@ export const RouteMap = ({
             }
           }
           setDirections(result);
-        } else {
-          console.error(`Erro ao calcular rota: ${status}`);
         }
       }
     );
@@ -126,30 +128,25 @@ export const RouteMap = ({
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
-    if (settings) {
-      map.setCenter({
-        lat: settings.operational_base_latitude,
-        lng: settings.operational_base_longitude,
-      });
-      map.setZoom(13);
-    }
+  };
+
+  const mapOptions: google.maps.MapOptions = {
+    zoomControl: true,
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    gestureHandling: "cooperative",
+    disableDefaultUI: false,
+    clickableIcons: false,
   };
 
   return (
     <div className="h-full rounded-lg overflow-hidden border border-gray-200 relative">
       <GoogleMap
         zoom={13}
-        center={settings ? {
-          lat: settings.operational_base_latitude,
-          lng: settings.operational_base_longitude,
-        } : { lat: -23.5505, lng: -46.6333 }}
+        center={center}
         mapContainerClassName="w-full h-full"
-        options={{
-          zoomControl: true,
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: false,
-        }}
+        options={mapOptions}
         onLoad={onLoad}
       >
         {directions && (
@@ -157,6 +154,7 @@ export const RouteMap = ({
             directions={directions}
             options={{
               suppressMarkers: true,
+              preserveViewport: true,
             }}
           />
         )}
