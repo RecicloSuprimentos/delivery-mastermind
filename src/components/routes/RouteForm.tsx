@@ -8,6 +8,7 @@ import { RouteStopsList } from "./RouteStopsList";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteBasicFields } from "./RouteBasicFields";
 import type { Database } from "@/integrations/supabase/types";
+import type { Service, SystemSettings } from "@/types/routes";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 type LocationType = RouteInsert["start_location_type"];
@@ -16,25 +17,6 @@ interface Agent {
   id: string;
   name: string;
   email: string;
-}
-
-interface Service {
-  id: string;
-  type: "coleta" | "entrega";
-  service_id: string;
-  customer_name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  time_window?: string;
-}
-
-interface SystemSettings {
-  id: string;
-  operational_base_address: string;
-  operational_base_latitude: number;
-  operational_base_longitude: number;
-  service_default_duration: number;
 }
 
 export const RouteForm = () => {
@@ -71,7 +53,20 @@ export const RouteForm = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("*")
+        .select(`
+          id,
+          type,
+          service_id,
+          customer_name,
+          address,
+          latitude,
+          longitude,
+          time_window,
+          phone,
+          email,
+          complement,
+          observations
+        `)
         .eq("status", "not-assigned");
 
       if (error) throw error;
@@ -84,7 +79,14 @@ export const RouteForm = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("system_settings")
-        .select("*")
+        .select(`
+          id,
+          operational_base_address,
+          operational_base_latitude,
+          operational_base_longitude,
+          service_default_duration,
+          google_maps_key
+        `)
         .maybeSingle();
 
       if (error) throw error;
