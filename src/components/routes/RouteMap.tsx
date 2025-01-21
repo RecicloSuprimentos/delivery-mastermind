@@ -1,29 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { RouteStats } from "./RouteStats";
-
-interface Location {
-  lat: number;
-  lng: number;
-}
-
-interface Service {
-  id: string;
-  type: "coleta" | "entrega";
-  service_id: string;
-  customer_name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  time_window?: string;
-}
-
-interface SystemSettings {
-  operational_base_address: string;
-  operational_base_latitude: number;
-  operational_base_longitude: number;
-  service_default_duration: number;
-}
+import { createOptimizedRoute, getLocationFromType } from "@/utils/mapUtils";
+import type { Location, Service, SystemSettings } from "@/types/routes";
 
 interface RouteMapProps {
   settings?: SystemSettings;
@@ -32,7 +11,7 @@ interface RouteMapProps {
   endLocationType: string;
   selectedStartService?: Service;
   selectedEndService?: Service;
-  onRouteStats?: (distance: number, duration: number) => void;
+  onRouteStats?: (distance: number, duration: number, estimatedTimes: Date[]) => void;
 }
 
 export const RouteMap = ({ 
@@ -46,47 +25,17 @@ export const RouteMap = ({
 }: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [center, setCenter] = useState<Location>({ 
+  const [center] = useState<Location>({ 
     lat: settings?.operational_base_latitude || -23.5505, 
     lng: settings?.operational_base_longitude || -46.6333 
   });
 
-  const getStartLocation = (): Location | null => {
-    if (startLocationType === "operational_base" && settings) {
-      return {
-        lat: settings.operational_base_latitude,
-        lng: settings.operational_base_longitude,
-      };
-    } else if (startLocationType === "service" && selectedStartService) {
-      return {
-        lat: selectedStartService.latitude,
-        lng: selectedStartService.longitude,
-      };
-    }
-    return null;
-  };
-
-  const getEndLocation = (): Location | null => {
-    if (endLocationType === "operational_base" && settings) {
-      return {
-        lat: settings.operational_base_latitude,
-        lng: settings.operational_base_longitude,
-      };
-    } else if (endLocationType === "service" && selectedEndService) {
-      return {
-        lat: selectedEndService.latitude,
-        lng: selectedEndService.longitude,
-      };
-    }
-    return null;
-  };
-
   useEffect(() => {
-    if (!window.google || selectedStops.length === 0) return;
+    if (!window.google || selectedStops.length === 0 || !settings) return;
 
     const directionsService = new google.maps.DirectionsService();
-    const startLocation = getStartLocation();
-    const endLocation = getEndLocation();
+    const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
+    const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
 
     if (!startLocation || !endLocation) return;
 
@@ -95,40 +44,23 @@ export const RouteMap = ({
       stopover: true,
     }));
 
-    directionsService.route(
-      {
-        origin: startLocation,
-        destination: endLocation,
-        waypoints,
-        optimizeWaypoints: true,
-        travelMode: google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          if (result && settings?.service_default_duration) {
-            const totalServiceDuration = (selectedStops.length + 2) * settings.service_default_duration * 60;
-            const legs = result.routes[0].legs;
-            const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
-            const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0) + totalServiceDuration;
-            
-            result.routes[0].legs[0].duration = {
-              text: `${Math.round(totalDuration / 60)} mins`,
-              value: totalDuration
-            };
-
-            if (onRouteStats) {
-              onRouteStats(totalDistance, Math.round(totalDuration / 60));
-            }
-          }
-          setDirections(result);
+    createOptimizedRoute(
+      directionsService,
+      startLocation,
+      endLocation,
+      waypoints,
+      settings.service_default_duration
+    )
+      .then(({ directions, totalDistance, totalDuration, estimatedTimes }) => {
+        setDirections(directions);
+        if (onRouteStats) {
+          onRouteStats(totalDistance, totalDuration, estimatedTimes);
         }
-      }
-    );
+      })
+      .catch(error => {
+        console.error("Error calculating route:", error);
+      });
   }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats]);
-
-  const onLoad = (map: google.maps.Map) => {
-    mapRef.current = map;
-  };
 
   const mapOptions: google.maps.MapOptions = {
     zoomControl: true,
@@ -147,7 +79,7 @@ export const RouteMap = ({
         center={center}
         mapContainerClassName="w-full h-full"
         options={mapOptions}
-        onLoad={onLoad}
+        onLoad={(map) => { mapRef.current = map; }}
       >
         {directions && (
           <DirectionsRenderer

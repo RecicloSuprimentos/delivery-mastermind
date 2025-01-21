@@ -1,9 +1,13 @@
+import { calculateTimeWindowViolation } from "@/utils/mapUtils";
+
 interface RouteStatsProps {
   distance?: number;
   duration?: number;
+  estimatedTimes?: Date[];
+  stops?: Array<{ time_window?: string }>;
 }
 
-export const RouteStats = ({ distance, duration }: RouteStatsProps) => {
+export const RouteStats = ({ distance, duration, estimatedTimes, stops }: RouteStatsProps) => {
   if (!distance && !duration) return null;
 
   const formatDuration = (minutes: number) => {
@@ -12,13 +16,36 @@ export const RouteStats = ({ distance, duration }: RouteStatsProps) => {
     return `${hours}h${remainingMinutes}min`;
   };
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const getTotalTimeWindowViolations = () => {
+    if (!estimatedTimes || !stops) return 0;
+    return stops.reduce((total, stop, index) => {
+      if (!stop.time_window || !estimatedTimes[index]) return total;
+      return total + calculateTimeWindowViolation(estimatedTimes[index], stop.time_window);
+    }, 0);
+  };
+
+  const timeWindowViolations = getTotalTimeWindowViolations();
+
   return (
-    <div className="absolute bottom-4 left-4 bg-black/80 text-white px-4 py-2 rounded-lg text-sm">
-      {distance && (
-        <div>Distância total: {(distance / 1000).toFixed(1)} km</div>
-      )}
-      {duration && (
-        <div>Tempo estimado: {formatDuration(Math.round(duration / 60))}</div>
+    <div className="absolute bottom-4 left-4 bg-black/80 text-white px-4 py-2 rounded-lg text-sm space-y-1">
+      <div>Distância total: {(distance / 1000).toFixed(1)} km</div>
+      <div>Tempo estimado: {formatDuration(Math.round(duration / 60))}</div>
+      {estimatedTimes?.map((time, index) => (
+        <div key={index}>
+          Parada {index + 1}: {formatTime(time)}
+        </div>
+      ))}
+      {timeWindowViolations > 0 && (
+        <div className="text-red-400">
+          Violações de janela de tempo: {formatDuration(timeWindowViolations)}
+        </div>
       )}
     </div>
   );
