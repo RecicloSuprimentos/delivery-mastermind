@@ -1,11 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
-import { MapContainer } from "./map/MapContainer";
-import { RouteDirections } from "./map/RouteDirections";
-import { StopMarkers } from "./map/StopMarkers";
+import { useEffect, useRef, useState } from "react";
+import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { RouteStats } from "./RouteStats";
-import type { RouteMapProps } from "@/types/routes";
+import { createOptimizedRoute, getLocationFromType } from "@/utils/mapUtils";
+import type { Location, Service, SystemSettings } from "@/types/routes";
 
-export const RouteMap = ({
+interface RouteMapProps {
+  settings?: SystemSettings;
+  selectedStops: Service[];
+  startLocationType: string;
+  endLocationType: string;
+  selectedStartService?: Service;
+  selectedEndService?: Service;
+  onRouteStats?: (distance: number, duration: number, estimatedTimes: Date[]) => void;
+}
+
+export const RouteMap = ({ 
   settings,
   selectedStops,
   startLocationType,
@@ -14,123 +23,114 @@ export const RouteMap = ({
   selectedEndService,
   onRouteStats,
 }: RouteMapProps) => {
+  const mapRef = useRef<google.maps.Map>();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [directionsService, setDirectionsService] = useState<google.maps.DirectionsService | null>(null);
-  const [center, setCenter] = useState<google.maps.LatLngLiteral | undefined>(
-    settings ? { 
-      lat: settings.operational_base_latitude, 
-      lng: settings.operational_base_longitude 
-    } : undefined
-  );
+  const [center] = useState<Location>({ 
+    lat: settings?.operational_base_latitude || -23.5505, 
+    lng: settings?.operational_base_longitude || -46.6333 
+  });
 
-  const calculateRoute = useCallback(async () => {
-    if (!directionsService || !selectedStartService || !selectedEndService || selectedStops.length === 0) return;
+  useEffect(() => {
+    if (!window.google || selectedStops.length === 0 || !settings) return;
 
-    const waypoints = selectedStops.map(service => ({
-      location: { lat: service.latitude!, lng: service.longitude! },
+    const directionsService = new google.maps.DirectionsService();
+    const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
+    const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
+
+    if (!startLocation || !endLocation) return;
+
+    const waypoints = selectedStops.map(stop => ({
+      location: { lat: stop.latitude, lng: stop.longitude },
       stopover: true,
     }));
 
-    try {
-      const result = await directionsService.route({
-        origin: startLocationType === "operational_base" && settings ? {
-          lat: settings.operational_base_latitude,
-          lng: settings.operational_base_longitude,
-        } : {
-          lat: selectedStartService.latitude,
-          lng: selectedStartService.longitude,
-        },
-        destination: endLocationType === "operational_base" && settings ? {
-          lat: settings.operational_base_latitude,
-          lng: settings.operational_base_longitude,
-        } : {
-          lat: selectedEndService.latitude,
-          lng: selectedEndService.longitude,
-        },
-        waypoints,
-        optimizeWaypoints: true,
-        travelMode: google.maps.TravelMode.DRIVING,
+    createOptimizedRoute(
+      directionsService,
+      startLocation,
+      endLocation,
+      waypoints,
+      settings.service_default_duration
+    )
+      .then(({ directions, totalDistance, totalDuration, estimatedTimes }) => {
+        setDirections(directions);
+        if (onRouteStats) {
+          onRouteStats(totalDistance, totalDuration, estimatedTimes);
+        }
+      })
+      .catch(error => {
+        console.error("Error calculating route:", error);
       });
+  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats]);
 
-      setDirections(result);
-
-      if (onRouteStats) {
-        const legs = result.routes[0].legs;
-        const totalDistance = legs.reduce((acc, leg) => acc + leg.distance!.value, 0);
-        const totalDuration = legs.reduce((acc, leg) => acc + leg.duration!.value, 0);
-        onRouteStats(totalDistance, totalDuration);
-      }
-    } catch (error) {
-      console.error("Error calculating route:", error);
-    }
-  }, [directionsService, selectedStartService, selectedEndService, selectedStops, onRouteStats, settings, startLocationType, endLocationType]);
-
-  useEffect(() => {
-    if (window.google) {
-      setDirectionsService(new google.maps.DirectionsService());
-    }
-  }, []);
-
-  useEffect(() => {
-    calculateRoute();
-  }, [calculateRoute]);
-
-  const stops = [
-    startLocationType === "operational_base" && settings ? {
-      location: { 
-        lat: settings.operational_base_latitude, 
-        lng: settings.operational_base_longitude 
-      },
-      label: "I"
-    } : selectedStartService ? {
-      location: { 
-        lat: selectedStartService.latitude, 
-        lng: selectedStartService.longitude 
-      },
-      label: "I"
-    } : null,
-    ...selectedStops.map((service, index) => ({
-      location: { lat: service.latitude, lng: service.longitude },
-      label: (index + 1).toString(),
-    })),
-    endLocationType === "operational_base" && settings ? {
-      location: { 
-        lat: settings.operational_base_latitude, 
-        lng: settings.operational_base_longitude 
-      },
-      label: "F"
-    } : selectedEndService ? {
-      location: { 
-        lat: selectedEndService.latitude, 
-        lng: selectedEndService.longitude 
-      },
-      label: "F"
-    } : null,
-  ].filter((stop): stop is NonNullable<typeof stop> => stop !== null);
+  const mapOptions: google.maps.MapOptions = {
+    zoomControl: true,
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    gestureHandling: "cooperative",
+    disableDefaultUI: false,
+    clickableIcons: false,
+  };
 
   return (
-    <div className="w-full h-full relative">
-      <MapContainer
+    <div className="h-full rounded-lg overflow-hidden border border-gray-200 relative">
+      <GoogleMap
+        zoom={13}
         center={center}
-        onLoad={(map) => {
-          if (center) {
-            map.setCenter(center);
-          }
-        }}
+        mapContainerClassName="w-full h-full"
+        options={mapOptions}
+        onLoad={(map) => { mapRef.current = map; }}
       >
-        <RouteDirections directions={directions} />
-        <StopMarkers stops={stops} />
-      </MapContainer>
-      <RouteStats
-        distance={directions?.routes[0].legs.reduce((acc, leg) => acc + leg.distance!.value, 0)}
-        duration={directions?.routes[0].legs.reduce((acc, leg) => acc + leg.duration!.value, 0)}
-        estimatedTimes={directions?.routes[0].legs.map(leg => {
-          const time = new Date();
-          time.setSeconds(time.getSeconds() + leg.duration!.value);
-          return time;
-        })}
-        stops={selectedStops}
-      />
+        {directions && (
+          <DirectionsRenderer
+            directions={directions}
+            options={{
+              suppressMarkers: true,
+              preserveViewport: true,
+            }}
+          />
+        )}
+        
+        {settings && startLocationType === "operational_base" && (
+          <Marker
+            position={{
+              lat: settings.operational_base_latitude,
+              lng: settings.operational_base_longitude,
+            }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: "#0EA5E9",
+              fillOpacity: 1,
+              strokeColor: "#0369A1",
+              strokeWeight: 2,
+            }}
+            label="Base"
+          />
+        )}
+
+        {selectedStops.map((stop, index) => (
+          <Marker
+            key={stop.id}
+            position={{ lat: stop.latitude, lng: stop.longitude }}
+            label={`${index + 1}`}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: stop.type === "coleta" ? "#F97316" : "#9333EA",
+              fillOpacity: 1,
+              strokeColor: stop.type === "coleta" ? "#C2410C" : "#6B21A8",
+              strokeWeight: 2,
+            }}
+          />
+        ))}
+      </GoogleMap>
+      {directions?.routes[0]?.legs && (
+        <RouteStats
+          distance={directions.routes[0].legs.reduce((acc, leg) => acc + leg.distance.value, 0)}
+          duration={directions.routes[0].legs.reduce((acc, leg) => acc + leg.duration.value, 0)}
+        />
+      )}
     </div>
   );
 };

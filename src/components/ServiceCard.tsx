@@ -66,15 +66,13 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
     if (window.confirm("Tem certeza que deseja desatribuir este serviço?")) {
       const { error } = await supabase
         .from("services")
-        .update({ 
-          status: "not-assigned",
-        })
+        .update({ status: "not-assigned" })
         .eq("id", service.id);
 
       if (error) {
         toast({
           title: "Erro",
-          description: "Erro ao desatribuir serviço: " + error.message,
+          description: "Erro ao desatribuir serviço",
           variant: "destructive",
         });
         return;

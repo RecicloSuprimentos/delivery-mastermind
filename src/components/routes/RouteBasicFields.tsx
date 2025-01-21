@@ -2,7 +2,19 @@ import { RouteNameField } from "./RouteNameField";
 import { AgentSelect } from "./AgentSelect";
 import { DateTimePicker } from "./DateTimePicker";
 import { LocationFields } from "./LocationFields";
-import type { Agent, Service } from "@/types/routes";
+
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Service {
+  id: string;
+  type: "coleta" | "entrega";
+  service_id: string;
+  customer_name: string;
+}
 
 interface RouteBasicFieldsProps {
   routeName: string;
@@ -45,19 +57,17 @@ export const RouteBasicFields = ({
 }: RouteBasicFieldsProps) => {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <RouteNameField 
-          value={routeName} 
-          onChange={setRouteName}
-          disabled={disabled}
-        />
-        <AgentSelect 
-          agents={agents} 
-          value={selectedAgent} 
-          onChange={setSelectedAgent}
-          disabled={disabled}
-        />
-      </div>
+      <RouteNameField 
+        value={routeName} 
+        onChange={setRouteName}
+        disabled={disabled}
+      />
+      <AgentSelect 
+        agents={agents} 
+        value={selectedAgent} 
+        onChange={setSelectedAgent}
+        disabled={disabled}
+      />
       <DateTimePicker 
         date={date} 
         onDateChange={setDate}
