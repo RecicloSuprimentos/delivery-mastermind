@@ -2,6 +2,7 @@ import { RouteNameField } from "./RouteNameField";
 import { AgentSelect } from "./AgentSelect";
 import { DateTimePicker } from "./DateTimePicker";
 import { LocationFields } from "./LocationFields";
+import type { Agent, Service } from "@/types/routes";
 
 interface RouteBasicFieldsProps {
   routeName: string;

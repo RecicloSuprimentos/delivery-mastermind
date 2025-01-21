@@ -3,48 +3,50 @@ import { MapContainer } from "./map/MapContainer";
 import { RouteDirections } from "./map/RouteDirections";
 import { StopMarkers } from "./map/StopMarkers";
 import { RouteStats } from "./RouteStats";
-import { calculateTimeWindowViolation } from "@/utils/mapUtils";
-
-interface Service {
-  id: string;
-  latitude?: number;
-  longitude?: number;
-  time_window?: string;
-}
-
-interface RouteMapProps {
-  services: Service[];
-  startLocation?: google.maps.LatLngLiteral;
-  endLocation?: google.maps.LatLngLiteral;
-  onRouteCalculated?: (data: {
-    distance: number;
-    duration: number;
-    estimatedTimes: Date[];
-  }) => void;
-}
+import type { RouteMapProps } from "@/types/routes";
 
 export const RouteMap = ({
-  services,
-  startLocation,
-  endLocation,
-  onRouteCalculated,
+  settings,
+  selectedStops,
+  startLocationType,
+  endLocationType,
+  selectedStartService,
+  selectedEndService,
+  onRouteStats,
 }: RouteMapProps) => {
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [directionsService, setDirectionsService] = useState<google.maps.DirectionsService | null>(null);
-  const [center, setCenter] = useState<google.maps.LatLngLiteral | undefined>(startLocation);
+  const [center, setCenter] = useState<google.maps.LatLngLiteral | undefined>(
+    settings ? { 
+      lat: settings.operational_base_latitude, 
+      lng: settings.operational_base_longitude 
+    } : undefined
+  );
 
   const calculateRoute = useCallback(async () => {
-    if (!directionsService || !startLocation || !endLocation || services.length === 0) return;
+    if (!directionsService || !selectedStartService || !selectedEndService || selectedStops.length === 0) return;
 
-    const waypoints = services.map(service => ({
+    const waypoints = selectedStops.map(service => ({
       location: { lat: service.latitude!, lng: service.longitude! },
       stopover: true,
     }));
 
     try {
       const result = await directionsService.route({
-        origin: startLocation,
-        destination: endLocation,
+        origin: startLocationType === "operational_base" && settings ? {
+          lat: settings.operational_base_latitude,
+          lng: settings.operational_base_longitude,
+        } : {
+          lat: selectedStartService.latitude,
+          lng: selectedStartService.longitude,
+        },
+        destination: endLocationType === "operational_base" && settings ? {
+          lat: settings.operational_base_latitude,
+          lng: settings.operational_base_longitude,
+        } : {
+          lat: selectedEndService.latitude,
+          lng: selectedEndService.longitude,
+        },
         waypoints,
         optimizeWaypoints: true,
         travelMode: google.maps.TravelMode.DRIVING,
@@ -52,7 +54,7 @@ export const RouteMap = ({
 
       setDirections(result);
 
-      if (onRouteCalculated) {
+      if (onRouteStats) {
         const legs = result.routes[0].legs;
         const totalDistance = legs.reduce((acc, leg) => acc + leg.distance!.value, 0);
         const totalDuration = legs.reduce((acc, leg) => acc + leg.duration!.value, 0);
@@ -67,7 +69,7 @@ export const RouteMap = ({
           currentTime = new Date(currentTime.getTime() + 10 * 60 * 1000); // 10 min service time
         });
 
-        onRouteCalculated({
+        onRouteStats({
           distance: totalDistance,
           duration: totalDuration,
           estimatedTimes,
@@ -76,7 +78,7 @@ export const RouteMap = ({
     } catch (error) {
       console.error("Error calculating route:", error);
     }
-  }, [directionsService, startLocation, endLocation, services, onRouteCalculated]);
+  }, [directionsService, selectedStartService, selectedEndService, selectedStops, onRouteStats]);
 
   useEffect(() => {
     if (window.google) {
@@ -89,22 +91,45 @@ export const RouteMap = ({
   }, [calculateRoute]);
 
   const stops = [
-    { location: startLocation!, label: "I" },
-    ...services.map((service, index) => ({
-      location: { lat: service.latitude!, lng: service.longitude! },
+    startLocationType === "operational_base" && settings ? {
+      location: { 
+        lat: settings.operational_base_latitude, 
+        lng: settings.operational_base_longitude 
+      },
+      label: "I"
+    } : selectedStartService ? {
+      location: { 
+        lat: selectedStartService.latitude, 
+        lng: selectedStartService.longitude 
+      },
+      label: "I"
+    } : null,
+    ...selectedStops.map((service, index) => ({
+      location: { lat: service.latitude, lng: service.longitude },
       label: (index + 1).toString(),
     })),
-    { location: endLocation!, label: "F" },
-  ].filter(stop => stop.location);
+    endLocationType === "operational_base" && settings ? {
+      location: { 
+        lat: settings.operational_base_latitude, 
+        lng: settings.operational_base_longitude 
+      },
+      label: "F"
+    } : selectedEndService ? {
+      location: { 
+        lat: selectedEndService.latitude, 
+        lng: selectedEndService.longitude 
+      },
+      label: "F"
+    } : null,
+  ].filter((stop): stop is NonNullable<typeof stop> => stop !== null);
 
   return (
     <div className="w-full h-full relative">
       <MapContainer
         center={center}
         onLoad={(map) => {
-          if (startLocation) {
-            setCenter(startLocation);
-            map.setCenter(startLocation);
+          if (center) {
+            map.setCenter(center);
           }
         }}
       >
@@ -119,7 +144,7 @@ export const RouteMap = ({
           time.setSeconds(time.getSeconds() + leg.duration!.value);
           return time;
         })}
-        stops={services}
+        stops={selectedStops}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RouteListItem } from "./RouteListItem";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { RouteStop } from "@/types/routes";
 
 interface Route {
   id: string;
@@ -15,20 +16,7 @@ interface Route {
   agent: {
     name: string;
   };
-  route_stops: {
-    service_id: string;
-    service: {
-      type: string;
-      service_id: string;
-      customer_name: string;
-      address: string;
-      phone: string;
-      email?: string;
-      complement?: string;
-      time_window?: string;
-      observations?: string;
-    };
-  }[];
+  route_stops: RouteStop[];
 }
 
 const statusTranslations: Record<string, string> = {
