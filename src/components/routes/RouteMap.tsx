@@ -58,27 +58,12 @@ export const RouteMap = ({
         const legs = result.routes[0].legs;
         const totalDistance = legs.reduce((acc, leg) => acc + leg.distance!.value, 0);
         const totalDuration = legs.reduce((acc, leg) => acc + leg.duration!.value, 0);
-
-        const startTime = new Date();
-        const estimatedTimes: Date[] = [];
-        let currentTime = new Date(startTime);
-
-        legs.forEach((leg) => {
-          currentTime = new Date(currentTime.getTime() + leg.duration!.value * 1000);
-          estimatedTimes.push(new Date(currentTime));
-          currentTime = new Date(currentTime.getTime() + 10 * 60 * 1000); // 10 min service time
-        });
-
-        onRouteStats({
-          distance: totalDistance,
-          duration: totalDuration,
-          estimatedTimes,
-        });
+        onRouteStats(totalDistance, totalDuration);
       }
     } catch (error) {
       console.error("Error calculating route:", error);
     }
-  }, [directionsService, selectedStartService, selectedEndService, selectedStops, onRouteStats]);
+  }, [directionsService, selectedStartService, selectedEndService, selectedStops, onRouteStats, settings, startLocationType, endLocationType]);
 
   useEffect(() => {
     if (window.google) {

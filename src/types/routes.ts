@@ -1,3 +1,8 @@
+export interface Location {
+  lat: number;
+  lng: number;
+}
+
 export interface Agent {
   id: string;
   name: string;
@@ -18,6 +23,7 @@ export interface Service {
   email?: string;
   complement?: string;
   observations?: string;
+  status?: string;
 }
 
 export interface RouteStop {
@@ -25,6 +31,24 @@ export interface RouteStop {
   sequence_number: number;
   estimated_arrival_time?: string;
   service: Service;
+}
+
+export interface Route {
+  id: string;
+  name: string;
+  agent_id: string;
+  start_time: string;
+  start_location_type: "operational_base" | "service";
+  start_location_reference: string;
+  end_location_type: "operational_base" | "service";
+  end_location_reference: string;
+  total_distance?: number;
+  total_duration?: number;
+  status?: string;
+  agent?: {
+    name: string;
+  };
+  route_stops: RouteStop[];
 }
 
 export interface SystemSettings {
