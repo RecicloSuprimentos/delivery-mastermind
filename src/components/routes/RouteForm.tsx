@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,37 +8,17 @@ import { RouteStopsList } from "./RouteStopsList";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteBasicFields } from "./RouteBasicFields";
 import type { Database } from "@/integrations/supabase/types";
+import type { Service } from "@/types/routes";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 type LocationType = RouteInsert["start_location_type"];
 
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
+interface RouteFormProps {
+  onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
+  isLoading: boolean;
 }
 
-interface Service {
-  id: string;
-  type: "coleta" | "entrega";
-  service_id: string;
-  customer_name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  time_window?: string;
-}
-
-interface SystemSettings {
-  id: string;
-  operational_base_address: string;
-  operational_base_latitude: number;
-  operational_base_longitude: number;
-  service_default_duration: number;
-}
-
-export const RouteForm = () => {
-  const navigate = useNavigate();
+export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const [searchParams] = useSearchParams();
   const routeId = searchParams.get("id");
   const mode = searchParams.get("mode");
@@ -52,7 +32,6 @@ export const RouteForm = () => {
   const [selectedAgent, setSelectedAgent] = useState<string>();
   const [selectedStops, setSelectedStops] = useState<Service[]>([]);
   const [routeStats, setRouteStats] = useState<{ distance: number; duration: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -133,96 +112,34 @@ export const RouteForm = () => {
     }
   }, [routeId]);
 
-  const handleSave = async () => {
-    setIsLoading(true);
-    try {
-      if (!date || !selectedAgent || !routeName || selectedStops.length === 0) {
-        toast({
-          title: "Erro",
-          description: "Por favor, preencha todos os campos obrigatórios.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const routeData: RouteInsert = {
-        name: routeName,
-        agent_id: selectedAgent,
-        start_time: date.toISOString(),
-        start_location_type: startLocationType,
-        start_location_reference: startLocationType === "operational_base" ? 
-          settings?.id : selectedStartService!,
-        end_location_type: endLocationType,
-        end_location_reference: endLocationType === "operational_base" ? 
-          settings?.id : selectedEndService!,
-        total_distance: routeStats?.distance,
-        total_duration: routeStats?.duration,
-        status: "assigned",
-      };
-
-      let route;
-      if (routeId) {
-        const { data: updatedRoute, error: routeError } = await supabase
-          .from("routes")
-          .update(routeData)
-          .eq("id", routeId)
-          .select()
-          .single();
-
-        if (routeError) throw routeError;
-        route = updatedRoute;
-
-        // Delete existing stops
-        await supabase
-          .from("route_stops")
-          .delete()
-          .eq("route_id", routeId);
-      } else {
-        const { data: newRoute, error: routeError } = await supabase
-          .from("routes")
-          .insert(routeData)
-          .select()
-          .single();
-
-        if (routeError) throw routeError;
-        route = newRoute;
-      }
-
-      const stops = selectedStops.map((service, index) => ({
-        route_id: route.id,
-        service_id: service.id,
-        sequence_number: index + 1,
-      }));
-
-      const { error: stopsError } = await supabase
-        .from("route_stops")
-        .insert(stops);
-
-      if (stopsError) throw stopsError;
-
-      // Update services status to "assigned"
-      const { error: updateError } = await supabase
-        .from("services")
-        .update({ status: "assigned" })
-        .in("id", selectedStops.map(s => s.id));
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: routeId ? "Rota atualizada com sucesso!" : "Rota criada com sucesso!",
-        description: "A rota foi salva e está pronta para ser utilizada.",
-      });
-      navigate("/routes");
-    } catch (error) {
-      console.error("Erro ao salvar rota:", error);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!date || !selectedAgent || !routeName || selectedStops.length === 0) {
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao salvar a rota.",
+        description: "Por favor, preencha todos os campos obrigatórios.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    const routeData: RouteInsert = {
+      name: routeName,
+      agent_id: selectedAgent,
+      start_time: date.toISOString(),
+      start_location_type: startLocationType,
+      start_location_reference: startLocationType === "operational_base" ? 
+        settings?.id : selectedStartService!,
+      end_location_type: endLocationType,
+      end_location_reference: endLocationType === "operational_base" ? 
+        settings?.id : selectedEndService!,
+      total_distance: routeStats?.distance,
+      total_duration: routeStats?.duration,
+      status: "assigned",
+    };
+
+    await onSave(routeData, selectedStops, routeId || undefined);
   };
 
   const handleRouteStats = (distance: number, duration: number) => {
@@ -232,10 +149,10 @@ export const RouteForm = () => {
   const isViewMode = mode === "view";
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="grid grid-cols-2 gap-8">
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-8">
       <div className="space-y-8">
         <RouteFormHeader
-          onSave={handleSave}
+          onSave={handleSubmit}
           isLoading={isLoading}
           routeId={routeId}
           isViewMode={isViewMode}
