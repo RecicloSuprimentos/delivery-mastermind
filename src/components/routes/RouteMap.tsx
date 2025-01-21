@@ -1,136 +1,126 @@
-import { useEffect, useRef, useState } from "react";
-import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
+import { useCallback, useEffect, useState } from "react";
+import { MapContainer } from "./map/MapContainer";
+import { RouteDirections } from "./map/RouteDirections";
+import { StopMarkers } from "./map/StopMarkers";
 import { RouteStats } from "./RouteStats";
-import { createOptimizedRoute, getLocationFromType } from "@/utils/mapUtils";
-import type { Location, Service, SystemSettings } from "@/types/routes";
+import { calculateTimeWindowViolation } from "@/utils/mapUtils";
 
-interface RouteMapProps {
-  settings?: SystemSettings;
-  selectedStops: Service[];
-  startLocationType: string;
-  endLocationType: string;
-  selectedStartService?: Service;
-  selectedEndService?: Service;
-  onRouteStats?: (distance: number, duration: number, estimatedTimes: Date[]) => void;
+interface Service {
+  id: string;
+  latitude?: number;
+  longitude?: number;
+  time_window?: string;
 }
 
-export const RouteMap = ({ 
-  settings,
-  selectedStops,
-  startLocationType,
-  endLocationType,
-  selectedStartService,
-  selectedEndService,
-  onRouteStats,
+interface RouteMapProps {
+  services: Service[];
+  startLocation?: google.maps.LatLngLiteral;
+  endLocation?: google.maps.LatLngLiteral;
+  onRouteCalculated?: (data: {
+    distance: number;
+    duration: number;
+    estimatedTimes: Date[];
+  }) => void;
+}
+
+export const RouteMap = ({
+  services,
+  startLocation,
+  endLocation,
+  onRouteCalculated,
 }: RouteMapProps) => {
-  const mapRef = useRef<google.maps.Map>();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [center] = useState<Location>({ 
-    lat: settings?.operational_base_latitude || -23.5505, 
-    lng: settings?.operational_base_longitude || -46.6333 
-  });
+  const [directionsService, setDirectionsService] = useState<google.maps.DirectionsService | null>(null);
+  const [center, setCenter] = useState<google.maps.LatLngLiteral | undefined>(startLocation);
 
-  useEffect(() => {
-    if (!window.google || selectedStops.length === 0 || !settings) return;
+  const calculateRoute = useCallback(async () => {
+    if (!directionsService || !startLocation || !endLocation || services.length === 0) return;
 
-    const directionsService = new google.maps.DirectionsService();
-    const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
-    const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
-
-    if (!startLocation || !endLocation) return;
-
-    const waypoints = selectedStops.map(stop => ({
-      location: { lat: stop.latitude, lng: stop.longitude },
+    const waypoints = services.map(service => ({
+      location: { lat: service.latitude!, lng: service.longitude! },
       stopover: true,
     }));
 
-    createOptimizedRoute(
-      directionsService,
-      startLocation,
-      endLocation,
-      waypoints,
-      settings.service_default_duration
-    )
-      .then(({ directions, totalDistance, totalDuration, estimatedTimes }) => {
-        setDirections(directions);
-        if (onRouteStats) {
-          onRouteStats(totalDistance, totalDuration, estimatedTimes);
-        }
-      })
-      .catch(error => {
-        console.error("Error calculating route:", error);
+    try {
+      const result = await directionsService.route({
+        origin: startLocation,
+        destination: endLocation,
+        waypoints,
+        optimizeWaypoints: true,
+        travelMode: google.maps.TravelMode.DRIVING,
       });
-  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats]);
 
-  const mapOptions: google.maps.MapOptions = {
-    zoomControl: true,
-    streetViewControl: false,
-    mapTypeControl: false,
-    fullscreenControl: false,
-    gestureHandling: "cooperative",
-    disableDefaultUI: false,
-    clickableIcons: false,
-  };
+      setDirections(result);
+
+      if (onRouteCalculated) {
+        const legs = result.routes[0].legs;
+        const totalDistance = legs.reduce((acc, leg) => acc + leg.distance!.value, 0);
+        const totalDuration = legs.reduce((acc, leg) => acc + leg.duration!.value, 0);
+
+        const startTime = new Date();
+        const estimatedTimes: Date[] = [];
+        let currentTime = new Date(startTime);
+
+        legs.forEach((leg) => {
+          currentTime = new Date(currentTime.getTime() + leg.duration!.value * 1000);
+          estimatedTimes.push(new Date(currentTime));
+          currentTime = new Date(currentTime.getTime() + 10 * 60 * 1000); // 10 min service time
+        });
+
+        onRouteCalculated({
+          distance: totalDistance,
+          duration: totalDuration,
+          estimatedTimes,
+        });
+      }
+    } catch (error) {
+      console.error("Error calculating route:", error);
+    }
+  }, [directionsService, startLocation, endLocation, services, onRouteCalculated]);
+
+  useEffect(() => {
+    if (window.google) {
+      setDirectionsService(new google.maps.DirectionsService());
+    }
+  }, []);
+
+  useEffect(() => {
+    calculateRoute();
+  }, [calculateRoute]);
+
+  const stops = [
+    { location: startLocation!, label: "I" },
+    ...services.map((service, index) => ({
+      location: { lat: service.latitude!, lng: service.longitude! },
+      label: (index + 1).toString(),
+    })),
+    { location: endLocation!, label: "F" },
+  ].filter(stop => stop.location);
 
   return (
-    <div className="h-full rounded-lg overflow-hidden border border-gray-200 relative">
-      <GoogleMap
-        zoom={13}
+    <div className="w-full h-full relative">
+      <MapContainer
         center={center}
-        mapContainerClassName="w-full h-full"
-        options={mapOptions}
-        onLoad={(map) => { mapRef.current = map; }}
+        onLoad={(map) => {
+          if (startLocation) {
+            setCenter(startLocation);
+            map.setCenter(startLocation);
+          }
+        }}
       >
-        {directions && (
-          <DirectionsRenderer
-            directions={directions}
-            options={{
-              suppressMarkers: true,
-              preserveViewport: true,
-            }}
-          />
-        )}
-        
-        {settings && startLocationType === "operational_base" && (
-          <Marker
-            position={{
-              lat: settings.operational_base_latitude,
-              lng: settings.operational_base_longitude,
-            }}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: "#0EA5E9",
-              fillOpacity: 1,
-              strokeColor: "#0369A1",
-              strokeWeight: 2,
-            }}
-            label="Base"
-          />
-        )}
-
-        {selectedStops.map((stop, index) => (
-          <Marker
-            key={stop.id}
-            position={{ lat: stop.latitude, lng: stop.longitude }}
-            label={`${index + 1}`}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: stop.type === "coleta" ? "#F97316" : "#9333EA",
-              fillOpacity: 1,
-              strokeColor: stop.type === "coleta" ? "#C2410C" : "#6B21A8",
-              strokeWeight: 2,
-            }}
-          />
-        ))}
-      </GoogleMap>
-      {directions?.routes[0]?.legs && (
-        <RouteStats
-          distance={directions.routes[0].legs.reduce((acc, leg) => acc + leg.distance.value, 0)}
-          duration={directions.routes[0].legs.reduce((acc, leg) => acc + leg.duration.value, 0)}
-        />
-      )}
+        <RouteDirections directions={directions} />
+        <StopMarkers stops={stops} />
+      </MapContainer>
+      <RouteStats
+        distance={directions?.routes[0].legs.reduce((acc, leg) => acc + leg.distance!.value, 0)}
+        duration={directions?.routes[0].legs.reduce((acc, leg) => acc + leg.duration!.value, 0)}
+        estimatedTimes={directions?.routes[0].legs.map(leg => {
+          const time = new Date();
+          time.setSeconds(time.getSeconds() + leg.duration!.value);
+          return time;
+        })}
+        stops={services}
+      />
     </div>
   );
 };
