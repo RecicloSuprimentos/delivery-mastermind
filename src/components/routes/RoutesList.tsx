@@ -3,21 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RouteListItem } from "./RouteListItem";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { RouteStop } from "@/types/routes";
-
-interface Route {
-  id: string;
-  name: string;
-  agent_id: string;
-  start_time: string;
-  total_distance: number;
-  total_duration: number;
-  status: string;
-  agent: {
-    name: string;
-  };
-  route_stops: RouteStop[];
-}
+import type { Route, RouteStop } from "@/types/routes";
 
 const statusTranslations: Record<string, string> = {
   'draft': 'Rascunho',
@@ -41,6 +27,7 @@ export const RoutesList = () => {
             sequence_number,
             estimated_arrival_time,
             service:services(
+              id,
               type,
               service_id,
               customer_name,
@@ -49,14 +36,16 @@ export const RoutesList = () => {
               email,
               complement,
               time_window,
-              observations
+              observations,
+              latitude,
+              longitude
             )
           )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Route[];
+      return data as unknown as Route[];
     },
   });
 

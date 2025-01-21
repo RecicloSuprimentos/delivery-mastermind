@@ -8,6 +8,7 @@ export interface Agent {
   name: string;
   email: string;
   user_type: "agent";
+  is_active?: boolean;
 }
 
 export interface Service {
@@ -30,6 +31,9 @@ export interface RouteStop {
   service_id: string;
   sequence_number: number;
   estimated_arrival_time?: string;
+  estimated_departure_time?: string;
+  distance_from_previous?: number;
+  duration_from_previous?: number;
   service: Service;
 }
 

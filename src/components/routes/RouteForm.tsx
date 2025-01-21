@@ -8,34 +8,10 @@ import { RouteStopsList } from "./RouteStopsList";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteBasicFields } from "./RouteBasicFields";
 import type { Database } from "@/integrations/supabase/types";
+import type { Agent, Service, SystemSettings } from "@/types/routes";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 type LocationType = RouteInsert["start_location_type"];
-
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface Service {
-  id: string;
-  type: "coleta" | "entrega";
-  service_id: string;
-  customer_name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  time_window?: string;
-}
-
-interface SystemSettings {
-  id: string;
-  operational_base_address: string;
-  operational_base_latitude: number;
-  operational_base_longitude: number;
-  service_default_duration: number;
-}
 
 export const RouteForm = () => {
   const navigate = useNavigate();
