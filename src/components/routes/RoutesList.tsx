@@ -18,6 +18,19 @@ interface Route {
   };
   route_stops: {
     service_id: string;
+    sequence_number: number;
+    estimated_arrival_time: string;
+    service: {
+      type: "coleta" | "entrega";
+      service_id: string;
+      customer_name: string;
+      address: string;
+      phone: string;
+      email: string;
+      complement: string;
+      time_window: string;
+      observations: string;
+    };
   }[];
 }
 
@@ -40,7 +53,22 @@ export const RoutesList = () => {
         .select(`
           *,
           agent:system_users(name),
-          route_stops(service_id)
+          route_stops(
+            service_id,
+            sequence_number,
+            estimated_arrival_time,
+            service:services(
+              type,
+              service_id,
+              customer_name,
+              address,
+              phone,
+              email,
+              complement,
+              time_window,
+              observations
+            )
+          )
         `)
         .order("created_at", { ascending: false });
 
