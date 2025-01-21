@@ -8,10 +8,17 @@ import { RouteStopsList } from "./RouteStopsList";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteBasicFields } from "./RouteBasicFields";
 import type { Database } from "@/integrations/supabase/types";
-import type { Service } from "@/types/routes";
+import type { Service, SystemSettings } from "@/types/routes";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 type LocationType = RouteInsert["start_location_type"];
+
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
+  user_type: string;
+}
 
 interface RouteFormProps {
   onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
