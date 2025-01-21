@@ -5,9 +5,11 @@ import { useNavigate } from "react-router-dom";
 interface RouteFormHeaderProps {
   onSave: () => void;
   isLoading: boolean;
+  routeId?: string | null;
+  isViewMode?: boolean;
 }
 
-export const RouteFormHeader = ({ onSave, isLoading }: RouteFormHeaderProps) => {
+export const RouteFormHeader = ({ onSave, isLoading, routeId, isViewMode }: RouteFormHeaderProps) => {
   const navigate = useNavigate();
 
   return (
@@ -20,14 +22,18 @@ export const RouteFormHeader = ({ onSave, isLoading }: RouteFormHeaderProps) => 
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-xl font-semibold">Nova Rota</h1>
+        <h1 className="text-xl font-semibold">
+          {routeId ? (isViewMode ? "Visualizar Rota" : "Editar Rota") : "Nova Rota"}
+        </h1>
       </div>
-      <Button 
-        onClick={onSave}
-        disabled={isLoading}
-      >
-        {isLoading ? "Salvando..." : "Salvar"}
-      </Button>
+      {!isViewMode && (
+        <Button 
+          onClick={onSave}
+          disabled={isLoading}
+        >
+          {isLoading ? "Salvando..." : "Salvar"}
+        </Button>
+      )}
     </div>
   );
 };

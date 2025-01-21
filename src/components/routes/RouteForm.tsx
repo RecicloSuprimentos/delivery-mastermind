@@ -52,6 +52,7 @@ export const RouteForm = () => {
   const [selectedAgent, setSelectedAgent] = useState<string>();
   const [selectedStops, setSelectedStops] = useState<Service[]>([]);
   const [routeStats, setRouteStats] = useState<{ distance: number; duration: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -133,16 +134,17 @@ export const RouteForm = () => {
   }, [routeId]);
 
   const handleSave = async () => {
-    if (!date || !selectedAgent || !routeName || selectedStops.length === 0) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    setIsLoading(true);
     try {
+      if (!date || !selectedAgent || !routeName || selectedStops.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Por favor, preencha todos os campos obrigatórios.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const routeData: RouteInsert = {
         name: routeName,
         agent_id: selectedAgent,
@@ -218,6 +220,8 @@ export const RouteForm = () => {
         description: "Ocorreu um erro ao salvar a rota.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -230,7 +234,12 @@ export const RouteForm = () => {
   return (
     <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="grid grid-cols-2 gap-8">
       <div className="space-y-8">
-        <RouteFormHeader routeId={routeId} isViewMode={isViewMode} />
+        <RouteFormHeader
+          onSave={handleSave}
+          isLoading={isLoading}
+          routeId={routeId}
+          isViewMode={isViewMode}
+        />
         
         <RouteBasicFields
           routeName={routeName}
