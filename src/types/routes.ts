@@ -15,6 +15,7 @@ export interface Service {
 }
 
 export interface SystemSettings {
+  id: string;
   operational_base_address: string;
   operational_base_latitude: number;
   operational_base_longitude: number;

@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface RouteFormHeaderProps {
-  onSave: () => void;
+  onSave: (e: React.FormEvent) => void;
   isLoading: boolean;
   routeId?: string | null;
   isViewMode?: boolean;
