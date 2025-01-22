@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const useServices = () => {
   const { toast } = useToast();
@@ -30,12 +30,16 @@ export const useServices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast({
+        title: "Sucesso",
+        description: "Serviço excluído com sucesso",
+      });
     },
     onError: (error) => {
       console.error("Delete service error:", error);
       toast({
         title: "Erro",
-        description: "Erro ao excluir serviço. Tente novamente.",
+        description: "Não é possível excluir este serviço pois ele está atribuído a uma rota",
         variant: "destructive",
       });
     },
@@ -52,6 +56,10 @@ export const useServices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
+      toast({
+        title: "Sucesso",
+        description: "Status do serviço atualizado com sucesso",
+      });
     },
     onError: (error) => {
       console.error("Update service status error:", error);

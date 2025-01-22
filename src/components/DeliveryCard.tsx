@@ -2,13 +2,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomerInfoFields from "./CustomerInfoFields";
 import AddressFields from "./AddressFields";
 import ServiceCardHeader from "./ServiceCardHeader";
 import ServiceIdField from "./ServiceIdField";
 import ServiceFormActions from "./ServiceFormActions";
+import { validateServiceForm } from "@/utils/serviceValidation";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Location {
   lat: number;
@@ -34,6 +36,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { id } = useParams();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchService = async () => {
@@ -74,28 +77,11 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!serviceType) {
+    const validationError = validateServiceForm(serviceType, location, customerName, phone, address);
+    if (validationError) {
       toast({
         title: "Erro",
-        description: "Por favor, selecione o tipo de serviço",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!location) {
-      toast({
-        title: "Erro",
-        description: "Por favor, selecione um endereço válido",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!customerName || !phone || !address) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios",
+        description: validationError,
         variant: "destructive",
       });
       return;
@@ -114,8 +100,8 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
         complement,
         time_window: timeWindow,
         observations,
-        latitude: location.lat,
-        longitude: location.lng,
+        latitude: location?.lat,
+        longitude: location?.lng,
         status: "not-assigned"
       };
 
@@ -136,6 +122,9 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
         console.error("Error saving service:", error);
         throw error;
       }
+
+      // Invalidate and refetch services query
+      await queryClient.invalidateQueries({ queryKey: ["services"] });
 
       toast({
         title: "Sucesso",
