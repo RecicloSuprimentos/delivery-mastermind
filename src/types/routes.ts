@@ -16,6 +16,7 @@ export interface Service {
 
 export interface SystemSettings {
   id: string;
+  google_maps_key?: string;
   operational_base_address: string;
   operational_base_latitude: number;
   operational_base_longitude: number;
