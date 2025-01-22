@@ -75,11 +75,14 @@ export const RouteMap = ({
     mapTypeControl: false,
     fullscreenControl: false,
     gestureHandling: "cooperative",
-    disableDefaultUI: true,
+    disableDefaultUI: false,
     clickableIcons: false,
     minZoom: 3,
     maxZoom: 18,
     zoomControl: true,
+    zoomControlOptions: {
+      position: google.maps.ControlPosition.RIGHT_TOP
+    }
   };
 
   const handleMapLoad = (map: google.maps.Map) => {
