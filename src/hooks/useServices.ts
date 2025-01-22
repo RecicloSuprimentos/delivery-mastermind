@@ -12,6 +12,7 @@ export const useServices = () => {
       const { data, error } = await supabase
         .from("services")
         .select("*")
+        .neq("status", "cancelled")
         .eq("status", "not-assigned");
 
       if (error) throw error;
@@ -23,7 +24,7 @@ export const useServices = () => {
     mutationFn: async (serviceId: string) => {
       const { error } = await supabase
         .from("services")
-        .delete()
+        .update({ status: "cancelled" })
         .eq("id", serviceId);
 
       if (error) throw error;
@@ -32,14 +33,14 @@ export const useServices = () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
       toast({
         title: "Sucesso",
-        description: "Serviço excluído com sucesso",
+        description: "Serviço cancelado com sucesso",
       });
     },
     onError: (error) => {
-      console.error("Delete service error:", error);
+      console.error("Cancel service error:", error);
       toast({
         title: "Erro",
-        description: "Não é possível excluir este serviço pois ele está atribuído a uma rota",
+        description: "Erro ao cancelar o serviço",
         variant: "destructive",
       });
     },

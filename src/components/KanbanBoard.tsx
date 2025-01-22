@@ -12,7 +12,7 @@ const columns = [
   { id: "completed", title: "Finalizado hoje", count: 0 },
 ];
 
-type ValidStatus = "not-assigned" | "assigned" | "accepted" | "in-transit" | "arrived" | "completed";
+type ValidStatus = "not-assigned" | "assigned" | "accepted" | "in-transit" | "arrived" | "completed" | "cancelled";
 
 interface Service {
   id: string;
@@ -39,6 +39,7 @@ export const KanbanBoard = () => {
     const { data, error } = await supabase
       .from("services")
       .select("*")
+      .neq("status", "cancelled")
       .order("created_at", { ascending: false });
 
     if (error) {
