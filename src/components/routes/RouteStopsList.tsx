@@ -48,7 +48,8 @@ export const RouteStopsList = ({
     }
   };
 
-  const handleInvertStops = () => {
+  const handleInvertStops = (e: React.MouseEvent) => {
+    e.preventDefault(); // Previne o form de ser submetido
     if (!disabled) {
       onStopsChange([...selectedStops].reverse());
     }
@@ -60,6 +61,7 @@ export const RouteStopsList = ({
         <h2 className="text-lg font-semibold">Paradas da Rota</h2>
         <div className="space-x-2">
           <Button 
+            type="button" // Garante que o botão não submeta o form
             variant="outline" 
             size="sm" 
             onClick={handleInvertStops}
