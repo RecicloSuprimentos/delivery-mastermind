@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ServiceCard } from "@/components/ServiceCard";
+import ServiceCard from "@/components/ServiceCard";
 import type { Service } from "@/types/routes";
 
 interface RouteStopsListProps {
@@ -56,8 +56,8 @@ export const RouteStopsList = ({
             <ServiceCard
               key={service.id}
               service={service}
-              onRemove={disabled ? undefined : () => handleRemoveStop(service)}
-              index={index + 1}
+              onUpdate={() => handleRemoveStop(service)}
+              isSelected={true}
             />
           ))}
         </div>
@@ -71,7 +71,8 @@ export const RouteStopsList = ({
               <ServiceCard
                 key={service.id}
                 service={service}
-                onClick={disabled ? undefined : () => handleServiceSelect(service)}
+                onUpdate={() => handleServiceSelect(service)}
+                onSelect={() => handleServiceSelect(service)}
               />
             ))}
           </div>
