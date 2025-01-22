@@ -24,7 +24,10 @@ export const MapMarkers = ({ startLocationType, settings, selectedStops }: MapMa
             strokeColor: "#0369A1",
             strokeWeight: 2,
           }}
-          label="Base"
+          label={{
+            text: "Base",
+            color: "#FFFFFF"
+          }}
         />
       )}
 
@@ -32,7 +35,11 @@ export const MapMarkers = ({ startLocationType, settings, selectedStops }: MapMa
         <Marker
           key={stop.id}
           position={{ lat: stop.latitude, lng: stop.longitude }}
-          label={`${index + 1}`}
+          label={{
+            text: `${index + 1}`,
+            color: "#FFFFFF",
+            fontWeight: "bold"
+          }}
           icon={{
             path: google.maps.SymbolPath.CIRCLE,
             scale: 10,
