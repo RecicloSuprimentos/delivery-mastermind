@@ -92,6 +92,15 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
       return;
     }
 
+    if (!customerName || !phone || !address) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const generatedServiceId = serviceId || Math.random().toString(36).substring(2, 8).toUpperCase();
       
@@ -123,7 +132,10 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
           .insert([serviceData]));
       }
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving service:", error);
+        throw error;
+      }
 
       toast({
         title: "Sucesso",
@@ -139,7 +151,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
       console.error("Error saving service:", error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar serviço. Tente novamente.",
+        description: "Erro ao salvar serviço. Verifique se todos os campos estão preenchidos corretamente.",
         variant: "destructive",
       });
     }

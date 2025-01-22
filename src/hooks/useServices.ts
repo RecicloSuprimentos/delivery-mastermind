@@ -30,15 +30,12 @@ export const useServices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
-      toast({
-        title: "Sucesso",
-        description: "Serviço excluído com sucesso",
-      });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete service error:", error);
       toast({
         title: "Erro",
-        description: "Erro ao excluir serviço",
+        description: "Erro ao excluir serviço. Tente novamente.",
         variant: "destructive",
       });
     },
@@ -55,12 +52,9 @@ export const useServices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
-      toast({
-        title: "Sucesso",
-        description: "Status do serviço atualizado com sucesso",
-      });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update service status error:", error);
       toast({
         title: "Erro",
         description: "Erro ao atualizar status do serviço",
