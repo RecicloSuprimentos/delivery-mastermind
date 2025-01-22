@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { RouteStats } from "./RouteStats";
-import { createOptimizedRoute, getLocationFromType } from "@/utils/mapUtils";
+import { getLocationFromType } from "@/utils/mapUtils";
+import { optimizeRoute } from "@/utils/routeOptimization";
+import { MapMarkers } from "./map/MapMarkers";
+import { MapDirections } from "./map/MapDirections";
 import type { Location, Service, SystemSettings } from "@/types/routes";
 
 interface RouteMapProps {
@@ -39,16 +42,11 @@ export const RouteMap = ({
 
     if (!startLocation || !endLocation) return;
 
-    const waypoints = selectedStops.map(stop => ({
-      location: { lat: stop.latitude, lng: stop.longitude },
-      stopover: true,
-    }));
-
-    createOptimizedRoute(
+    optimizeRoute(
       directionsService,
       startLocation,
       endLocation,
-      waypoints,
+      selectedStops,
       settings.service_default_duration
     )
       .then(({ directions, totalDistance, totalDuration, estimatedTimes }) => {
@@ -81,54 +79,19 @@ export const RouteMap = ({
         options={mapOptions}
         onLoad={(map) => { mapRef.current = map; }}
       >
-        {directions && (
-          <DirectionsRenderer
-            directions={directions}
-            options={{
-              suppressMarkers: true,
-              preserveViewport: false,
-            }}
-          />
-        )}
-        
-        {settings && startLocationType === "operational_base" && (
-          <Marker
-            position={{
-              lat: settings.operational_base_latitude,
-              lng: settings.operational_base_longitude,
-            }}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: "#0EA5E9",
-              fillOpacity: 1,
-              strokeColor: "#0369A1",
-              strokeWeight: 2,
-            }}
-            label="Base"
-          />
-        )}
-
-        {selectedStops.map((stop, index) => (
-          <Marker
-            key={stop.id}
-            position={{ lat: stop.latitude, lng: stop.longitude }}
-            label={`${index + 1}`}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: stop.type === "coleta" ? "#F97316" : "#9333EA",
-              fillOpacity: 1,
-              strokeColor: stop.type === "coleta" ? "#C2410C" : "#6B21A8",
-              strokeWeight: 2,
-            }}
-          />
-        ))}
+        <MapDirections directions={directions} />
+        <MapMarkers 
+          startLocationType={startLocationType}
+          settings={settings}
+          selectedStops={selectedStops}
+        />
       </GoogleMap>
       {directions?.routes[0]?.legs && (
         <RouteStats
           distance={directions.routes[0].legs.reduce((acc, leg) => acc + leg.distance.value, 0)}
           duration={directions.routes[0].legs.reduce((acc, leg) => acc + leg.duration.value, 0)}
+          estimatedTimes={selectedStops.map((_, index) => new Date())}
+          stops={selectedStops}
         />
       )}
     </div>
