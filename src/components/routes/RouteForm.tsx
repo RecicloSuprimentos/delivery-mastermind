@@ -1,24 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { RouteMap } from "./RouteMap";
-import { RouteStopsList } from "./RouteStopsList";
 import { RouteFormHeader } from "./RouteFormHeader";
-import { RouteBasicFields } from "./RouteBasicFields";
+import { RouteFormContent } from "./RouteFormContent";
+import { useRouteFormState } from "@/hooks/useRouteFormState";
 import type { Database } from "@/integrations/supabase/types";
-import type { Service, SystemSettings } from "@/types/routes";
+import type { Service } from "@/types/routes";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
-type LocationType = RouteInsert["start_location_type"];
-
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-  user_type: string;
-}
 
 interface RouteFormProps {
   onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
@@ -29,17 +19,31 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const [searchParams] = useSearchParams();
   const routeId = searchParams.get("id");
   const mode = searchParams.get("mode");
-  const { toast } = useToast();
-  const [date, setDate] = useState<Date>();
-  const [startLocationType, setStartLocationType] = useState<LocationType>("operational_base");
-  const [endLocationType, setEndLocationType] = useState<LocationType>("operational_base");
-  const [selectedStartService, setSelectedStartService] = useState<string>();
-  const [selectedEndService, setSelectedEndService] = useState<string>();
-  const [routeName, setRouteName] = useState("");
-  const [selectedAgent, setSelectedAgent] = useState<string>();
-  const [selectedStops, setSelectedStops] = useState<Service[]>([]);
-  const [routeStats, setRouteStats] = useState<{ distance: number; duration: number } | null>(null);
-  const [optimizedStops, setOptimizedStops] = useState<Service[]>([]);
+  const isViewMode = mode === "view";
+
+  const {
+    date,
+    setDate,
+    startLocationType,
+    setStartLocationType,
+    endLocationType,
+    setEndLocationType,
+    selectedStartService,
+    setSelectedStartService,
+    selectedEndService,
+    setSelectedEndService,
+    routeName,
+    setRouteName,
+    selectedAgent,
+    setSelectedAgent,
+    selectedStops,
+    setSelectedStops,
+    routeStats,
+    handleRouteStats,
+    handleOptimizedStops,
+    handleOptimize,
+    validateForm,
+  } = useRouteFormState();
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -50,7 +54,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
         .eq("user_type", "agent");
 
       if (error) throw error;
-      return data as Agent[];
+      return data;
     },
   });
 
@@ -76,7 +80,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as SystemSettings;
+      return data;
     },
   });
 
@@ -103,7 +107,6 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
           setSelectedStartService(data.start_location_reference);
           setSelectedEndService(data.end_location_reference);
           
-          // Fetch route stops
           const { data: stopsData } = await supabase
             .from("route_stops")
             .select("*, service:services(*)")
@@ -123,19 +126,12 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!date || !selectedAgent || !routeName || selectedStops.length === 0) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validateForm()) return;
 
     const routeData: RouteInsert = {
       name: routeName,
-      agent_id: selectedAgent,
-      start_time: date.toISOString(),
+      agent_id: selectedAgent!,
+      start_time: date!.toISOString(),
       start_location_type: startLocationType,
       start_location_reference: startLocationType === "operational_base" ? 
         settings?.id : selectedStartService!,
@@ -150,73 +146,40 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
     await onSave(routeData, selectedStops, routeId || undefined);
   };
 
-  const handleRouteStats = (distance: number, duration: number) => {
-    setRouteStats({ distance, duration });
-  };
-
-  const handleOptimizedStops = (stops: Service[]) => {
-    setOptimizedStops(stops);
-  };
-
-  const handleOptimize = () => {
-    if (optimizedStops.length > 0) {
-      setSelectedStops(optimizedStops);
-    }
-  };
-
-  const isViewMode = mode === "view";
-
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-8">
-      <div className="space-y-8">
-        <RouteFormHeader
-          onSave={handleSubmit}
-          isLoading={isLoading}
-          routeId={routeId}
-          isViewMode={isViewMode}
-        />
-        
-        <RouteBasicFields
-          routeName={routeName}
-          setRouteName={setRouteName}
-          selectedAgent={selectedAgent}
-          setSelectedAgent={setSelectedAgent}
-          date={date}
-          setDate={setDate}
-          startLocationType={startLocationType}
-          setStartLocationType={setStartLocationType}
-          endLocationType={endLocationType}
-          setEndLocationType={setEndLocationType}
-          selectedStartService={selectedStartService}
-          setSelectedStartService={setSelectedStartService}
-          selectedEndService={selectedEndService}
-          setSelectedEndService={setSelectedEndService}
-          agents={agents}
-          services={services}
-          disabled={isViewMode}
-        />
-
-        <RouteStopsList 
-          services={services || []}
-          selectedStops={selectedStops}
-          onStopsChange={setSelectedStops}
-          onOptimize={handleOptimize}
-          disabled={isViewMode}
-        />
-      </div>
-
-      <div className="h-[calc(100vh-6rem)] sticky top-24">
-        <RouteMap 
-          settings={settings}
-          selectedStops={selectedStops}
-          startLocationType={startLocationType}
-          endLocationType={endLocationType}
-          selectedStartService={services?.find(s => s.id === selectedStartService)}
-          selectedEndService={services?.find(s => s.id === selectedEndService)}
-          onRouteStats={handleRouteStats}
-          onOptimizedStops={handleOptimizedStops}
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <RouteFormHeader
+        onSave={handleSubmit}
+        isLoading={isLoading}
+        routeId={routeId}
+        isViewMode={isViewMode}
+      />
+      
+      <RouteFormContent
+        routeName={routeName}
+        setRouteName={setRouteName}
+        selectedAgent={selectedAgent}
+        setSelectedAgent={setSelectedAgent}
+        date={date}
+        setDate={setDate}
+        startLocationType={startLocationType}
+        setStartLocationType={setStartLocationType}
+        endLocationType={endLocationType}
+        setEndLocationType={setEndLocationType}
+        selectedStartService={selectedStartService}
+        setSelectedStartService={setSelectedStartService}
+        selectedEndService={selectedEndService}
+        setSelectedEndService={setSelectedEndService}
+        selectedStops={selectedStops}
+        setSelectedStops={setSelectedStops}
+        onOptimize={handleOptimize}
+        onRouteStats={handleRouteStats}
+        onOptimizedStops={handleOptimizedStops}
+        agents={agents}
+        services={services}
+        settings={settings}
+        isViewMode={isViewMode}
+      />
     </form>
   );
 };
