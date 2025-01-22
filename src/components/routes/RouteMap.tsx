@@ -5,6 +5,7 @@ import { getLocationFromType } from "@/utils/mapUtils";
 import { optimizeRoute } from "@/utils/routeOptimization";
 import { MapMarkers } from "./map/MapMarkers";
 import { MapDirections } from "./map/MapDirections";
+import { MapControls } from "./map/MapControls";
 import type { Location, Service, SystemSettings } from "@/types/routes";
 
 interface RouteMapProps {
@@ -44,55 +45,65 @@ export const RouteMap = ({
 
     if (!startLocation || !endLocation) return;
 
-    optimizeRoute(
-      directionsService,
-      startLocation,
-      endLocation,
-      selectedStops,
-      settings.service_default_duration
-    )
-      .then(({ directions, totalDistance, totalDuration, estimatedTimes, optimizedWaypoints }) => {
-        setDirections(directions);
+    const calculateRoute = async () => {
+      try {
+        const result = await optimizeRoute(
+          directionsService,
+          startLocation,
+          endLocation,
+          selectedStops,
+          settings.service_default_duration
+        );
+        
+        setDirections(result.directions);
         if (onRouteStats) {
-          onRouteStats(totalDistance, totalDuration, estimatedTimes);
+          onRouteStats(result.totalDistance, result.totalDuration, result.estimatedTimes);
         }
         if (onOptimizedStops) {
-          onOptimizedStops(optimizedWaypoints);
+          onOptimizedStops(result.optimizedWaypoints);
         }
-      })
-      .catch(error => {
+      } catch (error) {
         console.error("Error calculating route:", error);
-      });
+      }
+    };
+
+    calculateRoute();
   }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats, onOptimizedStops]);
 
   const mapOptions: google.maps.MapOptions = {
-    zoomControl: true,
     streetViewControl: false,
     mapTypeControl: false,
     fullscreenControl: false,
-    gestureHandling: "greedy",
-    disableDefaultUI: false,
+    gestureHandling: "cooperative",
+    disableDefaultUI: true,
     clickableIcons: false,
-    zoom: 13,
     minZoom: 3,
     maxZoom: 18,
+    zoomControl: true,
+  };
+
+  const handleMapLoad = (map: google.maps.Map) => {
+    mapRef.current = map;
   };
 
   return (
     <div className="h-full rounded-lg overflow-hidden border border-gray-200 relative">
       <GoogleMap
-        zoom={13}
-        center={center}
+        onLoad={handleMapLoad}
         mapContainerClassName="w-full h-full"
         options={mapOptions}
-        onLoad={(map) => { mapRef.current = map; }}
       >
-        <MapDirections directions={directions} />
-        <MapMarkers 
-          startLocationType={startLocationType}
-          settings={settings}
-          selectedStops={selectedStops}
-        />
+        {mapRef.current && (
+          <>
+            <MapControls map={mapRef.current} center={center} />
+            <MapDirections directions={directions} />
+            <MapMarkers 
+              startLocationType={startLocationType}
+              settings={settings}
+              selectedStops={selectedStops}
+            />
+          </>
+        )}
       </GoogleMap>
       {directions?.routes[0]?.legs && (
         <RouteStats
