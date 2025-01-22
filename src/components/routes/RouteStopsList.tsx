@@ -1,4 +1,4 @@
-import { Package, MapPin, ArrowRight, RefreshCw, RotateCw } from "lucide-react";
+import { Package, MapPin, ArrowRight, RefreshCw, RotateCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -44,6 +44,16 @@ export const RouteStopsList = ({
     }
   };
 
+  const handleAddAllStops = () => {
+    if (disabled) return;
+    
+    const availableServices = services.filter(
+      service => !selectedStops.find(s => s.id === service.id)
+    );
+    
+    onStopsChange([...selectedStops, ...availableServices]);
+  };
+
   const handleRemoveStop = (serviceId: string) => {
     if (!disabled) {
       onStopsChange(selectedStops.filter(s => s.id !== serviceId));
@@ -81,6 +91,16 @@ export const RouteStopsList = ({
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Inverter
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddAllStops}
+            disabled={disabled || services.length === selectedStops.length}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Todos
           </Button>
         </div>
       </div>
