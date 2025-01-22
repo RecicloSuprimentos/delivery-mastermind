@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
 import { RouteListItem } from "./RouteListItem";
 
 interface Route {
@@ -30,8 +27,6 @@ const statusTranslations: Record<string, string> = {
 };
 
 export const RoutesList = () => {
-  const navigate = useNavigate();
-
   const { data: routes } = useQuery({
     queryKey: ["routes"],
     queryFn: async () => {
@@ -97,10 +92,6 @@ export const RoutesList = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Rotas</h1>
-        <Button onClick={() => navigate("/routes/new")}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Rota
-        </Button>
       </div>
 
       <div className="grid gap-3">

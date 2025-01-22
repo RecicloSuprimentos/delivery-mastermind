@@ -31,7 +31,7 @@ export const RouteMap = ({
   });
 
   useEffect(() => {
-    if (!window.google || selectedStops.length === 0 || !settings) return;
+    if (!window.google || !settings) return;
 
     const directionsService = new google.maps.DirectionsService();
     const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
@@ -86,7 +86,7 @@ export const RouteMap = ({
             directions={directions}
             options={{
               suppressMarkers: true,
-              preserveViewport: true,
+              preserveViewport: false,
             }}
           />
         )}
