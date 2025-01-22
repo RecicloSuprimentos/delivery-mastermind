@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { ServiceCardActions } from "./service/ServiceCardActions";
 import { ServiceCardDetails } from "./service/ServiceCardDetails";
 import { useServices } from "@/hooks/useServices";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Service {
   id: string;
@@ -30,21 +31,48 @@ interface ServiceCardProps {
 const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { deleteService, updateServiceStatus } = useServices();
+  const { toast } = useToast();
 
   const handleDelete = async () => {
     if (window.confirm("Tem certeza que deseja excluir este serviço?")) {
-      await deleteService.mutateAsync(service.id);
-      onUpdate();
+      try {
+        await deleteService.mutateAsync(service.id);
+        onUpdate();
+        toast({
+          title: "Sucesso",
+          description: "Serviço excluído com sucesso",
+        });
+      } catch (error) {
+        console.error("Error deleting service:", error);
+        toast({
+          title: "Erro",
+          description: "Não é possível excluir este serviço pois ele está atribuído a uma rota",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleUnassign = async () => {
     if (window.confirm("Tem certeza que deseja desatribuir este serviço?")) {
-      await updateServiceStatus.mutateAsync({
-        serviceId: service.id,
-        status: "not-assigned"
-      });
-      onUpdate();
+      try {
+        await updateServiceStatus.mutateAsync({
+          serviceId: service.id,
+          status: "not-assigned"
+        });
+        onUpdate();
+        toast({
+          title: "Sucesso",
+          description: "Serviço desatribuído com sucesso",
+        });
+      } catch (error) {
+        console.error("Error unassigning service:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao desatribuir o serviço",
+          variant: "destructive",
+        });
+      }
     }
   };
 
