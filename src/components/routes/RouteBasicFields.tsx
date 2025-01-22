@@ -56,18 +56,20 @@ export const RouteBasicFields = ({
   disabled,
 }: RouteBasicFieldsProps) => {
   return (
-    <div className="space-y-4">
-      <RouteNameField 
-        value={routeName} 
-        onChange={setRouteName}
-        disabled={disabled}
-      />
-      <AgentSelect 
-        agents={agents} 
-        value={selectedAgent} 
-        onChange={setSelectedAgent}
-        disabled={disabled}
-      />
+    <div className="space-y-4 pt-16"> {/* Added pt-16 to account for fixed header */}
+      <div className="grid grid-cols-2 gap-4">
+        <RouteNameField 
+          value={routeName} 
+          onChange={setRouteName}
+          disabled={disabled}
+        />
+        <AgentSelect 
+          agents={agents} 
+          value={selectedAgent} 
+          onChange={setSelectedAgent}
+          disabled={disabled}
+        />
+      </div>
       <DateTimePicker 
         date={date} 
         onDateChange={setDate}
