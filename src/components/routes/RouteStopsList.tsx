@@ -1,4 +1,4 @@
-import { Package, MapPin, ArrowRight, RefreshCw } from "lucide-react";
+import { Package, MapPin, ArrowRight, RefreshCw, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -17,6 +17,7 @@ interface RouteStopsListProps {
   services: Service[];
   selectedStops: Service[];
   onStopsChange: (stops: Service[]) => void;
+  onOptimize?: () => void;
   disabled?: boolean;
 }
 
@@ -24,6 +25,7 @@ export const RouteStopsList = ({
   services,
   selectedStops,
   onStopsChange,
+  onOptimize,
   disabled,
 }: RouteStopsListProps) => {
   const handleDragEnd = (result: any) => {
@@ -49,7 +51,7 @@ export const RouteStopsList = ({
   };
 
   const handleInvertStops = (e: React.MouseEvent) => {
-    e.preventDefault(); // Previne o form de ser submetido
+    e.preventDefault();
     if (!disabled) {
       onStopsChange([...selectedStops].reverse());
     }
@@ -61,7 +63,17 @@ export const RouteStopsList = ({
         <h2 className="text-lg font-semibold">Paradas da Rota</h2>
         <div className="space-x-2">
           <Button 
-            type="button" // Garante que o botão não submeta o form
+            type="button"
+            variant="outline" 
+            size="sm" 
+            onClick={onOptimize}
+            disabled={disabled || !onOptimize}
+          >
+            <RotateCw className="h-4 w-4 mr-2" />
+            Otimizar
+          </Button>
+          <Button 
+            type="button"
             variant="outline" 
             size="sm" 
             onClick={handleInvertStops}

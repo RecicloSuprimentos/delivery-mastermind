@@ -39,6 +39,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const [selectedAgent, setSelectedAgent] = useState<string>();
   const [selectedStops, setSelectedStops] = useState<Service[]>([]);
   const [routeStats, setRouteStats] = useState<{ distance: number; duration: number } | null>(null);
+  const [optimizedStops, setOptimizedStops] = useState<Service[]>([]);
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -153,6 +154,16 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
     setRouteStats({ distance, duration });
   };
 
+  const handleOptimizedStops = (stops: Service[]) => {
+    setOptimizedStops(stops);
+  };
+
+  const handleOptimize = () => {
+    if (optimizedStops.length > 0) {
+      setSelectedStops(optimizedStops);
+    }
+  };
+
   const isViewMode = mode === "view";
 
   return (
@@ -189,6 +200,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
           services={services || []}
           selectedStops={selectedStops}
           onStopsChange={setSelectedStops}
+          onOptimize={handleOptimize}
           disabled={isViewMode}
         />
       </div>
@@ -202,6 +214,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
           selectedStartService={services?.find(s => s.id === selectedStartService)}
           selectedEndService={services?.find(s => s.id === selectedEndService)}
           onRouteStats={handleRouteStats}
+          onOptimizedStops={handleOptimizedStops}
         />
       </div>
     </form>
