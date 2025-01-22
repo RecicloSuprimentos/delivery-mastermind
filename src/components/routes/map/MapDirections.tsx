@@ -13,6 +13,11 @@ export const MapDirections = ({ directions }: MapDirectionsProps) => {
       options={{
         suppressMarkers: true,
         preserveViewport: false,
+        polylineOptions: {
+          strokeColor: "#0EA5E9",
+          strokeWeight: 5,
+          strokeOpacity: 0.7,
+        },
       }}
     />
   );

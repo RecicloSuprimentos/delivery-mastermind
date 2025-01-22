@@ -15,6 +15,7 @@ interface RouteMapProps {
   selectedStartService?: Service;
   selectedEndService?: Service;
   onRouteStats?: (distance: number, duration: number, estimatedTimes: Date[]) => void;
+  onOptimizedStops?: (stops: Service[]) => void;
 }
 
 export const RouteMap = ({ 
@@ -25,6 +26,7 @@ export const RouteMap = ({
   selectedStartService,
   selectedEndService,
   onRouteStats,
+  onOptimizedStops,
 }: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
@@ -34,7 +36,7 @@ export const RouteMap = ({
   });
 
   useEffect(() => {
-    if (!window.google || !settings) return;
+    if (!window.google || !settings || selectedStops.length === 0) return;
 
     const directionsService = new google.maps.DirectionsService();
     const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
@@ -49,16 +51,19 @@ export const RouteMap = ({
       selectedStops,
       settings.service_default_duration
     )
-      .then(({ directions, totalDistance, totalDuration, estimatedTimes }) => {
+      .then(({ directions, totalDistance, totalDuration, estimatedTimes, optimizedWaypoints }) => {
         setDirections(directions);
         if (onRouteStats) {
           onRouteStats(totalDistance, totalDuration, estimatedTimes);
+        }
+        if (onOptimizedStops) {
+          onOptimizedStops(optimizedWaypoints);
         }
       })
       .catch(error => {
         console.error("Error calculating route:", error);
       });
-  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats]);
+  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats, onOptimizedStops]);
 
   const mapOptions: google.maps.MapOptions = {
     zoomControl: true,

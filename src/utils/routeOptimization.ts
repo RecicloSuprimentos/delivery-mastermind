@@ -1,4 +1,12 @@
-import type { Location, Service, SystemSettings } from "@/types/routes";
+import type { Location, Service } from "@/types/routes";
+
+interface OptimizationResult {
+  directions: google.maps.DirectionsResult;
+  totalDistance: number;
+  totalDuration: number;
+  estimatedTimes: Date[];
+  optimizedWaypoints: Service[];
+}
 
 export const optimizeRoute = async (
   directionsService: google.maps.DirectionsService,
@@ -6,12 +14,7 @@ export const optimizeRoute = async (
   endLocation: Location,
   waypoints: Service[],
   defaultDuration: number
-): Promise<{
-  directions: google.maps.DirectionsResult;
-  totalDistance: number;
-  totalDuration: number;
-  estimatedTimes: Date[];
-}> => {
+): Promise<OptimizationResult> => {
   const formattedWaypoints = waypoints.map(stop => ({
     location: { lat: stop.latitude, lng: stop.longitude },
     stopover: true,
@@ -29,22 +32,28 @@ export const optimizeRoute = async (
       (result, status) => {
         if (status === google.maps.DirectionsStatus.OK && result) {
           const legs = result.routes[0].legs;
+          const waypointOrder = result.routes[0].waypoint_order;
+          
+          // Reorder waypoints based on optimization
+          const optimizedWaypoints = waypointOrder.map(index => waypoints[index]);
+          
+          // Calculate total service duration including default duration for each stop
           const totalServiceDuration = (waypoints.length + 2) * defaultDuration * 60;
           const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
           const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0) + totalServiceDuration;
 
-          // Calculate estimated arrival times considering service duration
+          // Calculate estimated arrival times considering service duration and time windows
           const startTime = new Date();
           const estimatedTimes: Date[] = [];
           let currentTime = new Date(startTime);
 
-          legs.forEach((leg, index) => {
-            // Add travel time
-            currentTime = new Date(currentTime.getTime() + leg.duration.value * 1000);
+          optimizedWaypoints.forEach((waypoint, index) => {
+            // Add travel time from previous stop
+            currentTime = new Date(currentTime.getTime() + legs[index].duration.value * 1000);
             
-            // Add service duration for the current stop
-            if (waypoints[index]?.time_window) {
-              const [startWindow] = waypoints[index].time_window.split('-')[0].trim().split(':').map(Number);
+            // If there's a time window, try to respect it
+            if (waypoint.time_window) {
+              const [startWindow] = waypoint.time_window.split('-')[0].trim().split(':').map(Number);
               const preferredTime = new Date(currentTime);
               preferredTime.setHours(startWindow, 0, 0, 0);
               
@@ -54,7 +63,10 @@ export const optimizeRoute = async (
               }
             }
             
+            // Store estimated arrival time
             estimatedTimes.push(new Date(currentTime));
+            
+            // Add service duration for this stop
             currentTime = new Date(currentTime.getTime() + defaultDuration * 60 * 1000);
           });
 
@@ -63,6 +75,7 @@ export const optimizeRoute = async (
             totalDistance,
             totalDuration: Math.round(totalDuration / 60),
             estimatedTimes,
+            optimizedWaypoints,
           });
         } else {
           reject(new Error(`Failed to calculate route: ${status}`));
