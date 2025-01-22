@@ -2,29 +2,19 @@ import { Marker } from "@react-google-maps/api";
 import type { Service, SystemSettings } from "@/types/routes";
 
 interface MapMarkersProps {
+  startLocationType: string;
   settings?: SystemSettings;
   selectedStops: Service[];
-  startLocationType: "operational_base" | "service";
-  endLocationType: "operational_base" | "service";
-  selectedStartService?: Service;
-  selectedEndService?: Service;
 }
 
-export const MapMarkers = ({ 
-  settings, 
-  selectedStops,
-  startLocationType,
-  endLocationType,
-  selectedStartService,
-  selectedEndService 
-}: MapMarkersProps) => {
+export const MapMarkers = ({ startLocationType, settings, selectedStops }: MapMarkersProps) => {
   return (
     <>
       {settings && startLocationType === "operational_base" && (
         <Marker
           position={{
-            lat: Number(settings.operational_base_latitude),
-            lng: Number(settings.operational_base_longitude),
+            lat: settings.operational_base_latitude,
+            lng: settings.operational_base_longitude,
           }}
           icon={{
             path: google.maps.SymbolPath.CIRCLE,
@@ -41,7 +31,7 @@ export const MapMarkers = ({
       {selectedStops.map((stop, index) => (
         <Marker
           key={stop.id}
-          position={{ lat: Number(stop.latitude), lng: Number(stop.longitude) }}
+          position={{ lat: stop.latitude, lng: stop.longitude }}
           label={`${index + 1}`}
           icon={{
             path: google.maps.SymbolPath.CIRCLE,
