@@ -70,9 +70,12 @@ export const RouteMap = ({
     streetViewControl: false,
     mapTypeControl: false,
     fullscreenControl: false,
-    gestureHandling: "cooperative",
+    gestureHandling: "greedy",
     disableDefaultUI: false,
     clickableIcons: false,
+    zoom: 13,
+    minZoom: 3,
+    maxZoom: 18,
   };
 
   return (
