@@ -16,13 +16,6 @@ export const RouteStats = ({ distance, duration, estimatedTimes, stops }: RouteS
     return `${hours}h${remainingMinutes}min`;
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  };
-
   const getTotalTimeWindowViolations = () => {
     if (!estimatedTimes || !stops) return 0;
     return stops.reduce((total, stop, index) => {
@@ -37,11 +30,6 @@ export const RouteStats = ({ distance, duration, estimatedTimes, stops }: RouteS
     <div className="absolute bottom-4 left-4 bg-black/80 text-white px-4 py-2 rounded-lg text-sm space-y-1">
       <div>Distância total: {(distance / 1000).toFixed(1)} km</div>
       <div>Tempo estimado: {formatDuration(Math.round(duration / 60))}</div>
-      {estimatedTimes?.map((time, index) => (
-        <div key={index}>
-          Parada {index + 1}: {formatTime(time)}
-        </div>
-      ))}
       {timeWindowViolations > 0 && (
         <div className="text-red-400">
           Violações de janela de tempo: {formatDuration(timeWindowViolations)}
