@@ -13,7 +13,7 @@ export const useServices = () => {
         .from("services")
         .select("*")
         .neq("status", "cancelled")
-        .eq("status", "not-assigned");
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
