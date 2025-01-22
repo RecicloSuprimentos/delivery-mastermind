@@ -3,9 +3,9 @@ import ServiceTypeSelector from "./ServiceTypeSelector";
 
 interface ServiceIdFieldProps {
   serviceId: string;
-  serviceType: "coleta" | "entrega" | "";
+  serviceType: "coleta" | "entrega" | null;
   onServiceIdChange: (value: string) => void;
-  onServiceTypeChange: (value: "coleta" | "entrega" | "") => void;
+  onServiceTypeChange: (value: "coleta" | "entrega") => void;
 }
 
 const ServiceIdField = ({

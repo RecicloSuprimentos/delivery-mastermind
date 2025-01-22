@@ -2,14 +2,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
 interface ServiceTypeSelectorProps {
-  value: "coleta" | "entrega" | "";
+  value: "coleta" | "entrega" | null;
   onChange: (value: "coleta" | "entrega") => void;
 }
 
 const ServiceTypeSelector = ({ value, onChange }: ServiceTypeSelectorProps) => {
   return (
     <RadioGroup
-      value={value}
+      value={value || undefined}
       onValueChange={(value) => onChange(value as "coleta" | "entrega")}
       className="flex items-center gap-4"
     >

@@ -32,7 +32,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
   const [complement, setComplement] = useState("");
   const [timeWindow, setTimeWindow] = useState("");
   const [observations, setObservations] = useState("");
-  const [serviceType, setServiceType] = useState<"coleta" | "entrega" | "">("");
+  const [serviceType, setServiceType] = useState<"coleta" | "entrega" | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -76,6 +76,15 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!serviceType) {
+      toast({
+        title: "Erro",
+        description: "Selecione o tipo de serviço",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const validationError = validateServiceForm(serviceType, location, customerName, phone, address);
     if (validationError) {
