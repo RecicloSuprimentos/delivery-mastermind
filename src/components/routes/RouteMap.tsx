@@ -17,6 +17,7 @@ interface RouteMapProps {
   selectedEndService?: Service;
   onRouteStats?: (distance: number, duration: number, estimatedTimes: Date[]) => void;
   onOptimizedStops?: (stops: Service[]) => void;
+  shouldOptimize?: boolean;
 }
 
 export const RouteMap = ({ 
@@ -28,6 +29,7 @@ export const RouteMap = ({
   selectedEndService,
   onRouteStats,
   onOptimizedStops,
+  shouldOptimize = false,
 }: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
@@ -36,7 +38,6 @@ export const RouteMap = ({
     lng: settings?.operational_base_longitude || -46.6333 
   });
 
-  // Add debug logs
   useEffect(() => {
     console.log("Settings received:", settings);
     console.log("Google Maps API Key:", settings?.google_maps_key);
@@ -44,11 +45,12 @@ export const RouteMap = ({
   }, [settings]);
 
   useEffect(() => {
-    if (!window.google || !settings || selectedStops.length === 0) {
-      console.log("Missing requirements:", {
+    if (!window.google || !settings || selectedStops.length === 0 || !shouldOptimize) {
+      console.log("Missing requirements or optimization not requested:", {
         google: !window.google,
         settings: !settings,
-        noStops: selectedStops.length === 0
+        noStops: selectedStops.length === 0,
+        shouldOptimize
       });
       return;
     }
@@ -85,7 +87,7 @@ export const RouteMap = ({
     };
 
     calculateRoute();
-  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats, onOptimizedStops]);
+  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats, onOptimizedStops, shouldOptimize]);
 
   const mapOptions: google.maps.MapOptions = {
     streetViewControl: false,

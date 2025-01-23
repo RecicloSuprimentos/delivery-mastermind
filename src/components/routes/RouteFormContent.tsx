@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
 import { RouteBasicFields } from "./RouteBasicFields";
@@ -54,6 +55,13 @@ export const RouteFormContent = ({
   settings,
   isViewMode,
 }: RouteFormContentProps) => {
+  const [shouldOptimize, setShouldOptimize] = useState(false);
+
+  const handleOptimize = () => {
+    setShouldOptimize(true);
+    onOptimize();
+  };
+
   return (
     <div className="grid grid-cols-2 gap-8">
       <div className="space-y-8">
@@ -81,7 +89,7 @@ export const RouteFormContent = ({
           services={services || []}
           selectedStops={selectedStops}
           onStopsChange={setSelectedStops}
-          onOptimize={onOptimize}
+          onOptimize={handleOptimize}
           disabled={isViewMode}
         />
       </div>
@@ -96,6 +104,7 @@ export const RouteFormContent = ({
           selectedEndService={services?.find(s => s.id === selectedEndService)}
           onRouteStats={onRouteStats}
           onOptimizedStops={onOptimizedStops}
+          shouldOptimize={shouldOptimize}
         />
       </div>
     </div>
