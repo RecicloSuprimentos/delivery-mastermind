@@ -6,6 +6,13 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface AuthResponse {
+  id: string;
+  email: string;
+  name: string;
+  user_type: "admin" | "user" | "agent";
+}
+
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,12 +41,14 @@ export const LoginForm = () => {
         return;
       }
 
+      const userData = data as AuthResponse;
+
       // Se autenticação foi bem sucedida, redireciona para a página principal
       navigate("/");
       
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo(a), ${data.name}!`,
+        description: `Bem-vindo(a), ${userData.name}!`,
       });
 
     } catch (error) {
