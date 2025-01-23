@@ -18,34 +18,22 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // Primeiro verificar se o usuário existe na tabela system_users
-      const { data: systemUser, error: systemUserError } = await supabase
-        .from('system_users')
-        .select('*')
-        .eq('email', email)
-        .eq('password', password)
-        .single();
+      // Usar a função authenticate_user para fazer login
+      const { data: authResult, error: authError } = await supabase
+        .rpc('authenticate_user', {
+          email_input: email,
+          password_input: password
+        });
 
-      if (systemUserError || !systemUser) {
-        console.error("Erro ao verificar usuário:", systemUserError);
-        throw new Error("Credenciais inválidas");
-      }
-
-      // Se o usuário existe e a senha está correta, fazer login no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) {
+      if (authError || !authResult) {
         console.error("Erro de autenticação:", authError);
-        throw new Error("Erro ao autenticar usuário");
+        throw new Error("Credenciais inválidas");
       }
 
       // Mostrar mensagem de sucesso
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo(a), ${systemUser.name}!`,
+        description: `Bem-vindo(a), ${authResult.name}!`,
       });
 
       // Redirecionar para a página inicial
