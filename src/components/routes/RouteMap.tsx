@@ -36,14 +36,31 @@ export const RouteMap = ({
     lng: settings?.operational_base_longitude || -46.6333 
   });
 
+  // Add debug logs
   useEffect(() => {
-    if (!window.google || !settings || selectedStops.length === 0) return;
+    console.log("Settings received:", settings);
+    console.log("Google Maps API Key:", settings?.google_maps_key);
+    console.log("Window google object:", window.google);
+  }, [settings]);
+
+  useEffect(() => {
+    if (!window.google || !settings || selectedStops.length === 0) {
+      console.log("Missing requirements:", {
+        google: !window.google,
+        settings: !settings,
+        noStops: selectedStops.length === 0
+      });
+      return;
+    }
 
     const directionsService = new google.maps.DirectionsService();
     const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
     const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
 
-    if (!startLocation || !endLocation) return;
+    if (!startLocation || !endLocation) {
+      console.log("Missing locations:", { startLocation, endLocation });
+      return;
+    }
 
     const calculateRoute = async () => {
       try {
@@ -86,6 +103,7 @@ export const RouteMap = ({
   };
 
   const handleMapLoad = (map: google.maps.Map) => {
+    console.log("Map loaded successfully");
     mapRef.current = map;
   };
 
@@ -95,6 +113,8 @@ export const RouteMap = ({
         onLoad={handleMapLoad}
         mapContainerClassName="w-full h-full"
         options={mapOptions}
+        center={center}
+        zoom={13}
       >
         {mapRef.current && (
           <>
