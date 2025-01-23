@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { Autocomplete } from "@react-google-maps/api";
 import { Input } from "@/components/ui/input";
 
@@ -16,6 +16,14 @@ interface AddressSearchProps {
 const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps) => {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
+  useEffect(() => {
+    // Verificar se o Google Maps está carregado
+    if (!window.google) {
+      console.warn("Google Maps not loaded");
+      return;
+    }
+  }, []);
+
   const handlePlaceSelect = () => {
     const place = autocompleteRef.current?.getPlace();
     
@@ -27,6 +35,18 @@ const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps
       onLocationSelect({ lat, lng }, place.formatted_address || "");
     }
   };
+
+  // Se o Google Maps não estiver carregado, retorna apenas o input
+  if (!window.google) {
+    return (
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Digite o endereço (Google Maps não carregado)"
+        disabled
+      />
+    );
+  }
 
   return (
     <Autocomplete
