@@ -62,6 +62,17 @@ export const LoginForm = () => {
         throw new Error('Formato de resposta inválido do servidor');
       }
 
+      // Criar uma sessão explicitamente
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (signInError) {
+        console.error("Erro ao criar sessão:", signInError);
+        throw new Error('Erro ao criar sessão');
+      }
+
       // Verificar se a sessão foi criada corretamente
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
