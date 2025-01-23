@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 interface AuthResponse {
   id: string;
@@ -41,14 +42,26 @@ export const LoginForm = () => {
         return;
       }
 
-      const userData = data as AuthResponse;
+      // Validate that the response has the expected shape
+      const isValidAuthResponse = (data: Json): data is AuthResponse => {
+        return typeof data === 'object' 
+          && data !== null
+          && 'id' in data
+          && 'email' in data
+          && 'name' in data
+          && 'user_type' in data;
+      };
+
+      if (!isValidAuthResponse(data)) {
+        throw new Error('Invalid response format from server');
+      }
 
       // Se autenticação foi bem sucedida, redireciona para a página principal
       navigate("/");
       
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo(a), ${userData.name}!`,
+        description: `Bem-vindo(a), ${data.name}!`,
       });
 
     } catch (error) {
