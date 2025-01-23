@@ -9,6 +9,7 @@ import { AgentProtectedRoute } from "@/components/auth/AgentProtectedRoute";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import AgentLogin from "./pages/AgentLogin";
 import NewServicePage from "./pages/NewServicePage";
 import SettingsPage from "./pages/Settings";
 import RoutesPage from "./pages/RoutesPage";
