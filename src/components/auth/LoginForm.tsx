@@ -57,13 +57,23 @@ export const LoginForm = () => {
         throw new Error('Invalid response format from server');
       }
 
-      // Se autenticação foi bem sucedida, redireciona para a página principal
-      navigate("/");
+      // Verificar se a sessão foi criada corretamente
+      const { data: sessionData } = await supabase.auth.getSession();
       
+      if (!sessionData.session) {
+        throw new Error('Session not created');
+      }
+
+      // Se a sessão foi criada com sucesso, redireciona para a página principal
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo(a), ${data.name}!`,
       });
+
+      // Aguarda um pequeno intervalo para garantir que o toast seja exibido
+      setTimeout(() => {
+        navigate("/");
+      }, 500);
 
     } catch (error) {
       console.error("Erro ao fazer login:", error);
