@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-import type { Location } from "@/types/routes";
+import type { SystemSettings, Location } from "@/types/routes";
 
-export const useMapConfiguration = (settings?: { 
-  operational_base_latitude?: number; 
-  operational_base_longitude?: number;
-}) => {
+export const useMapConfiguration = (settings?: SystemSettings) => {
   const [center] = useState<Location>({ 
     lat: settings?.operational_base_latitude || -23.5505, 
     lng: settings?.operational_base_longitude || -46.6333 
