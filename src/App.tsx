@@ -52,6 +52,7 @@ const AppContent = () => {
         <Sonner />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/agent-login" element={<AgentLogin />} />
           <Route
             path="/"
             element={
