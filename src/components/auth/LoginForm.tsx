@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Json } from "@/integrations/supabase/types";
 
 interface AuthResponse {
   id: string;
@@ -26,12 +25,16 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.rpc('authenticate_user', {
+      // Primeiro, autenticar o usuário usando a função RPC
+      const { data, error: rpcError } = await supabase.rpc('authenticate_user', {
         email_input: email,
         password_input: password
       });
 
-      if (error) throw error;
+      if (rpcError) {
+        console.error("Erro RPC:", rpcError);
+        throw new Error("Falha na autenticação");
+      }
       
       if (!data) {
         toast({
@@ -39,10 +42,11 @@ export const LoginForm = () => {
           title: "Erro ao fazer login",
           description: "Email ou senha inválidos",
         });
+        setIsLoading(false);
         return;
       }
 
-      // Validate that the response has the expected shape
+      // Validar o formato da resposta
       const isValidAuthResponse = (data: unknown): data is AuthResponse => {
         const d = data as any;
         return typeof d === 'object' 
@@ -54,33 +58,40 @@ export const LoginForm = () => {
       };
 
       if (!isValidAuthResponse(data)) {
-        throw new Error('Invalid response format from server');
+        console.error("Formato de resposta inválido:", data);
+        throw new Error('Formato de resposta inválido do servidor');
       }
 
       // Verificar se a sessão foi criada corretamente
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (!sessionData.session) {
-        throw new Error('Session not created');
+      if (sessionError) {
+        console.error("Erro ao obter sessão:", sessionError);
+        throw new Error('Erro ao criar sessão');
       }
 
-      // Se a sessão foi criada com sucesso, redireciona para a página principal
+      if (!sessionData.session) {
+        console.error("Sessão não criada");
+        throw new Error('Sessão não criada');
+      }
+
+      // Se a sessão foi criada com sucesso, mostrar mensagem e redirecionar
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo(a), ${data.name}!`,
       });
 
-      // Aguarda um pequeno intervalo para garantir que o toast seja exibido
+      // Aguardar um pequeno intervalo para garantir que o toast seja exibido
       setTimeout(() => {
         navigate("/");
       }, 500);
 
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
+      console.error("Erro detalhado ao fazer login:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: "Ocorreu um erro ao tentar fazer login. Tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar fazer login. Tente novamente.",
       });
     } finally {
       setIsLoading(false);
