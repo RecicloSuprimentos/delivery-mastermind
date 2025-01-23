@@ -2,3 +2,5 @@ project_id = "tmqgmbnbjklkgeiveanb"
 
 [api]
 enabled = true
+[functions.manage-auth-users]
+verify_jwt = true
