@@ -18,7 +18,7 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // Fazer login diretamente com o Supabase Auth
+      // Primeiro, autenticar o usuário
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -26,12 +26,7 @@ export const LoginForm = () => {
 
       if (authError) {
         console.error("Erro de autenticação:", authError);
-        throw new Error(authError.message);
-      }
-
-      if (!authData.session) {
-        console.error("Sessão não criada");
-        throw new Error("Sessão não criada");
+        throw new Error("Credenciais inválidas");
       }
 
       // Buscar dados adicionais do usuário
@@ -52,17 +47,15 @@ export const LoginForm = () => {
         description: `Bem-vindo(a), ${userData.name}!`,
       });
 
-      // Aguardar um pequeno intervalo para garantir que o toast seja exibido
-      setTimeout(() => {
-        navigate("/");
-      }, 500);
+      // Redirecionar para a página inicial
+      navigate("/");
 
     } catch (error) {
-      console.error("Erro detalhado ao fazer login:", error);
+      console.error("Erro ao fazer login:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar fazer login. Tente novamente.",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar fazer login",
       });
     } finally {
       setIsLoading(false);
