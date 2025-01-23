@@ -26,7 +26,6 @@ interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
   user_type: UserType;
   is_active: boolean;
 }
@@ -42,7 +41,6 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
   const [formData, setFormData] = useState<Omit<User, "id">>({
     name: "",
     email: "",
-    password: "12345",
     user_type: "user",
     is_active: true,
   });
@@ -52,7 +50,6 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
       setFormData({
         name: selectedUser.name,
         email: selectedUser.email,
-        password: selectedUser.password,
         user_type: selectedUser.user_type,
         is_active: selectedUser.is_active,
       });
@@ -98,18 +95,6 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
               }
             />
           </div>
