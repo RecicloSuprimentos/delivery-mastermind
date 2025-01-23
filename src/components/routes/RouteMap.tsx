@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { GoogleMap } from "@react-google-maps/api";
 import { RouteStats } from "./RouteStats";
-import { getLocationFromType } from "@/utils/mapUtils";
-import { optimizeRoute } from "@/utils/routeOptimization";
 import { MapMarkers } from "./map/MapMarkers";
 import { MapDirections } from "./map/MapDirections";
 import { MapControls } from "./map/MapControls";
-import type { Location, Service, SystemSettings } from "@/types/routes";
+import { useMapDirections } from "./map/useMapDirections";
+import { useMapConfiguration } from "./map/useMapConfiguration";
+import type { Service, SystemSettings } from "@/types/routes";
 
 interface RouteMapProps {
   settings?: SystemSettings;
@@ -32,77 +32,19 @@ export const RouteMap = ({
   shouldOptimize = false,
 }: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [center] = useState<Location>({ 
-    lat: settings?.operational_base_latitude || -23.5505, 
-    lng: settings?.operational_base_longitude || -46.6333 
+  const { center, mapOptions } = useMapConfiguration(settings);
+  
+  const directions = useMapDirections({
+    settings,
+    selectedStops,
+    startLocationType,
+    endLocationType,
+    selectedStartService,
+    selectedEndService,
+    onRouteStats,
+    onOptimizedStops,
+    shouldOptimize,
   });
-
-  useEffect(() => {
-    console.log("Settings received:", settings);
-    console.log("Google Maps API Key:", settings?.google_maps_key);
-    console.log("Window google object:", window.google);
-  }, [settings]);
-
-  useEffect(() => {
-    if (!window.google || !settings || selectedStops.length === 0 || !shouldOptimize) {
-      console.log("Missing requirements or optimization not requested:", {
-        google: !window.google,
-        settings: !settings,
-        noStops: selectedStops.length === 0,
-        shouldOptimize
-      });
-      return;
-    }
-
-    const directionsService = new google.maps.DirectionsService();
-    const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
-    const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
-
-    if (!startLocation || !endLocation) {
-      console.log("Missing locations:", { startLocation, endLocation });
-      return;
-    }
-
-    const calculateRoute = async () => {
-      try {
-        const result = await optimizeRoute(
-          directionsService,
-          startLocation,
-          endLocation,
-          selectedStops,
-          settings.service_default_duration
-        );
-        
-        setDirections(result.directions);
-        if (onRouteStats) {
-          onRouteStats(result.totalDistance, result.totalDuration, result.estimatedTimes);
-        }
-        if (onOptimizedStops) {
-          onOptimizedStops(result.optimizedWaypoints);
-        }
-      } catch (error) {
-        console.error("Error calculating route:", error);
-      }
-    };
-
-    calculateRoute();
-  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats, onOptimizedStops, shouldOptimize]);
-
-  const mapOptions: google.maps.MapOptions = {
-    streetViewControl: false,
-    mapTypeControl: false,
-    fullscreenControl: false,
-    gestureHandling: "cooperative",
-    disableDefaultUI: false,
-    clickableIcons: false,
-    minZoom: 3,
-    maxZoom: 18,
-    zoomControl: true,
-    zoomControlOptions: {
-      position: google.maps.ControlPosition.RIGHT_TOP
-    }
-  };
 
   const handleMapLoad = (map: google.maps.Map) => {
     console.log("Map loaded successfully");
