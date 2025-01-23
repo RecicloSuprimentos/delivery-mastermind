@@ -6,13 +6,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface AuthResponse {
-  id: string;
-  email: string;
-  name: string;
-  user_type: "admin" | "user" | "agent";
-}
-
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,71 +18,38 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // Primeiro, autenticar o usuário usando a função RPC
-      const { data, error: rpcError } = await supabase.rpc('authenticate_user', {
-        email_input: email,
-        password_input: password
+      // Fazer login diretamente com o Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (rpcError) {
-        console.error("Erro RPC:", rpcError);
-        throw new Error("Falha na autenticação");
-      }
-      
-      if (!data) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao fazer login",
-          description: "Email ou senha inválidos",
-        });
-        setIsLoading(false);
-        return;
+      if (authError) {
+        console.error("Erro de autenticação:", authError);
+        throw new Error(authError.message);
       }
 
-      // Validar o formato da resposta
-      const isValidAuthResponse = (data: unknown): data is AuthResponse => {
-        const d = data as any;
-        return typeof d === 'object' 
-          && d !== null
-          && typeof d.id === 'string'
-          && typeof d.email === 'string'
-          && typeof d.name === 'string'
-          && (d.user_type === 'admin' || d.user_type === 'user' || d.user_type === 'agent');
-      };
-
-      if (!isValidAuthResponse(data)) {
-        console.error("Formato de resposta inválido:", data);
-        throw new Error('Formato de resposta inválido do servidor');
-      }
-
-      // Criar uma sessão explicitamente
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
-
-      if (signInError) {
-        console.error("Erro ao criar sessão:", signInError);
-        throw new Error('Erro ao criar sessão');
-      }
-
-      // Verificar se a sessão foi criada corretamente
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error("Erro ao obter sessão:", sessionError);
-        throw new Error('Erro ao criar sessão');
-      }
-
-      if (!sessionData.session) {
+      if (!authData.session) {
         console.error("Sessão não criada");
-        throw new Error('Sessão não criada');
+        throw new Error("Sessão não criada");
       }
 
-      // Se a sessão foi criada com sucesso, mostrar mensagem e redirecionar
+      // Buscar dados adicionais do usuário
+      const { data: userData, error: userError } = await supabase
+        .from('system_users')
+        .select('name, user_type')
+        .eq('email', email)
+        .single();
+
+      if (userError) {
+        console.error("Erro ao buscar dados do usuário:", userError);
+        throw new Error("Erro ao buscar dados do usuário");
+      }
+
+      // Mostrar mensagem de sucesso
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo(a), ${data.name}!`,
+        description: `Bem-vindo(a), ${userData.name}!`,
       });
 
       // Aguardar um pequeno intervalo para garantir que o toast seja exibido
