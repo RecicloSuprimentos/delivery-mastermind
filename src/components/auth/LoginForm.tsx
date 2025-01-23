@@ -18,7 +18,6 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // Usar a função authenticate_user para fazer login
       const { data: authResult, error: authError } = await supabase
         .rpc('authenticate_user', {
           email_input: email,
