@@ -43,13 +43,14 @@ export const LoginForm = () => {
       }
 
       // Validate that the response has the expected shape
-      const isValidAuthResponse = (data: Json): data is AuthResponse => {
-        return typeof data === 'object' 
-          && data !== null
-          && 'id' in data
-          && 'email' in data
-          && 'name' in data
-          && 'user_type' in data;
+      const isValidAuthResponse = (data: unknown): data is AuthResponse => {
+        const d = data as any;
+        return typeof d === 'object' 
+          && d !== null
+          && typeof d.id === 'string'
+          && typeof d.email === 'string'
+          && typeof d.name === 'string'
+          && (d.user_type === 'admin' || d.user_type === 'user' || d.user_type === 'agent');
       };
 
       if (!isValidAuthResponse(data)) {
