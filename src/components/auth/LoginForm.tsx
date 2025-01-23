@@ -18,26 +18,32 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const { data: authResult, error: authError } = await supabase
-        .rpc('authenticate_user', {
-          email_input: email,
-          password_input: password
-        });
-
-      if (authError || !authResult) {
-        console.error("Erro de autenticação:", authError);
-        throw new Error("Credenciais inválidas");
-      }
-
-      // Mostrar mensagem de sucesso
-      toast({
-        title: "Login realizado com sucesso",
-        description: `Bem-vindo(a), ${authResult.name}!`,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      // Redirecionar para a página inicial
-      navigate("/");
+      if (error) throw error;
 
+      if (data.user) {
+        // Buscar informações adicionais do usuário
+        const { data: userData, error: userError } = await supabase
+          .from("system_users")
+          .select("name, user_type")
+          .eq("email", data.user.email)
+          .maybeSingle();
+
+        if (userError) throw userError;
+
+        // Mostrar mensagem de sucesso
+        toast({
+          title: "Login realizado com sucesso",
+          description: `Bem-vindo(a), ${userData?.name}!`,
+        });
+
+        // Redirecionar para a página inicial
+        navigate("/");
+      }
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       toast({
