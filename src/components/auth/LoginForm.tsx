@@ -18,7 +18,20 @@ export const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // Primeiro, autenticar o usuário
+      // Primeiro verificar se o usuário existe na tabela system_users
+      const { data: systemUser, error: systemUserError } = await supabase
+        .from('system_users')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
+
+      if (systemUserError || !systemUser) {
+        console.error("Erro ao verificar usuário:", systemUserError);
+        throw new Error("Credenciais inválidas");
+      }
+
+      // Se o usuário existe e a senha está correta, fazer login no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -26,25 +39,13 @@ export const LoginForm = () => {
 
       if (authError) {
         console.error("Erro de autenticação:", authError);
-        throw new Error("Credenciais inválidas");
-      }
-
-      // Buscar dados adicionais do usuário
-      const { data: userData, error: userError } = await supabase
-        .from('system_users')
-        .select('name, user_type')
-        .eq('email', email)
-        .single();
-
-      if (userError) {
-        console.error("Erro ao buscar dados do usuário:", userError);
-        throw new Error("Erro ao buscar dados do usuário");
+        throw new Error("Erro ao autenticar usuário");
       }
 
       // Mostrar mensagem de sucesso
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo(a), ${userData.name}!`,
+        description: `Bem-vindo(a), ${systemUser.name}!`,
       });
 
       // Redirecionar para a página inicial
