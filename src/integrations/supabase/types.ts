@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string | null
+          updated_at: string
+          user_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          is_active?: boolean | null
+          name?: string | null
+          updated_at?: string
+          user_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          updated_at?: string
+          user_type?: string | null
+        }
+        Relationships: []
+      }
       route_stops: {
         Row: {
           created_at: string | null
@@ -109,15 +136,7 @@ export type Database = {
           total_duration?: number | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "routes_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "system_users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       services: {
         Row: {
@@ -200,36 +219,6 @@ export type Database = {
           operational_base_longitude?: number | null
           service_default_duration?: number | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      system_users: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          is_active: boolean | null
-          name: string
-          password: string
-          user_type: Database["public"]["Enums"]["user_type"]
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          is_active?: boolean | null
-          name: string
-          password?: string
-          user_type: Database["public"]["Enums"]["user_type"]
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          password?: string
-          user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: []
       }
