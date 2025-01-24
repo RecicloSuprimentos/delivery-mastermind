@@ -10,17 +10,31 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AuthUser {
   id: string;
   email: string;
+  user_type?: string;
+  name?: string;
 }
 
 interface AccessUserFormProps {
   isOpen: boolean;
   onClose: () => void;
   selectedUser: AuthUser | null;
-  onSubmit: (formData: { email: string; password?: string }) => void;
+  onSubmit: (formData: { 
+    email: string; 
+    password?: string; 
+    user_type?: string;
+    name?: string;
+  }) => void;
 }
 
 export const AccessUserForm = ({
@@ -29,9 +43,16 @@ export const AccessUserForm = ({
   selectedUser,
   onSubmit,
 }: AccessUserFormProps) => {
-  const [formData, setFormData] = useState<{ email: string; password?: string }>({
+  const [formData, setFormData] = useState<{
+    email: string;
+    password?: string;
+    user_type: string;
+    name: string;
+  }>({
     email: "",
     password: "",
+    user_type: "user",
+    name: "",
   });
 
   useEffect(() => {
@@ -39,11 +60,15 @@ export const AccessUserForm = ({
       setFormData({
         email: selectedUser.email,
         password: "",
+        user_type: selectedUser.user_type || "user",
+        name: selectedUser.name || "",
       });
     } else {
       setFormData({
         email: "",
         password: "",
+        user_type: "user",
+        name: "",
       });
     }
   }, [selectedUser]);
@@ -68,6 +93,17 @@ export const AccessUserForm = ({
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
+            <Label htmlFor="name">Nome</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="grid gap-2">
             <Label htmlFor="email">E-mail</Label>
             <Input
               id="email"
@@ -91,6 +127,25 @@ export const AccessUserForm = ({
                 setFormData({ ...formData, password: e.target.value })
               }
             />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="user_type">Tipo de Usuário</Label>
+            <Select
+              value={formData.user_type}
+              onValueChange={(value) =>
+                setFormData({ ...formData, user_type: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">Usuário</SelectItem>
+                <SelectItem value="agent">Agente</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

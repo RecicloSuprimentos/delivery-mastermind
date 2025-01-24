@@ -8,12 +8,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface AuthUser {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
+  user_type?: string;
+  name?: string;
 }
 
 interface AccessUserListProps {
@@ -22,12 +25,40 @@ interface AccessUserListProps {
   onDelete: (userId: string) => void;
 }
 
+const getUserTypeLabel = (type?: string) => {
+  switch (type) {
+    case 'admin':
+      return 'Administrador';
+    case 'agent':
+      return 'Agente';
+    case 'user':
+      return 'Usuário';
+    default:
+      return 'Usuário';
+  }
+};
+
+const getUserTypeBadgeColor = (type?: string) => {
+  switch (type) {
+    case 'admin':
+      return 'bg-red-500';
+    case 'agent':
+      return 'bg-blue-500';
+    case 'user':
+      return 'bg-green-500';
+    default:
+      return 'bg-gray-500';
+  }
+};
+
 export const AccessUserList = ({ users, onEdit, onDelete }: AccessUserListProps) => {
   return (
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>Nome</TableHead>
           <TableHead>E-mail</TableHead>
+          <TableHead>Tipo</TableHead>
           <TableHead>Criado em</TableHead>
           <TableHead>Último acesso</TableHead>
           <TableHead className="text-right">Ações</TableHead>
@@ -36,7 +67,13 @@ export const AccessUserList = ({ users, onEdit, onDelete }: AccessUserListProps)
       <TableBody>
         {users?.map((user) => (
           <TableRow key={user.id}>
+            <TableCell>{user.name || 'N/A'}</TableCell>
             <TableCell>{user.email}</TableCell>
+            <TableCell>
+              <Badge className={getUserTypeBadgeColor(user.user_type)}>
+                {getUserTypeLabel(user.user_type)}
+              </Badge>
+            </TableCell>
             <TableCell>
               {new Date(user.created_at).toLocaleDateString()}
             </TableCell>
