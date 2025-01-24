@@ -12,6 +12,12 @@ export interface Service {
   latitude: number;
   longitude: number;
   time_window?: string;
+  phone: string;
+  email?: string;
+  complement?: string;
+  observations?: string;
+  status?: string;
+  created_at?: string;
 }
 
 export interface SystemSettings {

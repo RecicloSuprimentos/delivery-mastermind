@@ -17,7 +17,6 @@ interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
   user_type: UserType;
   is_active: boolean;
 }

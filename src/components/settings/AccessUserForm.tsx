@@ -10,7 +10,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -18,58 +17,66 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Database } from "@/integrations/supabase/types";
 
-type UserType = Database["public"]["Enums"]["user_type"];
-
-interface User {
+interface AuthUser {
   id: string;
-  name: string;
   email: string;
-  user_type: UserType;
-  is_active: boolean;
-  password?: string;
+  user_metadata?: {
+    name?: string;
+    user_type?: "user" | "agent" | "admin";
+  };
 }
 
-interface UserFormProps {
+interface AccessUserFormProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedUser: User | null;
-  onSubmit: (formData: Omit<User, "id">) => void;
+  selectedUser: AuthUser | null;
+  onSubmit: (formData: { 
+    email: string; 
+    password?: string;
+    name?: string;
+    user_type?: "user" | "agent" | "admin";
+  }) => void;
 }
 
-export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormProps) => {
-  const [formData, setFormData] = useState<Omit<User, "id">>({
-    name: "",
+export const AccessUserForm = ({
+  isOpen,
+  onClose,
+  selectedUser,
+  onSubmit,
+}: AccessUserFormProps) => {
+  const [formData, setFormData] = useState<{
+    email: string;
+    password?: string;
+    name: string;
+    user_type: "user" | "agent" | "admin";
+  }>({
     email: "",
-    user_type: "user",
-    is_active: true,
     password: "",
+    name: "",
+    user_type: "user",
   });
 
   useEffect(() => {
     if (selectedUser) {
       setFormData({
-        name: selectedUser.name,
         email: selectedUser.email,
-        user_type: selectedUser.user_type,
-        is_active: selectedUser.is_active,
         password: "",
+        name: selectedUser.user_metadata?.name || "",
+        user_type: selectedUser.user_metadata?.user_type || "user",
       });
     } else {
       setFormData({
-        name: "",
         email: "",
-        user_type: "user",
-        is_active: true,
         password: "",
+        name: "",
+        user_type: "user",
       });
     }
   }, [selectedUser]);
 
   const handleSubmit = () => {
     onSubmit(formData);
-    onClose();
   };
 
   return (
@@ -125,33 +132,22 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="type">Tipo de Usuário</Label>
+            <Label htmlFor="user_type">Tipo de Usuário</Label>
             <Select
               value={formData.user_type}
-              onValueChange={(value: UserType) =>
+              onValueChange={(value: "user" | "agent" | "admin") =>
                 setFormData({ ...formData, user_type: value })
               }
             >
-              <SelectTrigger className="bg-white">
+              <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Administrador</SelectItem>
                 <SelectItem value="user">Usuário</SelectItem>
                 <SelectItem value="agent">Agente</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Label htmlFor="status">Status</Label>
-            <Switch
-              id="status"
-              checked={formData.is_active}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, is_active: checked })
-              }
-            />
           </div>
         </div>
 

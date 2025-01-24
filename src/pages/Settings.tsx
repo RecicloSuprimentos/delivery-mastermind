@@ -1,11 +1,11 @@
-import { Link } from "lucide-react";
+import { Link, UserPlus, MapPin, Key, Clock, Lock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/settings/UserManagement";
+import { AccessManagement } from "@/components/settings/AccessManagement";
 import { OperationalBase } from "@/components/settings/OperationalBase";
 import { ServiceSettings } from "@/components/settings/ServiceSettings";
 import { ApiKeys } from "@/components/settings/ApiKeys";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { UserPlus, MapPin, Key, Clock } from "lucide-react";
 
 const SettingsPage = () => {
   return (
@@ -17,6 +17,10 @@ const SettingsPage = () => {
           <TabsTrigger value="users" className="gap-2">
             <UserPlus className="h-4 w-4" />
             Usuários
+          </TabsTrigger>
+          <TabsTrigger value="access" className="gap-2">
+            <Lock className="h-4 w-4" />
+            Acesso
           </TabsTrigger>
           <TabsTrigger value="operational" className="gap-2">
             <MapPin className="h-4 w-4" />
@@ -39,6 +43,10 @@ const SettingsPage = () => {
         <div className="mt-6 grid gap-6">
           <TabsContent value="users">
             <UserManagement />
+          </TabsContent>
+
+          <TabsContent value="access">
+            <AccessManagement />
           </TabsContent>
 
           <TabsContent value="operational">

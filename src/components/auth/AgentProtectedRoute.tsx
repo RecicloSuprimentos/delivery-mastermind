@@ -16,25 +16,18 @@ export const AgentProtectedRoute = ({ children }: { children: React.ReactNode })
         return;
       }
 
-      const { data: userData, error } = await supabase
-        .from("system_users")
-        .select("user_type")
-        .eq("email", session.user.email)
-        .single();
+      const userType = session.user.user_metadata?.user_type;
+      
+      setIsAuthenticated(true);
+      setIsAgent(userType === "agent");
 
-      if (error) {
-        console.error("Error fetching user type:", error);
+      if (userType !== "agent") {
         toast({
           variant: "destructive",
-          title: "Erro",
-          description: "Erro ao verificar permissões do usuário",
+          title: "Acesso negado",
+          description: "Apenas agentes podem acessar esta área",
         });
-        setIsAuthenticated(false);
-        return;
       }
-
-      setIsAuthenticated(true);
-      setIsAgent(userData?.user_type === "agent");
     };
 
     checkAuth();
@@ -50,17 +43,8 @@ export const AgentProtectedRoute = ({ children }: { children: React.ReactNode })
     return null;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  if (!isAgent) {
-    toast({
-      variant: "destructive",
-      title: "Acesso negado",
-      description: "Apenas agentes podem acessar esta área",
-    });
-    return <Navigate to="/" />;
+  if (!isAuthenticated || !isAgent) {
+    return <Navigate to="/agent-login" />;
   }
 
   return <>{children}</>;
