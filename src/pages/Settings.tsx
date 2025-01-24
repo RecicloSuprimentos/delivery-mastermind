@@ -1,6 +1,5 @@
-import { Link, UserPlus, MapPin, Key, Clock, Users } from "lucide-react";
+import { MapPin, Key, Clock, Users, Link } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserManagement } from "@/components/settings/UserManagement";
 import { UserAssignments } from "@/components/settings/UserAssignments";
 import { OperationalBase } from "@/components/settings/OperationalBase";
 import { ServiceSettings } from "@/components/settings/ServiceSettings";
@@ -12,12 +11,8 @@ const SettingsPage = () => {
     <div className="container mx-auto p-6 space-y-6 pt-20">
       <SettingsHeader />
 
-      <Tabs defaultValue="users" className="w-full">
+      <Tabs defaultValue="assignments" className="w-full">
         <TabsList className="w-full justify-start">
-          <TabsTrigger value="users" className="gap-2">
-            <UserPlus className="h-4 w-4" />
-            Usuários
-          </TabsTrigger>
           <TabsTrigger value="assignments" className="gap-2">
             <Users className="h-4 w-4" />
             Atribuições
@@ -41,10 +36,6 @@ const SettingsPage = () => {
         </TabsList>
 
         <div className="mt-6 grid gap-6">
-          <TabsContent value="users">
-            <UserManagement />
-          </TabsContent>
-
           <TabsContent value="assignments">
             <UserAssignments />
           </TabsContent>
