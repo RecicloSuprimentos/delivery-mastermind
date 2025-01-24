@@ -16,7 +16,6 @@ export const UserAssignments = () => {
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Busca usuários autenticados que ainda não têm atribuições
   const { data: availableUsers } = useQuery({
     queryKey: ["availableUsers"],
     queryFn: async () => {
@@ -33,7 +32,6 @@ export const UserAssignments = () => {
     },
   });
 
-  // Busca usuários já atribuídos
   const { data: assignedUsers } = useQuery({
     queryKey: ["assignedUsers"],
     queryFn: async () => {
@@ -53,16 +51,21 @@ export const UserAssignments = () => {
     },
   });
 
-  // Mutação para criar nova atribuição
   const createAssignment = useMutation({
     mutationFn: async (userData: { name: string; email: string; user_type: string }) => {
       console.log("Criando nova atribuição:", userData);
-      const { error } = await supabase.from("system_users").insert([userData]);
+      const { data, error } = await supabase
+        .from("system_users")
+        .insert([userData])
+        .select()
+        .single();
       
       if (error) {
         console.error("Erro ao criar atribuição:", error);
-        throw new Error("Não foi possível criar a atribuição");
+        throw new Error(error.message || "Não foi possível criar a atribuição");
       }
+
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["availableUsers"] });
@@ -74,6 +77,7 @@ export const UserAssignments = () => {
       setIsFormOpen(false);
     },
     onError: (error: Error) => {
+      console.error("Erro na mutação:", error);
       toast({
         variant: "destructive",
         title: "Erro ao criar atribuição",

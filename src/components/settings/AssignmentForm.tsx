@@ -73,6 +73,7 @@ export const AssignmentForm = ({
   const handleSubmit = () => {
     if (validateForm()) {
       onSubmit(formData);
+      setFormData({ name: "", email: "", user_type: "" }); // Reset form after submit
     }
   };
 
@@ -95,10 +96,10 @@ export const AssignmentForm = ({
                 setFormData({ ...formData, email: value })
               }
             >
-              <SelectTrigger className="bg-white">
+              <SelectTrigger id="email" className="bg-popover">
                 <SelectValue placeholder="Selecione um usuário" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover">
                 {availableUsers.map((user) => (
                   <SelectItem key={user.email} value={user.email}>
                     {user.email}
@@ -134,10 +135,10 @@ export const AssignmentForm = ({
                 setFormData({ ...formData, user_type: value })
               }
             >
-              <SelectTrigger className="bg-white">
+              <SelectTrigger id="type" className="bg-popover">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover">
                 <SelectItem value="admin">Administrador</SelectItem>
                 <SelectItem value="user">Usuário</SelectItem>
                 <SelectItem value="agent">Agente</SelectItem>
