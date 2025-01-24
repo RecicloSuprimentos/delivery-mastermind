@@ -21,8 +21,10 @@ import {
 interface AuthUser {
   id: string;
   email: string;
-  user_type?: string;
-  name?: string;
+  user_metadata?: {
+    name?: string;
+    user_type?: string;
+  };
 }
 
 interface AccessUserFormProps {
@@ -31,9 +33,9 @@ interface AccessUserFormProps {
   selectedUser: AuthUser | null;
   onSubmit: (formData: { 
     email: string; 
-    password?: string; 
-    user_type?: string;
+    password?: string;
     name?: string;
+    user_type?: string;
   }) => void;
 }
 
@@ -46,13 +48,13 @@ export const AccessUserForm = ({
   const [formData, setFormData] = useState<{
     email: string;
     password?: string;
-    user_type: string;
     name: string;
+    user_type: string;
   }>({
     email: "",
     password: "",
-    user_type: "user",
     name: "",
+    user_type: "user",
   });
 
   useEffect(() => {
@@ -60,15 +62,15 @@ export const AccessUserForm = ({
       setFormData({
         email: selectedUser.email,
         password: "",
-        user_type: selectedUser.user_type || "user",
-        name: selectedUser.name || "",
+        name: selectedUser.user_metadata?.name || "",
+        user_type: selectedUser.user_metadata?.user_type || "user",
       });
     } else {
       setFormData({
         email: "",
         password: "",
-        user_type: "user",
         name: "",
+        user_type: "user",
       });
     }
   }, [selectedUser]);

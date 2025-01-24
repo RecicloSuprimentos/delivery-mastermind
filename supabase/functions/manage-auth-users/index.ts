@@ -36,65 +36,27 @@ Deno.serve(async (req) => {
           throw listError
         }
         
-        // Buscar dados adicionais dos usuários do system_users
-        const userIds = users.map(user => user.id)
-        const { data: systemUsers, error: systemUsersError } = await supabaseClient
-          .from('system_users')
-          .select('*')
-          .in('id', userIds)
-
-        if (systemUsersError) {
-          console.error('Error fetching system users:', systemUsersError)
-          throw systemUsersError
-        }
-
-        // Combinar os dados
-        const enrichedUsers = users.map(user => {
-          const systemUser = systemUsers?.find(su => su.id === user.id)
-          return {
-            ...user,
-            user_type: systemUser?.user_type || 'user',
-            name: systemUser?.name || '',
-            is_active: systemUser?.is_active ?? true
-          }
-        })
-        
-        console.log(`Found ${enrichedUsers.length} users`)
+        console.log(`Found ${users.length} users`)
         return new Response(
-          JSON.stringify({ users: enrichedUsers }),
+          JSON.stringify({ users }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 
       case 'create':
         console.log('Creating user:', userData.email)
-        // Criar usuário no auth
         const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
           email: userData.email,
           password: userData.password,
-          email_confirm: true
+          email_confirm: true,
+          user_metadata: {
+            name: userData.name || '',
+            user_type: userData.user_type || 'user'
+          }
         })
         
         if (createError) {
           console.error('Error creating user:', createError)
           throw createError
-        }
-
-        // Criar entrada correspondente em system_users
-        if (newUser.user) {
-          const { error: systemUserError } = await supabaseClient
-            .from('system_users')
-            .insert([{
-              id: newUser.user.id,
-              email: userData.email,
-              name: userData.name || userData.email,
-              user_type: userData.user_type || 'user',
-              is_active: true
-            }])
-
-          if (systemUserError) {
-            console.error('Error creating system user:', systemUserError)
-            throw systemUserError
-          }
         }
         
         console.log('User created successfully:', newUser)
@@ -105,11 +67,14 @@ Deno.serve(async (req) => {
 
       case 'update':
         console.log('Updating user:', userData.id)
-        const updateData: any = {}
-        
-        if (userData.email) {
-          updateData.email = userData.email
+        const updateData: any = {
+          email: userData.email,
+          user_metadata: {
+            name: userData.name,
+            user_type: userData.user_type
+          }
         }
+        
         if (userData.password) {
           updateData.password = userData.password
         }
@@ -122,23 +87,6 @@ Deno.serve(async (req) => {
         if (updateError) {
           console.error('Error updating user:', updateError)
           throw updateError
-        }
-
-        // Atualizar system_users se necessário
-        if (userData.user_type || userData.name) {
-          const { error: systemUserUpdateError } = await supabaseClient
-            .from('system_users')
-            .update({
-              user_type: userData.user_type,
-              name: userData.name,
-              email: userData.email
-            })
-            .eq('id', userData.id)
-
-          if (systemUserUpdateError) {
-            console.error('Error updating system user:', systemUserUpdateError)
-            throw systemUserUpdateError
-          }
         }
         
         console.log('User updated successfully:', updatedUser)
@@ -156,17 +104,6 @@ Deno.serve(async (req) => {
         if (deleteError) {
           console.error('Error deleting user:', deleteError)
           throw deleteError
-        }
-
-        // Deletar entrada em system_users
-        const { error: systemUserDeleteError } = await supabaseClient
-          .from('system_users')
-          .delete()
-          .eq('id', userData.id)
-
-        if (systemUserDeleteError) {
-          console.error('Error deleting system user:', systemUserDeleteError)
-          throw systemUserDeleteError
         }
         
         console.log('User deleted successfully')

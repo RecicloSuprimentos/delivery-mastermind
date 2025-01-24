@@ -13,8 +13,10 @@ interface AuthUser {
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
-  user_metadata: Record<string, any>;
-  app_metadata: Record<string, any>;
+  user_metadata?: {
+    name?: string;
+    user_type?: string;
+  };
 }
 
 export const AccessManagement = () => {
@@ -40,7 +42,12 @@ export const AccessManagement = () => {
   });
 
   const createUser = useMutation({
-    mutationFn: async (userData: { email: string; password: string }) => {
+    mutationFn: async (userData: { 
+      email: string; 
+      password: string;
+      name?: string;
+      user_type?: string;
+    }) => {
       console.log('Creating user:', userData.email);
       const { data, error } = await supabase.functions.invoke("manage-auth-users", {
         body: { action: "create", userData },
@@ -68,7 +75,13 @@ export const AccessManagement = () => {
   });
 
   const updateUser = useMutation({
-    mutationFn: async (userData: { id: string; email?: string; password?: string }) => {
+    mutationFn: async (userData: { 
+      id: string; 
+      email?: string; 
+      password?: string;
+      name?: string;
+      user_type?: string;
+    }) => {
       console.log('Updating user:', userData.id);
       const { data, error } = await supabase.functions.invoke("manage-auth-users", {
         body: { action: "update", userData },
@@ -122,7 +135,12 @@ export const AccessManagement = () => {
     },
   });
 
-  const handleSubmit = async (formData: { email: string; password?: string }) => {
+  const handleSubmit = async (formData: { 
+    email: string; 
+    password?: string;
+    name?: string;
+    user_type?: string;
+  }) => {
     if (selectedUser) {
       await updateUser.mutateAsync({
         id: selectedUser.id,
@@ -137,7 +155,12 @@ export const AccessManagement = () => {
         });
         return;
       }
-      await createUser.mutateAsync(formData as { email: string; password: string });
+      await createUser.mutateAsync(formData as { 
+        email: string; 
+        password: string;
+        name?: string;
+        user_type?: string;
+      });
     }
   };
 

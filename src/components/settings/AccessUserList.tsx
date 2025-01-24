@@ -15,8 +15,10 @@ interface AuthUser {
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
-  user_type?: string;
-  name?: string;
+  user_metadata?: {
+    name?: string;
+    user_type?: string;
+  };
 }
 
 interface AccessUserListProps {
@@ -67,11 +69,11 @@ export const AccessUserList = ({ users, onEdit, onDelete }: AccessUserListProps)
       <TableBody>
         {users?.map((user) => (
           <TableRow key={user.id}>
-            <TableCell>{user.name || 'N/A'}</TableCell>
+            <TableCell>{user.user_metadata?.name || 'N/A'}</TableCell>
             <TableCell>{user.email}</TableCell>
             <TableCell>
-              <Badge className={getUserTypeBadgeColor(user.user_type)}>
-                {getUserTypeLabel(user.user_type)}
+              <Badge className={getUserTypeBadgeColor(user.user_metadata?.user_type)}>
+                {getUserTypeLabel(user.user_metadata?.user_type)}
               </Badge>
             </TableCell>
             <TableCell>
