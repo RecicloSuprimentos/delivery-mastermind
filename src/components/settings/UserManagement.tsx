@@ -15,9 +15,9 @@ interface User {
   id: string;
   name: string;
   email: string;
+  password: string;
   user_type: UserType;
   is_active: boolean;
-  password?: string;
 }
 
 export const UserManagement = () => {
@@ -42,12 +42,7 @@ export const UserManagement = () => {
 
   const createUser = useMutation({
     mutationFn: async (userData: Omit<User, "id">) => {
-      const { error } = await supabase.from("system_users").insert([{
-        name: userData.name,
-        email: userData.email,
-        user_type: userData.user_type,
-        is_active: userData.is_active,
-      }]);
+      const { error } = await supabase.from("system_users").insert([userData]);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -62,23 +57,17 @@ export const UserManagement = () => {
 
   const updateUser = useMutation({
     mutationFn: async (user: User) => {
-      const updateData: Partial<User> = {
-        name: user.name,
-        email: user.email,
-        user_type: user.user_type,
-        is_active: user.is_active,
-      };
-
       const { error } = await supabase
         .from("system_users")
-        .update(updateData)
+        .update({
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          user_type: user.user_type,
+          is_active: user.is_active,
+        })
         .eq("id", user.id);
       if (error) throw error;
-
-      // Se uma nova senha foi fornecida, atualize-a
-      if (user.password) {
-        // A senha será atualizada pelo trigger do banco de dados
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["systemUsers"] });

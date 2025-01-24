@@ -26,9 +26,9 @@ interface User {
   id: string;
   name: string;
   email: string;
+  password: string;
   user_type: UserType;
   is_active: boolean;
-  password?: string;
 }
 
 interface UserFormProps {
@@ -42,9 +42,9 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
   const [formData, setFormData] = useState<Omit<User, "id">>({
     name: "",
     email: "",
+    password: "12345",
     user_type: "user",
     is_active: true,
-    password: "",
   });
 
   useEffect(() => {
@@ -52,17 +52,9 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
       setFormData({
         name: selectedUser.name,
         email: selectedUser.email,
+        password: selectedUser.password,
         user_type: selectedUser.user_type,
         is_active: selectedUser.is_active,
-        password: "",
-      });
-    } else {
-      setFormData({
-        name: "",
-        email: "",
-        user_type: "user",
-        is_active: true,
-        password: "",
       });
     }
   }, [selectedUser]);
@@ -111,9 +103,7 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="password">
-              {selectedUser ? "Nova Senha (deixe em branco para manter)" : "Senha"}
-            </Label>
+            <Label htmlFor="password">Senha</Label>
             <Input
               id="password"
               type="password"

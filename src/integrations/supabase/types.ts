@@ -210,7 +210,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
-          password: string | null
+          password: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Insert: {
@@ -219,7 +219,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
-          password?: string | null
+          password?: string
           user_type: Database["public"]["Enums"]["user_type"]
         }
         Update: {
@@ -228,7 +228,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
-          password?: string | null
+          password?: string
           user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: []
@@ -238,7 +238,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      authenticate_user: {
+        Args: {
+          email_input: string
+          password_input: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       location_type: "operational_base" | "service"

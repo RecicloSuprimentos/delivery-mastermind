@@ -51,7 +51,7 @@ export const AgentProtectedRoute = ({ children }: { children: React.ReactNode })
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/agent-login" />;
+    return <Navigate to="/login" />;
   }
 
   if (!isAgent) {
@@ -60,7 +60,7 @@ export const AgentProtectedRoute = ({ children }: { children: React.ReactNode })
       title: "Acesso negado",
       description: "Apenas agentes podem acessar esta área",
     });
-    return <Navigate to="/agent-login" />;
+    return <Navigate to="/" />;
   }
 
   return <>{children}</>;
