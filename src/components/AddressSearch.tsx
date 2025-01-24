@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,12 +15,9 @@ interface AddressSearchProps {
 }
 
 const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  // Buscar a chave da API do Google Maps
   const { data: settings } = useQuery({
     queryKey: ["systemSettings"],
     queryFn: async () => {
@@ -29,85 +26,43 @@ const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps
         .select("google_maps_key")
         .single();
       
-      if (error) {
-        console.error("Erro ao buscar configurações:", error);
-        setError("Erro ao carregar configurações");
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
   });
 
-  // Carregar o script do Google Maps
   useEffect(() => {
-    if (!settings?.google_maps_key) return;
+    if (!settings?.google_maps_key || !inputRef.current) return;
 
-    const googleMapsScript = document.createElement("script");
-    googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${settings.google_maps_key}&libraries=places`;
-    googleMapsScript.async = true;
-    googleMapsScript.defer = true;
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${settings.google_maps_key}&libraries=places`;
+    script.async = true;
     
-    googleMapsScript.onload = () => {
-      setIsLoading(false);
-      initializeAutocomplete();
-    };
-
-    googleMapsScript.onerror = () => {
-      setError("Erro ao carregar Google Maps");
-      setIsLoading(false);
-    };
-
-    document.head.appendChild(googleMapsScript);
-
-    return () => {
-      document.head.removeChild(googleMapsScript);
-    };
-  }, [settings?.google_maps_key]);
-
-  // Inicializar o autocomplete
-  const initializeAutocomplete = () => {
-    if (!inputRef.current || !window.google) return;
-
-    autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-      componentRestrictions: { country: "br" },
-      fields: ["formatted_address", "geometry"],
-      types: ["address"]
-    });
-
-    autocompleteRef.current.addListener("place_changed", () => {
-      const place = autocompleteRef.current?.getPlace();
+    script.onload = () => {
+      if (!inputRef.current) return;
       
-      if (place?.geometry?.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        
-        onChange(place.formatted_address || "");
-        onLocationSelect({ lat, lng });
-      }
-    });
-  };
+      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+        componentRestrictions: { country: "br" },
+        fields: ["formatted_address", "geometry"],
+      });
 
-  if (error) {
-    return (
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Erro ao carregar busca de endereços"
-        className="bg-red-50"
-      />
-    );
-  }
+      autocompleteRef.current.addListener("place_changed", () => {
+        const place = autocompleteRef.current?.getPlace();
+        if (place?.geometry?.location) {
+          onChange(place.formatted_address || "");
+          onLocationSelect({
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          });
+        }
+      });
+    };
 
-  if (isLoading) {
-    return (
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Carregando busca de endereços..."
-        disabled
-      />
-    );
-  }
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [settings?.google_maps_key, onChange, onLocationSelect]);
 
   return (
     <Input
