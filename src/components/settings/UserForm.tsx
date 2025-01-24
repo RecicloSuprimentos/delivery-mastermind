@@ -47,6 +47,12 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
     is_active: true,
   });
 
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
   useEffect(() => {
     if (selectedUser) {
       setFormData({
@@ -56,17 +62,58 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
         user_type: selectedUser.user_type,
         is_active: selectedUser.is_active,
       });
+      setErrors({
+        name: "",
+        email: "",
+        password: "",
+      });
+    } else {
+      setFormData({
+        name: "",
+        email: "",
+        password: "12345",
+        user_type: "user",
+        is_active: true,
+      });
     }
   }, [selectedUser]);
 
+  const validateForm = () => {
+    const newErrors = {
+      name: "",
+      email: "",
+      password: "",
+    };
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Nome é obrigatório";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "E-mail é obrigatório";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "E-mail inválido";
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = "Senha é obrigatória";
+    } else if (formData.password.length < 5) {
+      newErrors.password = "Senha deve ter no mínimo 5 caracteres";
+    }
+
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error);
+  };
+
   const handleSubmit = () => {
-    onSubmit(formData);
-    onClose();
+    if (validateForm()) {
+      onSubmit(formData);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {selectedUser ? "Editar Usuário" : "Criar Novo Usuário"}
@@ -87,7 +134,11 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
+              className={errors.name ? "border-red-500" : ""}
             />
+            {errors.name && (
+              <span className="text-sm text-red-500">{errors.name}</span>
+            )}
           </div>
 
           <div className="grid gap-2">
@@ -99,7 +150,11 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
+              className={errors.email ? "border-red-500" : ""}
             />
+            {errors.email && (
+              <span className="text-sm text-red-500">{errors.email}</span>
+            )}
           </div>
 
           <div className="grid gap-2">
@@ -111,7 +166,11 @@ export const UserForm = ({ isOpen, onClose, selectedUser, onSubmit }: UserFormPr
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
+              className={errors.password ? "border-red-500" : ""}
             />
+            {errors.password && (
+              <span className="text-sm text-red-500">{errors.password}</span>
+            )}
           </div>
 
           <div className="grid gap-2">
