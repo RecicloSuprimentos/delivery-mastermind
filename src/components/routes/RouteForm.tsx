@@ -67,28 +67,32 @@ export const RouteForm = () => {
   });
 
   useEffect(() => {
-    if (route) {
-      setName(route.name);
-      setAgentId(route.agent_id || "");
-      setStartLocation(route.start_location_type);
-      setEndLocation(route.end_location_type);
-      
-      if (route.route_stops) {
-        const { data: services } = await supabase
-          .from("services")
-          .select("*")
-          .in("id", route.route_stops.map(stop => stop.service_id));
+    const loadRouteServices = async () => {
+      if (route) {
+        setName(route.name);
+        setAgentId(route.agent_id || "");
+        setStartLocation(route.start_location_type);
+        setEndLocation(route.end_location_type);
         
-        if (services) {
-          const orderedServices = route.route_stops
-            .sort((a, b) => a.sequence_number - b.sequence_number)
-            .map(stop => services.find(s => s.id === stop.service_id))
-            .filter(Boolean) as Service[];
-            
-          setSelectedServices(orderedServices);
+        if (route.route_stops) {
+          const { data: services } = await supabase
+            .from("services")
+            .select("*")
+            .in("id", route.route_stops.map(stop => stop.service_id));
+          
+          if (services) {
+            const orderedServices = route.route_stops
+              .sort((a, b) => a.sequence_number - b.sequence_number)
+              .map(stop => services.find(s => s.id === stop.service_id))
+              .filter(Boolean) as Service[];
+              
+            setSelectedServices(orderedServices);
+          }
         }
       }
-    }
+    };
+
+    loadRouteServices();
   }, [route]);
 
   const createRoute = useMutation({
