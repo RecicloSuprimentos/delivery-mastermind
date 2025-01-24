@@ -104,10 +104,24 @@ const Login = () => {
                   social_provider_text: "Criar conta com {{provider}}",
                   link_text: "Não tem uma conta? Cadastre-se",
                 },
+                forgotten_password: {
+                  email_label: "Email",
+                  password_label: "Senha",
+                  button_label: "Enviar instruções",
+                  loading_button_label: "Enviando instruções...",
+                  link_text: "Esqueceu sua senha?",
+                },
+                update_password: {
+                  password_label: "Nova senha",
+                  button_label: "Atualizar senha",
+                  loading_button_label: "Atualizando senha...",
+                },
               },
             }}
             theme="light"
             providers={[]}
+            view="sign_in"
+            showLinks={true}
           />
         </div>
       </div>
