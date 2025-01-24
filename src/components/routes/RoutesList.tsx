@@ -45,7 +45,11 @@ export const RoutesList = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching routes:", error);
+        throw error;
+      }
+
       return data as Route[];
     },
   });
