@@ -27,29 +27,42 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case 'list':
-        result = await supabaseClient.auth.admin.listUsers()
+        const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers()
+        if (listError) throw listError
+        console.log('Users listed:', users)
+        result = { users: users.users }
         break
 
       case 'create':
         const { email, password } = userData as AuthUser
-        result = await supabaseClient.auth.admin.createUser({
+        const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
           email,
           password,
-          email_confirm: true
+          email_confirm: true,
+          user_metadata: { created_by: 'admin' }
         })
+        if (createError) throw createError
+        console.log('User created:', newUser)
+        result = { user: newUser }
         break
 
       case 'delete':
         const { id } = userData
-        result = await supabaseClient.auth.admin.deleteUser(id)
+        const { data: deletedUser, error: deleteError } = await supabaseClient.auth.admin.deleteUser(id)
+        if (deleteError) throw deleteError
+        console.log('User deleted:', deletedUser)
+        result = { user: deletedUser }
         break
 
       case 'update':
         const { id: userId, ...updateData } = userData
-        result = await supabaseClient.auth.admin.updateUserById(
+        const { data: updatedUser, error: updateError } = await supabaseClient.auth.admin.updateUserById(
           userId,
           updateData
         )
+        if (updateError) throw updateError
+        console.log('User updated:', updatedUser)
+        result = { user: updatedUser }
         break
 
       default:
@@ -65,6 +78,7 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('Error in manage-auth-users function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
