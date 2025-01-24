@@ -15,7 +15,7 @@ interface AuthUser {
   last_sign_in_at: string | null;
   user_metadata?: {
     name?: string;
-    user_type?: string;
+    user_type?: "user" | "agent" | "admin";
   };
 }
 
@@ -46,11 +46,20 @@ export const AccessManagement = () => {
       email: string; 
       password: string;
       name?: string;
-      user_type?: string;
+      user_type?: "user" | "agent" | "admin";
     }) => {
       console.log('Creating user:', userData.email);
       const { data, error } = await supabase.functions.invoke("manage-auth-users", {
-        body: { action: "create", userData },
+        body: { 
+          action: "create", 
+          userData: {
+            ...userData,
+            user_metadata: {
+              name: userData.name,
+              user_type: userData.user_type || "user"
+            }
+          }
+        },
       });
       if (error) throw error;
       console.log('User created:', data);
@@ -80,11 +89,20 @@ export const AccessManagement = () => {
       email?: string; 
       password?: string;
       name?: string;
-      user_type?: string;
+      user_type?: "user" | "agent" | "admin";
     }) => {
       console.log('Updating user:', userData.id);
       const { data, error } = await supabase.functions.invoke("manage-auth-users", {
-        body: { action: "update", userData },
+        body: { 
+          action: "update", 
+          userData: {
+            ...userData,
+            user_metadata: {
+              name: userData.name,
+              user_type: userData.user_type
+            }
+          }
+        },
       });
       if (error) throw error;
       console.log('User updated:', data);
@@ -139,7 +157,7 @@ export const AccessManagement = () => {
     email: string; 
     password?: string;
     name?: string;
-    user_type?: string;
+    user_type?: "user" | "agent" | "admin";
   }) => {
     if (selectedUser) {
       await updateUser.mutateAsync({
@@ -155,12 +173,7 @@ export const AccessManagement = () => {
         });
         return;
       }
-      await createUser.mutateAsync(formData as { 
-        email: string; 
-        password: string;
-        name?: string;
-        user_type?: string;
-      });
+      await createUser.mutateAsync(formData);
     }
   };
 
@@ -186,7 +199,8 @@ export const AccessManagement = () => {
   };
 
   const filteredUsers = users?.filter((user) =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.user_metadata?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

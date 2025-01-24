@@ -17,7 +17,7 @@ interface AuthUser {
   last_sign_in_at: string | null;
   user_metadata?: {
     name?: string;
-    user_type?: string;
+    user_type?: "user" | "agent" | "admin";
   };
 }
 

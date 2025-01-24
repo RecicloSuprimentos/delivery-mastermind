@@ -16,7 +16,6 @@ export const AgentProtectedRoute = ({ children }: { children: React.ReactNode })
         return;
       }
 
-      // Verificar o tipo de usuário no user_metadata
       const userType = session.user.user_metadata?.user_type;
       
       setIsAuthenticated(true);

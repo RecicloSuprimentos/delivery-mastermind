@@ -23,7 +23,7 @@ interface AuthUser {
   email: string;
   user_metadata?: {
     name?: string;
-    user_type?: string;
+    user_type?: "user" | "agent" | "admin";
   };
 }
 
@@ -35,7 +35,7 @@ interface AccessUserFormProps {
     email: string; 
     password?: string;
     name?: string;
-    user_type?: string;
+    user_type?: "user" | "agent" | "admin";
   }) => void;
 }
 
@@ -49,7 +49,7 @@ export const AccessUserForm = ({
     email: string;
     password?: string;
     name: string;
-    user_type: string;
+    user_type: "user" | "agent" | "admin";
   }>({
     email: "",
     password: "",
@@ -135,7 +135,7 @@ export const AccessUserForm = ({
             <Label htmlFor="user_type">Tipo de Usuário</Label>
             <Select
               value={formData.user_type}
-              onValueChange={(value) =>
+              onValueChange={(value: "user" | "agent" | "admin") =>
                 setFormData({ ...formData, user_type: value })
               }
             >
