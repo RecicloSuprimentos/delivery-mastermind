@@ -1,74 +1,193 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { User } from "@supabase/supabase-js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useUsers } from "@/hooks/useUsers";
+import { Loader2, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 export const UserManagement = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const { profiles, isLoading, createUser, updateUser } = useUsers();
+  const [isOpen, setIsOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [userType, setUserType] = useState<"admin" | "user" | "agent">("user");
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      if (error) throw error;
-      return users;
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await createUser.mutateAsync({
+      email,
+      password,
+      data: {
+        name,
+        user_type: userType,
+        is_active: true,
+      },
+    });
+    setIsOpen(false);
+    resetForm();
+  };
 
-  const filteredUsers = users?.filter((user: User) => {
-    const searchLower = searchTerm.toLowerCase();
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setName("");
+    setUserType("user");
+  };
+
+  const handleUserTypeChange = async (userId: string, newType: "admin" | "user" | "agent") => {
+    await updateUser.mutateAsync({
+      id: userId,
+      data: { user_type: newType },
+    });
+  };
+
+  if (isLoading) {
     return (
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.user_metadata?.name?.toLowerCase().includes(searchLower) ||
-      user.user_metadata?.user_type?.toLowerCase().includes(searchLower)
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     );
-  });
+  }
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Buscar usuários..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      <ScrollArea className="h-[500px] rounded-md border">
-        <div className="p-4 space-y-4">
-          {isLoading ? (
-            <p>Carregando...</p>
-          ) : (
-            filteredUsers?.map((user: User) => (
-              <div
-                key={user.id}
-                className="p-4 rounded-lg border hover:bg-accent"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">
-                      {user.user_metadata?.name || "Sem nome"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                    <p className="text-sm">
-                      Tipo: {user.user_metadata?.user_type || "Não definido"}
-                    </p>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    <p>Criado em: {new Date(user.created_at).toLocaleDateString()}</p>
-                    <p>
-                      Último acesso:{" "}
-                      {user.last_sign_in_at
-                        ? new Date(user.last_sign_in_at).toLocaleDateString()
-                        : "Nunca"}
-                    </p>
-                  </div>
-                </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Gerenciamento de Usuários</h2>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Usuário
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Criar Novo Usuário</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
-            ))
-          )}
-        </div>
-      </ScrollArea>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="userType">Tipo de Usuário</Label>
+                <Select value={userType} onValueChange={(value: "admin" | "user" | "agent") => setUserType(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="agent">Agente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full">
+                Criar Usuário
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {profiles?.map((profile) => (
+            <TableRow key={profile.id}>
+              <TableCell>{profile.name}</TableCell>
+              <TableCell>{profile.id}</TableCell>
+              <TableCell>
+                <Select
+                  value={profile.user_type}
+                  onValueChange={(value: "admin" | "user" | "agent") =>
+                    handleUserTypeChange(profile.id, value)
+                  }
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="agent">Agente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell>{profile.is_active ? "Ativo" : "Inativo"}</TableCell>
+              <TableCell>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    updateUser.mutateAsync({
+                      id: profile.id,
+                      data: { is_active: !profile.is_active },
+                    })
+                  }
+                >
+                  {profile.is_active ? "Desativar" : "Ativar"}
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };
