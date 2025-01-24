@@ -1,91 +1,97 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
+type RouteUpdate = Database["public"]["Tables"]["routes"]["Update"];
 
-export const useRoutes = (routeId?: string) => {
-  const { toast } = useToast();
+export const useRoutes = () => {
   const queryClient = useQueryClient();
 
-  const { data: route, isLoading: isLoadingRoute } = useQuery({
-    queryKey: ["route", routeId],
+  const { data: agents } = useQuery({
+    queryKey: ["agents"],
     queryFn: async () => {
-      if (!routeId) return null;
-      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_type", "agent")
+        .eq("is_active", true);
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: routes, isLoading: isLoadingRoutes } = useQuery({
+    queryKey: ["routes"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("routes")
         .select("*")
-        .eq("id", routeId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createRoute = useMutation({
+    mutationFn: async (routeData: RouteInsert) => {
+      const { data, error } = await supabase
+        .from("routes")
+        .insert(routeData)
+        .select()
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!routeId,
+    onSuccess: () => {
+      toast.success("Rota criada com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
+    },
   });
 
-  const { data: routeStops } = useQuery({
-    queryKey: ["route_stops", routeId],
-    queryFn: async () => {
-      if (!routeId) return null;
-
-      const { data, error } = await supabase
-        .from("route_stops")
-        .select("*, service:services(*)")
-        .eq("route_id", routeId)
-        .order("sequence_number");
+  const updateRoute = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: RouteUpdate }) => {
+      const { data: updatedRoute, error } = await supabase
+        .from("routes")
+        .update(data)
+        .eq("id", id)
+        .select()
+        .single();
 
       if (error) throw error;
-      return data;
-    },
-    enabled: !!routeId,
-  });
-
-  const saveRoute = useMutation({
-    mutationFn: async (routeData: RouteInsert) => {
-      if (routeId) {
-        const { data, error } = await supabase
-          .from("routes")
-          .update(routeData)
-          .eq("id", routeId)
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      } else {
-        const { data, error } = await supabase
-          .from("routes")
-          .insert(routeData)
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      }
+      return updatedRoute;
     },
     onSuccess: () => {
+      toast.success("Rota atualizada com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["routes"] });
-      toast({
-        title: "Sucesso",
-        description: routeId ? "Rota atualizada com sucesso!" : "Rota criada com sucesso!",
-      });
     },
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a rota.",
-        variant: "destructive",
-      });
+  });
+
+  const deleteRoute = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("routes")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Rota deletada com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
     },
   });
 
   return {
-    route,
-    routeStops,
-    isLoadingRoute,
-    saveRoute,
+    agents,
+    isLoadingRoutes,
+    routes,
+    createRoute,
+    updateRoute,
+    deleteRoute,
   };
 };
