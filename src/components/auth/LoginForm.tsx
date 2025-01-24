@@ -26,10 +26,19 @@ export const LoginForm = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Mostrar mensagem de sucesso usando o nome do metadata
+        // Buscar informações adicionais do usuário
+        const { data: userData, error: userError } = await supabase
+          .from("system_users")
+          .select("name, user_type")
+          .eq("email", data.user.email)
+          .maybeSingle();
+
+        if (userError) throw userError;
+
+        // Mostrar mensagem de sucesso
         toast({
           title: "Login realizado com sucesso",
-          description: `Bem-vindo(a), ${data.user.user_metadata?.name || 'Usuário'}!`,
+          description: `Bem-vindo(a), ${userData?.name}!`,
         });
 
         // Redirecionar para a página inicial

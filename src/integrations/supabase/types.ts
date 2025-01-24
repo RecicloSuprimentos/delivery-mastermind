@@ -109,7 +109,15 @@ export type Database = {
           total_duration?: number | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "routes_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -192,6 +200,36 @@ export type Database = {
           operational_base_longitude?: number | null
           service_default_duration?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          name: string
+          password: string | null
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          password?: string | null
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          password?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"]
         }
         Relationships: []
       }
