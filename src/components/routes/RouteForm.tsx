@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -15,21 +14,25 @@ import {
 } from "@/components/ui/select";
 import { ServiceSelector } from "@/components/services/ServiceSelector";
 import { MapComponent } from "@/components/map/MapComponent";
-import { optimizeRoute } from "@/utils/routeOptimization";
 import type { Service } from "@/types/routes";
-import type { User } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
-export const RouteForm = () => {
+type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
+
+interface RouteFormProps {
+  onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
+  isLoading: boolean;
+}
+
+export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [agentId, setAgentId] = useState<string>("");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [startLocation, setStartLocation] = useState<string>("operational_base");
   const [endLocation, setEndLocation] = useState<string>("operational_base");
-  const [isLoading, setIsLoading] = useState(false);
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -38,8 +41,8 @@ export const RouteForm = () => {
       if (error) throw error;
       
       return users
-        .filter((user: User) => user.user_metadata?.user_type === "agent")
-        .map((user: User) => ({
+        .filter((user) => user.user_metadata?.user_type === "agent")
+        .map((user) => ({
           id: user.id,
           name: user.user_metadata?.name || "Sem nome",
           email: user.email || ""
@@ -95,77 +98,9 @@ export const RouteForm = () => {
     }
   }, [route]);
 
-  const createRoute = useMutation({
-    mutationFn: async (routeData: any) => {
-      const { data, error } = await supabase
-        .from("routes")
-        .insert([routeData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["routes"] });
-      toast({
-        title: "Rota criada com sucesso!",
-        description: "A nova rota foi adicionada ao sistema.",
-      });
-      navigate("/routes");
-    },
-  });
-
-  const updateRoute = useMutation({
-    mutationFn: async ({ routeId, routeData }: { routeId: string; routeData: any }) => {
-      const { data, error } = await supabase
-        .from("routes")
-        .update(routeData)
-        .eq("id", routeId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["routes"] });
-      toast({
-        title: "Rota atualizada!",
-        description: "As alterações foram salvas com sucesso.",
-      });
-      navigate("/routes");
-    },
-  });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const routeData = {
-        name,
-        agent_id: agentId || null,
-        start_location_type: startLocation,
-        end_location_type: endLocation,
-        status: "pending",
-      };
-
-      if (id) {
-        await updateRoute.mutateAsync({ routeId: id, routeData });
-      } else {
-        await createRoute.mutateAsync(routeData);
-      }
-    } catch (error) {
-      console.error("Erro ao salvar rota:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar rota",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar salvar a rota",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await onSave({ name, agent_id: agentId || null, start_location_type: startLocation, end_location_type: endLocation, status: "pending" }, selectedServices, id);
   };
 
   return (

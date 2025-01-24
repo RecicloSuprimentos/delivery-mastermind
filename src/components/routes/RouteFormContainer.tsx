@@ -8,6 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 
+interface RouteFormProps {
+  onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
+  isLoading: boolean;
+}
+
 export const RouteFormContainer = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
