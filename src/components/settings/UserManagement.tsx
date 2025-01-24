@@ -1,92 +1,74 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  user_type: "admin" | "agent" | "user";
-  is_active: boolean;
-}
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { User } from "@supabase/supabase-js";
 
 export const UserManagement = () => {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: users } = useQuery({
+  const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
       const { data: { users }, error } = await supabase.auth.admin.listUsers();
       if (error) throw error;
-
-      return users.map(user => ({
-        id: user.id,
-        name: user.user_metadata?.name || "Sem nome",
-        email: user.email || "",
-        user_type: user.user_metadata?.user_type || "user",
-        is_active: !user.banned_until
-      }));
-    }
+      return users;
+    },
   });
 
-  const filteredUsers = users?.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users?.filter((user: User) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.user_metadata?.name?.toLowerCase().includes(searchLower) ||
+      user.user_metadata?.user_type?.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Input
-          placeholder="Buscar usuários..."
-          className="w-64"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Button className="gap-2">
-          <UserPlus className="h-4 w-4" />
-          Novo Usuário
-        </Button>
-      </div>
+      <Input
+        placeholder="Buscar usuários..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
 
-      <div className="border rounded-lg">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="p-4 text-left">Nome</th>
-              <th className="p-4 text-left">Email</th>
-              <th className="p-4 text-left">Tipo</th>
-              <th className="p-4 text-left">Status</th>
-              <th className="p-4 text-left">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers?.map((user) => (
-              <tr key={user.id} className="border-b">
-                <td className="p-4">{user.name}</td>
-                <td className="p-4">{user.email}</td>
-                <td className="p-4">{user.user_type}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {user.is_active ? 'Ativo' : 'Inativo'}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <Button variant="ghost" size="sm">
-                    Editar
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <ScrollArea className="h-[500px] rounded-md border">
+        <div className="p-4 space-y-4">
+          {isLoading ? (
+            <p>Carregando...</p>
+          ) : (
+            filteredUsers?.map((user: User) => (
+              <div
+                key={user.id}
+                className="p-4 rounded-lg border hover:bg-accent"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-medium">
+                      {user.user_metadata?.name || "Sem nome"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-sm">
+                      Tipo: {user.user_metadata?.user_type || "Não definido"}
+                    </p>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <p>Criado em: {new Date(user.created_at).toLocaleDateString()}</p>
+                    <p>
+                      Último acesso:{" "}
+                      {user.last_sign_in_at
+                        ? new Date(user.last_sign_in_at).toLocaleDateString()
+                        : "Nunca"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 };

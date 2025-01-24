@@ -17,6 +17,7 @@ import { ServiceSelector } from "@/components/services/ServiceSelector";
 import { MapComponent } from "@/components/map/MapComponent";
 import { optimizeRoute } from "@/utils/routeOptimization";
 import type { Service } from "@/types/routes";
+import type { User } from "@supabase/supabase-js";
 
 export const RouteForm = () => {
   const { id } = useParams();
@@ -37,8 +38,8 @@ export const RouteForm = () => {
       if (error) throw error;
       
       return users
-        .filter(user => user.user_metadata?.user_type === "agent")
-        .map(user => ({
+        .filter((user: User) => user.user_metadata?.user_type === "agent")
+        .map((user: User) => ({
           id: user.id,
           name: user.user_metadata?.name || "Sem nome",
           email: user.email || ""
@@ -68,31 +69,30 @@ export const RouteForm = () => {
 
   useEffect(() => {
     const loadRouteServices = async () => {
-      if (route) {
-        setName(route.name);
-        setAgentId(route.agent_id || "");
-        setStartLocation(route.start_location_type);
-        setEndLocation(route.end_location_type);
+      if (route?.route_stops) {
+        const { data: services } = await supabase
+          .from("services")
+          .select("*")
+          .in("id", route.route_stops.map(stop => stop.service_id));
         
-        if (route.route_stops) {
-          const { data: services } = await supabase
-            .from("services")
-            .select("*")
-            .in("id", route.route_stops.map(stop => stop.service_id));
-          
-          if (services) {
-            const orderedServices = route.route_stops
-              .sort((a, b) => a.sequence_number - b.sequence_number)
-              .map(stop => services.find(s => s.id === stop.service_id))
-              .filter(Boolean) as Service[];
-              
-            setSelectedServices(orderedServices);
-          }
+        if (services) {
+          const orderedServices = route.route_stops
+            .sort((a, b) => a.sequence_number - b.sequence_number)
+            .map(stop => services.find(s => s.id === stop.service_id))
+            .filter(Boolean) as Service[];
+            
+          setSelectedServices(orderedServices);
         }
       }
     };
 
-    loadRouteServices();
+    if (route) {
+      setName(route.name);
+      setAgentId(route.agent_id || "");
+      setStartLocation(route.start_location_type);
+      setEndLocation(route.end_location_type);
+      loadRouteServices();
+    }
   }, [route]);
 
   const createRoute = useMutation({
