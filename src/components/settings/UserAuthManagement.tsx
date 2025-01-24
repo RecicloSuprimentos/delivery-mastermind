@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -28,14 +27,12 @@ interface AuthUser {
 export const UserAuthManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users } = useQuery({
     queryKey: ["authUsers"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("manage-auth-users", {
-        body: { action: "list" },
-      });
+      const { data: { users }, error } = await supabase.auth.admin.listUsers();
       if (error) throw error;
-      return data.users as AuthUser[];
+      return users as AuthUser[];
     },
   });
 
@@ -82,44 +79,40 @@ export const UserAuthManagement = () => {
         />
       </div>
 
-      {isLoading ? (
-        <div>Carregando usuários...</div>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>E-mail</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Criado em</TableHead>
-              <TableHead>Último acesso</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>E-mail</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Criado em</TableHead>
+            <TableHead>Último acesso</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredUsers?.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>{user.user_metadata?.name || "N/A"}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <Badge
+                  className={getUserTypeBadgeColor(user.user_metadata?.user_type)}
+                >
+                  {getUserTypeLabel(user.user_metadata?.user_type)}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {format(new Date(user.created_at), "dd/MM/yyyy HH:mm")}
+              </TableCell>
+              <TableCell>
+                {user.last_sign_in_at
+                  ? format(new Date(user.last_sign_in_at), "dd/MM/yyyy HH:mm")
+                  : "Nunca"}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers?.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.user_metadata?.name || "N/A"}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Badge
-                    className={getUserTypeBadgeColor(user.user_metadata?.user_type)}
-                  >
-                    {getUserTypeLabel(user.user_metadata?.user_type)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {format(new Date(user.created_at), "dd/MM/yyyy HH:mm")}
-                </TableCell>
-                <TableCell>
-                  {user.last_sign_in_at
-                    ? format(new Date(user.last_sign_in_at), "dd/MM/yyyy HH:mm")
-                    : "Nunca"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

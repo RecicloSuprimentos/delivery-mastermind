@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { ServiceSelector } from "@/components/services/ServiceSelector";
 import { MapComponent } from "@/components/map/MapComponent";
-import { calculateRoute } from "@/utils/routeOptimization";
+import { optimizeRoute } from "@/utils/routeOptimization";
 import type { Service } from "@/types/routes";
 
 export const RouteForm = () => {
@@ -36,7 +36,6 @@ export const RouteForm = () => {
       const { data: { users }, error } = await supabase.auth.admin.listUsers();
       if (error) throw error;
       
-      // Filtrar apenas usuários do tipo agent
       return users
         .filter(user => user.user_metadata?.user_type === "agent")
         .map(user => ({
@@ -74,15 +73,20 @@ export const RouteForm = () => {
       setStartLocation(route.start_location_type);
       setEndLocation(route.end_location_type);
       
-      // Carregar serviços da rota
       if (route.route_stops) {
-        const services = route.route_stops
-          .sort((a, b) => a.sequence_number - b.sequence_number)
-          .map(stop => ({
-            id: stop.service_id,
-            sequence: stop.sequence_number,
-          }));
-        setSelectedServices(services);
+        const { data: services } = await supabase
+          .from("services")
+          .select("*")
+          .in("id", route.route_stops.map(stop => stop.service_id));
+        
+        if (services) {
+          const orderedServices = route.route_stops
+            .sort((a, b) => a.sequence_number - b.sequence_number)
+            .map(stop => services.find(s => s.id === stop.service_id))
+            .filter(Boolean) as Service[];
+            
+          setSelectedServices(orderedServices);
+        }
       }
     }
   }, [route]);
