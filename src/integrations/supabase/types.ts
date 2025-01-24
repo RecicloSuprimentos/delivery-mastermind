@@ -9,33 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean | null
-          name: string | null
-          updated_at: string
-          user_type: string | null
-        }
-        Insert: {
-          created_at?: string
-          id: string
-          is_active?: boolean | null
-          name?: string | null
-          updated_at?: string
-          user_type?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean | null
-          name?: string | null
-          updated_at?: string
-          user_type?: string | null
-        }
-        Relationships: []
-      }
       route_stops: {
         Row: {
           created_at: string | null
