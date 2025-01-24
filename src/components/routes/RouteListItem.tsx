@@ -14,7 +14,7 @@ interface Route {
   status: string;
   agent: {
     name: string;
-  };
+  } | null;
   route_stops: {
     service_id: string;
   }[];

@@ -12,7 +12,7 @@ interface Route {
   status: string;
   agent: {
     name: string;
-  };
+  } | null;
   route_stops: {
     service_id: string;
   }[];
@@ -33,7 +33,13 @@ export const RoutesList = () => {
       const { data, error } = await supabase
         .from("routes")
         .select(`
-          *,
+          id,
+          name,
+          agent_id,
+          start_time,
+          total_distance,
+          total_duration,
+          status,
           agent:system_users(name),
           route_stops(service_id)
         `)
