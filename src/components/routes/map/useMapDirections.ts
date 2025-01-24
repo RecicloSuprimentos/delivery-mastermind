@@ -29,6 +29,12 @@ export const useMapDirections = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
+    // Se não devemos otimizar, limpa as direções
+    if (!shouldOptimize) {
+      setDirections(null);
+      return;
+    }
+
     // Verifica se temos todas as dependências necessárias
     if (!window.google || !settings) {
       console.log("Google Maps ou configurações não disponíveis");
@@ -37,7 +43,7 @@ export const useMapDirections = ({
 
     // Verifica se há paradas selecionadas
     if (selectedStops.length === 0) {
-      setDirections(null); // Limpa as direções se não houver paradas
+      setDirections(null);
       return;
     }
 
@@ -50,7 +56,7 @@ export const useMapDirections = ({
       return;
     }
 
-    // Função para calcular a rota com debounce
+    // Função para calcular a rota
     const calculateRoute = async () => {
       try {
         const result = await optimizeRoute(
@@ -67,7 +73,7 @@ export const useMapDirections = ({
           onRouteStats(result.totalDistance, result.totalDuration, result.estimatedTimes);
         }
         
-        if (onOptimizedStops && shouldOptimize) {
+        if (onOptimizedStops) {
           onOptimizedStops(result.optimizedWaypoints);
         }
       } catch (error) {
@@ -76,7 +82,7 @@ export const useMapDirections = ({
       }
     };
 
-    // Executa o cálculo da rota
+    // Executa o cálculo da rota apenas quando shouldOptimize for true
     calculateRoute();
   }, [
     settings,
@@ -85,7 +91,7 @@ export const useMapDirections = ({
     endLocationType,
     selectedStartService,
     selectedEndService,
-    shouldOptimize
+    shouldOptimize // Adicionado como dependência
   ]);
 
   return directions;

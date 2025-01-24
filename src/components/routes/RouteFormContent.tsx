@@ -88,7 +88,11 @@ export const RouteFormContent = ({
         <RouteStopsList 
           services={services || []}
           selectedStops={selectedStops}
-          onStopsChange={setSelectedStops}
+          onStopsChange={(stops) => {
+            setSelectedStops(stops);
+            // Reseta o estado de otimização quando as paradas são alteradas
+            setShouldOptimize(false);
+          }}
           onOptimize={handleOptimize}
           disabled={isViewMode}
         />
