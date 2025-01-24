@@ -29,13 +29,14 @@ export const useMapDirections = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
-    if (!window.google || !settings || selectedStops.length === 0 || !shouldOptimize) {
-      console.log("Missing requirements or optimization not requested:", {
-        google: !window.google,
-        settings: !settings,
-        noStops: selectedStops.length === 0,
-        shouldOptimize
-      });
+    if (!window.google || !settings) {
+      console.log("Google Maps ou configurações não disponíveis");
+      return;
+    }
+
+    // Verifica se há paradas selecionadas
+    if (selectedStops.length === 0) {
+      console.log("Nenhuma parada selecionada");
       return;
     }
 
@@ -44,12 +45,19 @@ export const useMapDirections = ({
     const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
 
     if (!startLocation || !endLocation) {
-      console.log("Missing locations:", { startLocation, endLocation });
+      console.log("Localizações de origem ou destino inválidas:", { startLocation, endLocation });
       return;
     }
 
     const calculateRoute = async () => {
       try {
+        console.log("Calculando rota com:", {
+          startLocation,
+          endLocation,
+          stops: selectedStops,
+          duration: settings.service_default_duration
+        });
+
         const result = await optimizeRoute(
           directionsService,
           startLocation,
@@ -58,20 +66,22 @@ export const useMapDirections = ({
           settings.service_default_duration
         );
         
+        console.log("Rota calculada com sucesso:", result);
+        
         setDirections(result.directions);
         if (onRouteStats) {
           onRouteStats(result.totalDistance, result.totalDuration, result.estimatedTimes);
         }
-        if (onOptimizedStops) {
+        if (onOptimizedStops && shouldOptimize) {
           onOptimizedStops(result.optimizedWaypoints);
         }
       } catch (error) {
-        console.error("Error calculating route:", error);
+        console.error("Erro ao calcular rota:", error);
       }
     };
 
     calculateRoute();
-  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, onRouteStats, onOptimizedStops, shouldOptimize]);
+  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, shouldOptimize]);
 
   return directions;
 };
