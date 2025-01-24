@@ -39,7 +39,7 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = async (formData: Omit<User, "id">) => {
+  const handleSubmit = async (formData: User & { password?: string }) => {
     try {
       if (selectedUser) {
         await updateUser.mutateAsync({
@@ -48,9 +48,13 @@ const Index = () => {
         });
         toast.success("Usuário atualizado com sucesso");
       } else {
+        if (!formData.password) {
+          toast.error("Senha é obrigatória para novos usuários");
+          return;
+        }
         await createUser.mutateAsync({
           email: formData.email,
-          password: formData.password || "",
+          password: formData.password,
           data: {
             name: formData.name,
             user_type: formData.user_type,
@@ -71,6 +75,14 @@ const Index = () => {
     return <div>Carregando...</div>;
   }
 
+  const users: User[] = profiles?.map(profile => ({
+    id: profile.id,
+    name: profile.name || "",
+    email: "", // This will be filled from auth.users
+    user_type: profile.user_type as UserType,
+    is_active: profile.is_active || false
+  })) || [];
+
   return (
     <div className="container mx-auto p-6 space-y-6 pt-20">
       <div className="flex justify-between items-center">
@@ -87,7 +99,7 @@ const Index = () => {
       </div>
 
       <UserList
-        users={profiles || []}
+        users={users}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

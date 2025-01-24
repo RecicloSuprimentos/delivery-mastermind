@@ -18,6 +18,7 @@ import type { Service } from "@/types/routes";
 import type { Database } from "@/integrations/supabase/types";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
+type LocationType = Database["public"]["Enums"]["location_type"];
 
 interface RouteFormProps {
   onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
@@ -31,8 +32,8 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const [name, setName] = useState("");
   const [agentId, setAgentId] = useState<string>("");
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
-  const [startLocation, setStartLocation] = useState<string>("operational_base");
-  const [endLocation, setEndLocation] = useState<string>("operational_base");
+  const [startLocation, setStartLocation] = useState<LocationType>("operational_base");
+  const [endLocation, setEndLocation] = useState<LocationType>("operational_base");
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -100,7 +101,20 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave({ name, agent_id: agentId || null, start_location_type: startLocation, end_location_type: endLocation, status: "pending" }, selectedServices, id);
+    await onSave(
+      { 
+        name, 
+        agent_id: agentId || null, 
+        start_location_type: startLocation, 
+        end_location_type: endLocation,
+        status: "pending",
+        start_time: new Date().toISOString(),
+        start_location_reference: "",
+        end_location_reference: ""
+      }, 
+      selectedServices, 
+      id
+    );
   };
 
   return (

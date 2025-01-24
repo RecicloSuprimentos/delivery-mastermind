@@ -1,12 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Profile {
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type UserType = Database["public"]["Enums"]["user_type"];
+
+interface User {
   id: string;
   name: string;
-  user_type: "admin" | "user" | "agent";
+  email: string;
+  user_type: UserType;
   is_active: boolean;
+  password?: string;
 }
 
 export const useUsers = () => {
@@ -26,10 +32,14 @@ export const useUsers = () => {
   });
 
   const updateUser = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Profile> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<User> }) => {
       const { error } = await supabase
         .from("profiles")
-        .update(data)
+        .update({
+          name: data.name,
+          user_type: data.user_type,
+          is_active: data.is_active
+        })
         .eq("id", id);
 
       if (error) throw error;
@@ -45,10 +55,16 @@ export const useUsers = () => {
   });
 
   const createUser = useMutation({
-    mutationFn: async ({ email, password, data }: { email: string; password: string; data: Omit<Profile, "id"> }) => {
+    mutationFn: async ({ email, password, data }: { email: string; password: string; data: Omit<Profile, "id" | "created_at" | "updated_at"> }) => {
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name: data.name,
+            user_type: data.user_type
+          }
+        }
       });
 
       if (signUpError) throw signUpError;
