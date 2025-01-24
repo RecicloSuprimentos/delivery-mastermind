@@ -29,6 +29,7 @@ export const useMapDirections = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
+    // Verifica se temos todas as dependências necessárias
     if (!window.google || !settings) {
       console.log("Google Maps ou configurações não disponíveis");
       return;
@@ -36,7 +37,7 @@ export const useMapDirections = ({
 
     // Verifica se há paradas selecionadas
     if (selectedStops.length === 0) {
-      console.log("Nenhuma parada selecionada");
+      setDirections(null); // Limpa as direções se não houver paradas
       return;
     }
 
@@ -49,15 +50,9 @@ export const useMapDirections = ({
       return;
     }
 
+    // Função para calcular a rota com debounce
     const calculateRoute = async () => {
       try {
-        console.log("Calculando rota com:", {
-          startLocation,
-          endLocation,
-          stops: selectedStops,
-          duration: settings.service_default_duration
-        });
-
         const result = await optimizeRoute(
           directionsService,
           startLocation,
@@ -66,22 +61,32 @@ export const useMapDirections = ({
           settings.service_default_duration
         );
         
-        console.log("Rota calculada com sucesso:", result);
-        
         setDirections(result.directions);
+        
         if (onRouteStats) {
           onRouteStats(result.totalDistance, result.totalDuration, result.estimatedTimes);
         }
+        
         if (onOptimizedStops && shouldOptimize) {
           onOptimizedStops(result.optimizedWaypoints);
         }
       } catch (error) {
         console.error("Erro ao calcular rota:", error);
+        setDirections(null);
       }
     };
 
+    // Executa o cálculo da rota
     calculateRoute();
-  }, [selectedStops, settings, startLocationType, endLocationType, selectedStartService, selectedEndService, shouldOptimize]);
+  }, [
+    settings,
+    selectedStops,
+    startLocationType,
+    endLocationType,
+    selectedStartService,
+    selectedEndService,
+    shouldOptimize
+  ]);
 
   return directions;
 };

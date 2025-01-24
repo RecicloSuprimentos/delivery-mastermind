@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { GoogleMap } from "@react-google-maps/api";
 import { RouteStats } from "./RouteStats";
 import { MapMarkers } from "./map/MapMarkers";
@@ -45,13 +45,6 @@ export const RouteMap = ({
     onOptimizedStops,
     shouldOptimize,
   });
-
-  // Força o recálculo da rota quando os pontos são carregados
-  useEffect(() => {
-    if (selectedStops.length > 0 && settings) {
-      console.log("Recalculando rota com paradas:", selectedStops);
-    }
-  }, [selectedStops, settings]);
 
   const handleMapLoad = (map: google.maps.Map) => {
     console.log("Map loaded successfully");
