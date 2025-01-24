@@ -30,3 +30,19 @@ export interface RouteStats {
   duration: number;
   estimatedTimes: Date[];
 }
+
+export interface Route {
+  id: string;
+  name: string;
+  agent_id: string;
+  start_time: string;
+  total_distance: number;
+  total_duration: number;
+  status: string;
+  agent: {
+    name: string;
+  } | null;
+  route_stops: {
+    service_id: string;
+  }[];
+}
