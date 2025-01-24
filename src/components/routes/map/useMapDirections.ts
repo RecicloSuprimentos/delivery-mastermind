@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { optimizeRoute } from "@/utils/routeOptimization";
-import { getLocationFromType } from "@/utils/mapUtils";
+import { calculateRoute } from "./mapDirectionsUtils";
 import type { Service, SystemSettings } from "@/types/routes";
 
 interface UseMapDirectionsProps {
@@ -29,61 +28,60 @@ export const useMapDirections = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
-    // Se não devemos otimizar, limpa as direções
     if (!shouldOptimize) {
       setDirections(null);
       return;
     }
 
-    // Verifica se temos todas as dependências necessárias
     if (!window.google || !settings) {
       console.log("Google Maps ou configurações não disponíveis");
       return;
     }
 
-    // Verifica se há paradas selecionadas
     if (selectedStops.length === 0) {
       setDirections(null);
       return;
     }
 
     const directionsService = new google.maps.DirectionsService();
-    const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
-    const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
 
-    if (!startLocation || !endLocation) {
-      console.log("Localizações de origem ou destino inválidas:", { startLocation, endLocation });
-      return;
-    }
+    const fetchDirections = async () => {
+      const result = await calculateRoute(
+        directionsService,
+        settings,
+        selectedStops,
+        startLocationType,
+        endLocationType,
+        selectedStartService,
+        selectedEndService
+      );
 
-    // Função para calcular a rota
-    const calculateRoute = async () => {
-      try {
-        const result = await optimizeRoute(
-          directionsService,
-          startLocation,
-          endLocation,
-          selectedStops,
-          settings.service_default_duration
-        );
+      if (result) {
+        setDirections(result);
         
-        setDirections(result.directions);
+        const legs = result.routes[0].legs;
+        const waypointOrder = result.routes[0].waypoint_order;
+        const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
+        const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0);
         
         if (onRouteStats) {
-          onRouteStats(result.totalDistance, result.totalDuration, result.estimatedTimes);
+          const estimatedTimes = legs.map((leg, index) => {
+            const time = new Date();
+            time.setSeconds(time.getSeconds() + leg.duration.value);
+            return time;
+          });
+          
+          onRouteStats(totalDistance, totalDuration, estimatedTimes);
         }
         
         if (onOptimizedStops) {
-          onOptimizedStops(result.optimizedWaypoints);
+          const optimizedWaypoints = waypointOrder.map(index => selectedStops[index]);
+          onOptimizedStops(optimizedWaypoints);
         }
-      } catch (error) {
-        console.error("Erro ao calcular rota:", error);
-        setDirections(null);
       }
     };
 
-    // Executa o cálculo da rota apenas quando shouldOptimize for true
-    calculateRoute();
+    fetchDirections();
   }, [
     settings,
     selectedStops,
@@ -91,7 +89,9 @@ export const useMapDirections = ({
     endLocationType,
     selectedStartService,
     selectedEndService,
-    shouldOptimize // Adicionado como dependência
+    shouldOptimize,
+    onRouteStats,
+    onOptimizedStops
   ]);
 
   return directions;

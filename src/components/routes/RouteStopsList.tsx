@@ -1,17 +1,9 @@
-import { Package, MapPin, ArrowRight, RefreshCw, RotateCw, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-
-interface Service {
-  id: string;
-  type: "coleta" | "entrega";
-  service_id: string;
-  customer_name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  time_window?: string;
-}
+import { RouteStopItem } from "./stops/RouteStopItem";
+import { AvailableServiceItem } from "./stops/AvailableServiceItem";
+import { RouteStopsHeader } from "./stops/RouteStopsHeader";
+import { useRouteStops } from "./stops/useRouteStops";
+import type { Service } from "@/types/routes";
 
 interface RouteStopsListProps {
   services: Service[];
@@ -28,6 +20,19 @@ export const RouteStopsList = ({
   onOptimize,
   disabled,
 }: RouteStopsListProps) => {
+  const {
+    handleAddStop,
+    handleAddAllStops,
+    handleRemoveStop,
+    handleInvertStops,
+    getAvailableServices,
+  } = useRouteStops({
+    services,
+    selectedStops,
+    onStopsChange,
+    disabled,
+  });
+
   const handleDragEnd = (result: any) => {
     if (!result.destination || disabled) return;
 
@@ -38,72 +43,17 @@ export const RouteStopsList = ({
     onStopsChange(items);
   };
 
-  const handleAddStop = (service: Service) => {
-    if (!selectedStops.find(s => s.id === service.id) && !disabled) {
-      onStopsChange([...selectedStops, service]);
-    }
-  };
-
-  const handleAddAllStops = () => {
-    if (disabled) return;
-    
-    const availableServices = services.filter(
-      service => !selectedStops.find(s => s.id === service.id)
-    );
-    
-    onStopsChange([...selectedStops, ...availableServices]);
-  };
-
-  const handleRemoveStop = (serviceId: string) => {
-    if (!disabled) {
-      onStopsChange(selectedStops.filter(s => s.id !== serviceId));
-    }
-  };
-
-  const handleInvertStops = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!disabled) {
-      onStopsChange([...selectedStops].reverse());
-    }
-  };
+  const availableServices = getAvailableServices();
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Paradas da Rota</h2>
-        <div className="space-x-2">
-          <Button 
-            type="button"
-            variant="outline" 
-            size="sm" 
-            onClick={onOptimize}
-            disabled={disabled || !onOptimize}
-          >
-            <RotateCw className="h-4 w-4 mr-2" />
-            Otimizar
-          </Button>
-          <Button 
-            type="button"
-            variant="outline" 
-            size="sm" 
-            onClick={handleInvertStops}
-            disabled={disabled}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Inverter
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddAllStops}
-            disabled={disabled || services.length === selectedStops.length}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Todos
-          </Button>
-        </div>
-      </div>
+      <RouteStopsHeader
+        onOptimize={onOptimize || (() => {})}
+        onInvert={handleInvertStops}
+        onAddAll={handleAddAllStops}
+        disabled={disabled}
+        hasAvailableServices={availableServices.length > 0}
+      />
 
       <div className="space-y-2">
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -122,47 +72,13 @@ export const RouteStopsList = ({
                     isDragDisabled={disabled}
                   >
                     {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="bg-white p-4 rounded-lg border border-gray-200"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="bg-primary/10 p-2 rounded-full relative">
-                              <Package className="h-5 w-5 text-primary" />
-                              <div className="absolute -top-2 -right-2 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                {index + 1}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="font-medium">
-                                {stop.type.toUpperCase()} #{stop.service_id}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {stop.customer_name}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {stop.address}
-                              </div>
-                              {stop.time_window && (
-                                <div className="text-sm text-gray-500">
-                                  {stop.time_window}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveStop(stop.id)}
-                            disabled={disabled}
-                          >
-                            Remover
-                          </Button>
-                        </div>
-                      </div>
+                      <RouteStopItem
+                        stop={stop}
+                        index={index}
+                        onRemove={handleRemoveStop}
+                        disabled={disabled}
+                        provided={provided}
+                      />
                     )}
                   </Draggable>
                 ))}
@@ -175,47 +91,20 @@ export const RouteStopsList = ({
 
       <div className="space-y-2">
         <h3 className="text-sm font-medium text-gray-500">Serviços Disponíveis</h3>
-        {services
-          .filter(service => !selectedStops.find(s => s.id === service.id))
-          .map(service => (
-            <div
-              key={service.id}
-              className="bg-gray-50 p-4 rounded-lg border border-gray-200"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-gray-200 p-2 rounded-full">
-                    <Package className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <div>
-                    <div className="font-medium">
-                      {service.type.toUpperCase()} #{service.service_id}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {service.customer_name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {service.address}
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleAddStop(service)}
-                  disabled={disabled}
-                >
-                  Adicionar
-                </Button>
-              </div>
-            </div>
-          ))}
+        {availableServices.map(service => (
+          <AvailableServiceItem
+            key={service.id}
+            service={service}
+            onAdd={handleAddStop}
+            disabled={disabled}
+          />
+        ))}
       </div>
 
       <div className="flex items-center justify-between text-sm text-gray-500 border-t pt-4">
         <div>
           <div>Paradas selecionadas: {selectedStops.length}</div>
-          <div>Serviços disponíveis: {services.length - selectedStops.length}</div>
+          <div>Serviços disponíveis: {availableServices.length}</div>
         </div>
       </div>
     </div>

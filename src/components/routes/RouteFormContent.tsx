@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
 import { RouteBasicFields } from "./RouteBasicFields";
+import { useRouteFormState } from "./form/useRouteFormState";
 import type { Service, SystemSettings } from "@/types/routes";
 
 interface RouteFormContentProps {
@@ -55,12 +55,7 @@ export const RouteFormContent = ({
   settings,
   isViewMode,
 }: RouteFormContentProps) => {
-  const [shouldOptimize, setShouldOptimize] = useState(false);
-
-  const handleOptimize = () => {
-    setShouldOptimize(true);
-    onOptimize();
-  };
+  const { shouldOptimize, handleOptimize, resetOptimization } = useRouteFormState();
 
   return (
     <div className="grid grid-cols-2 gap-8">
@@ -90,10 +85,9 @@ export const RouteFormContent = ({
           selectedStops={selectedStops}
           onStopsChange={(stops) => {
             setSelectedStops(stops);
-            // Reseta o estado de otimização quando as paradas são alteradas
-            setShouldOptimize(false);
+            resetOptimization();
           }}
-          onOptimize={handleOptimize}
+          onOptimize={() => handleOptimize(onOptimize)}
           disabled={isViewMode}
         />
       </div>
