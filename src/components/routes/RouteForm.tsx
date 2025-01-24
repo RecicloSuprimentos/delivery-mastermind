@@ -1,24 +1,14 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ServiceSelector } from "@/components/services/ServiceSelector";
-import { MapComponent } from "@/components/map/MapComponent";
-import type { Service } from "@/types/routes";
+import { RouteFormHeader } from "./RouteFormHeader";
+import { RouteFormContent } from "./RouteFormContent";
+import { useRouteFormState } from "@/hooks/useRouteFormState";
 import type { Database } from "@/integrations/supabase/types";
+import type { Service } from "@/types/routes";
 
 type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
-type LocationType = Database["public"]["Enums"]["location_type"];
 
 interface RouteFormProps {
   onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
@@ -26,180 +16,170 @@ interface RouteFormProps {
 }
 
 export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [name, setName] = useState("");
-  const [agentId, setAgentId] = useState<string>("");
-  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
-  const [startLocation, setStartLocation] = useState<LocationType>("operational_base");
-  const [endLocation, setEndLocation] = useState<LocationType>("operational_base");
+  const [searchParams] = useSearchParams();
+  const routeId = searchParams.get("id");
+  const mode = searchParams.get("mode");
+  const isViewMode = mode === "view";
+
+  const {
+    date,
+    setDate,
+    startLocationType,
+    setStartLocationType,
+    endLocationType,
+    setEndLocationType,
+    selectedStartService,
+    setSelectedStartService,
+    selectedEndService,
+    setSelectedEndService,
+    routeName,
+    setRouteName,
+    selectedAgent,
+    setSelectedAgent,
+    selectedStops,
+    setSelectedStops,
+    routeStats,
+    handleRouteStats,
+    handleOptimizedStops,
+    handleOptimize,
+    validateForm,
+  } = useRouteFormState();
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
-      const { data: { users }, error } = await supabase.auth.admin.listUsers();
-      if (error) throw error;
-      
-      return users
-        .filter((user) => user.user_metadata?.user_type === "agent")
-        .map((user) => ({
-          id: user.id,
-          name: user.user_metadata?.name || "Sem nome",
-          email: user.email || ""
-        }));
-    },
-  });
-
-  const { data: route } = useQuery({
-    queryKey: ["route", id],
-    queryFn: async () => {
-      if (!id) return null;
-
       const { data, error } = await supabase
-        .from("routes")
-        .select(`
-          *,
-          route_stops (*)
-        `)
-        .eq("id", id)
-        .single();
+        .from("system_users")
+        .select("*")
+        .eq("user_type", "agent");
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+  });
+
+  const { data: services } = useQuery({
+    queryKey: ["available_services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .eq("status", "not-assigned");
+
+      if (error) throw error;
+      return data as Service[];
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["system_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("*")
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
   });
 
   useEffect(() => {
-    const loadRouteServices = async () => {
-      if (route?.route_stops) {
-        const { data: services } = await supabase
-          .from("services")
+    if (routeId) {
+      const fetchRoute = async () => {
+        const { data, error } = await supabase
+          .from("routes")
           .select("*")
-          .in("id", route.route_stops.map(stop => stop.service_id));
-        
-        if (services) {
-          const orderedServices = route.route_stops
-            .sort((a, b) => a.sequence_number - b.sequence_number)
-            .map(stop => services.find(s => s.id === stop.service_id))
-            .filter(Boolean) as Service[];
-            
-          setSelectedServices(orderedServices);
-        }
-      }
-    };
+          .eq("id", routeId)
+          .single();
 
-    if (route) {
-      setName(route.name);
-      setAgentId(route.agent_id || "");
-      setStartLocation(route.start_location_type);
-      setEndLocation(route.end_location_type);
-      loadRouteServices();
+        if (error) {
+          console.error("Error fetching route:", error);
+          return;
+        }
+
+        if (data) {
+          setRouteName(data.name);
+          setSelectedAgent(data.agent_id);
+          setDate(new Date(data.start_time));
+          setStartLocationType(data.start_location_type);
+          setEndLocationType(data.end_location_type);
+          setSelectedStartService(data.start_location_reference);
+          setSelectedEndService(data.end_location_reference);
+          
+          const { data: stopsData } = await supabase
+            .from("route_stops")
+            .select("*, service:services(*)")
+            .eq("route_id", routeId)
+            .order("sequence_number");
+
+          if (stopsData) {
+            setSelectedStops(stopsData.map((stop: any) => stop.service));
+          }
+        }
+      };
+
+      fetchRoute();
     }
-  }, [route]);
+  }, [routeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave(
-      { 
-        name, 
-        agent_id: agentId || null, 
-        start_location_type: startLocation, 
-        end_location_type: endLocation,
-        status: "pending",
-        start_time: new Date().toISOString(),
-        start_location_reference: "",
-        end_location_reference: ""
-      }, 
-      selectedServices, 
-      id
-    );
+    
+    if (!validateForm()) return;
+
+    const routeData: RouteInsert = {
+      name: routeName,
+      agent_id: selectedAgent!,
+      start_time: date!.toISOString(),
+      start_location_type: startLocationType,
+      start_location_reference: startLocationType === "operational_base" ? 
+        settings?.id : selectedStartService!,
+      end_location_type: endLocationType,
+      end_location_reference: endLocationType === "operational_base" ? 
+        settings?.id : selectedEndService!,
+      total_distance: routeStats?.distance,
+      total_duration: routeStats?.duration,
+      status: "assigned",
+    };
+
+    await onSave(routeData, selectedStops, routeId || undefined);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome da Rota</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="agent">Agente</Label>
-          <Select value={agentId} onValueChange={setAgentId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um agente" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Sem agente</SelectItem>
-              {agents?.map((agent) => (
-                <SelectItem key={agent.id} value={agent.id}>
-                  {agent.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Ponto de Partida</Label>
-          <Select value={startLocation} onValueChange={setStartLocation}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="operational_base">Base Operacional</SelectItem>
-              <SelectItem value="service">Primeiro Serviço</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Ponto de Chegada</Label>
-          <Select value={endLocation} onValueChange={setEndLocation}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="operational_base">Base Operacional</SelectItem>
-              <SelectItem value="service">Último Serviço</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Serviços</Label>
-          <ServiceSelector
-            selectedServices={selectedServices}
-            onChange={setSelectedServices}
-          />
-        </div>
-
-        {selectedServices.length > 0 && (
-          <div className="h-96">
-            <MapComponent services={selectedServices} />
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-end gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate("/routes")}
-        >
-          Cancelar
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Salvando..." : "Salvar"}
-        </Button>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <RouteFormHeader
+        onSave={handleSubmit}
+        isLoading={isLoading}
+        routeId={routeId}
+        isViewMode={isViewMode}
+      />
+      
+      <RouteFormContent
+        routeName={routeName}
+        setRouteName={setRouteName}
+        selectedAgent={selectedAgent}
+        setSelectedAgent={setSelectedAgent}
+        date={date}
+        setDate={setDate}
+        startLocationType={startLocationType}
+        setStartLocationType={setStartLocationType}
+        endLocationType={endLocationType}
+        setEndLocationType={setEndLocationType}
+        selectedStartService={selectedStartService}
+        setSelectedStartService={setSelectedStartService}
+        selectedEndService={selectedEndService}
+        setSelectedEndService={setSelectedEndService}
+        selectedStops={selectedStops}
+        setSelectedStops={setSelectedStops}
+        onOptimize={handleOptimize}
+        onRouteStats={handleRouteStats}
+        onOptimizedStops={handleOptimizedStops}
+        agents={agents}
+        services={services}
+        settings={settings}
+        isViewMode={isViewMode}
+      />
     </form>
   );
 };
