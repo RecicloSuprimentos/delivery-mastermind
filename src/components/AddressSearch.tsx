@@ -10,7 +10,7 @@ interface Location {
 interface AddressSearchProps {
   value: string;
   onChange: (address: string) => void;
-  onLocationSelect: (location: Location, address: string) => void;
+  onLocationSelect: (location: Location) => void;
 }
 
 const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps) => {
@@ -19,7 +19,7 @@ const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps
   useEffect(() => {
     // Verificar se o Google Maps está carregado
     if (!window.google) {
-      console.warn("Google Maps not loaded");
+      console.error("Google Maps não carregado");
       return;
     }
   }, []);
@@ -31,8 +31,11 @@ const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
       
+      // Atualiza o endereço e a localização
       onChange(place.formatted_address || "");
-      onLocationSelect({ lat, lng }, place.formatted_address || "");
+      onLocationSelect({ lat, lng });
+    } else {
+      console.error("Localização não encontrada no endereço selecionado");
     }
   };
 
