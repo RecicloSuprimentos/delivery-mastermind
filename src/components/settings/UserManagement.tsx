@@ -15,7 +15,6 @@ interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
   user_type: UserType;
   is_active: boolean;
 }
@@ -86,7 +85,6 @@ export const UserManagement = () => {
         .update({
           name: user.name,
           email: user.email,
-          password: user.password,
           user_type: user.user_type,
           is_active: user.is_active,
         })

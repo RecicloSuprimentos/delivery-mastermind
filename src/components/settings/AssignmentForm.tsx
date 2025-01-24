@@ -96,10 +96,10 @@ export const AssignmentForm = ({
                 setFormData({ ...formData, email: value })
               }
             >
-              <SelectTrigger id="email" className="bg-popover">
+              <SelectTrigger id="email" className="bg-background border">
                 <SelectValue placeholder="Selecione um usuário" />
               </SelectTrigger>
-              <SelectContent className="bg-popover">
+              <SelectContent className="bg-background border">
                 {availableUsers.map((user) => (
                   <SelectItem key={user.email} value={user.email}>
                     {user.email}
@@ -135,10 +135,10 @@ export const AssignmentForm = ({
                 setFormData({ ...formData, user_type: value })
               }
             >
-              <SelectTrigger id="type" className="bg-popover">
+              <SelectTrigger id="type" className="bg-background border">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
-              <SelectContent className="bg-popover">
+              <SelectContent className="bg-background border">
                 <SelectItem value="admin">Administrador</SelectItem>
                 <SelectItem value="user">Usuário</SelectItem>
                 <SelectItem value="agent">Agente</SelectItem>
