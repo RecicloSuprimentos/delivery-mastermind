@@ -238,13 +238,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      authenticate_user: {
-        Args: {
-          email_input: string
-          password_input: string
-        }
-        Returns: Json
-      }
+      [_ in never]: never
     }
     Enums: {
       location_type: "operational_base" | "service"
