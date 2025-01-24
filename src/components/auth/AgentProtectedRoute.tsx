@@ -17,9 +17,9 @@ export const AgentProtectedRoute = ({ children }: { children: React.ReactNode })
       }
 
       const { data: userData, error } = await supabase
-        .from("profiles")
+        .from("system_users")
         .select("user_type")
-        .eq("id", session.user.id)
+        .eq("email", session.user.email)
         .single();
 
       if (error) {
