@@ -49,8 +49,8 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
     queryKey: ["agents"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("system_users")
-        .select("*")
+        .from("profiles")
+        .select("id, name, email")
         .eq("user_type", "agent");
 
       if (error) throw error;

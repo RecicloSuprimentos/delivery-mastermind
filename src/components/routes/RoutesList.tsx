@@ -34,7 +34,7 @@ export const RoutesList = () => {
         .from("routes")
         .select(`
           *,
-          agent:system_users(name),
+          agent:profiles(name),
           route_stops(service_id)
         `)
         .order("created_at", { ascending: false });
