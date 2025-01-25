@@ -36,6 +36,7 @@ export const KanbanBoard = () => {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const fetchServices = async () => {
+    console.log("Buscando serviços...");
     const { data, error } = await supabase
       .from("services")
       .select("*")
@@ -43,11 +44,12 @@ export const KanbanBoard = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching services:", error);
+      console.error("Erro ao buscar serviços:", error);
       return;
     }
 
     if (data) {
+      console.log("Serviços encontrados:", data);
       setServices(data as Service[]);
     }
   };
@@ -64,7 +66,8 @@ export const KanbanBoard = () => {
           schema: 'public',
           table: 'services'
         },
-        () => {
+        (payload) => {
+          console.log("Mudança detectada nos serviços:", payload);
           fetchServices();
         }
       )
