@@ -43,6 +43,45 @@ export const useRoutes = (routeId?: string) => {
     enabled: !!routeId,
   });
 
+  const saveRoute = useMutation({
+    mutationFn: async (routeData: RouteInsert) => {
+      if (routeId) {
+        const { data, error } = await supabase
+          .from("routes")
+          .update(routeData)
+          .eq("id", routeId)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from("routes")
+          .insert(routeData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
+      toast({
+        title: "Sucesso",
+        description: routeId ? "Rota atualizada com sucesso!" : "Rota criada com sucesso!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar a rota.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const updateRouteStatus = useMutation({
     mutationFn: async ({ routeId, status }: { routeId: string; status: string }) => {
       console.log("Updating route status:", { routeId, status });
