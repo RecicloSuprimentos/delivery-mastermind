@@ -4,6 +4,7 @@ import { UserAssignments } from "@/components/settings/UserAssignments";
 import { OperationalBase } from "@/components/settings/OperationalBase";
 import { ServiceSettings } from "@/components/settings/ServiceSettings";
 import { ApiKeys } from "@/components/settings/ApiKeys";
+import { ApiIntegration } from "@/components/settings/ApiIntegration";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 
 const SettingsPage = () => {
@@ -50,6 +51,10 @@ const SettingsPage = () => {
 
           <TabsContent value="api">
             <ApiKeys />
+          </TabsContent>
+
+          <TabsContent value="integrations">
+            <ApiIntegration />
           </TabsContent>
         </div>
       </Tabs>
