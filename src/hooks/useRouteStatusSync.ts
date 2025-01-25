@@ -58,8 +58,7 @@ export const useRouteStatusSync = () => {
         {
           event: "UPDATE",
           schema: "public",
-          table: "routes",
-          filter: "status=accepted"
+          table: "routes"
         },
         handleRouteStatusChange
       )
