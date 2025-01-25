@@ -3,124 +3,115 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServices } from "./useServices";
 import { useToast } from "./use-toast";
 
+// Interface para a fila de processamento
+interface ProcessingQueue {
+  routeId: string;
+  status: string;
+}
+
 export const useRouteStatusSync = () => {
   const { updateServiceStatus } = useServices();
   const { toast } = useToast();
   const processedRoutes = useRef(new Set<string>());
+  const processingQueue = useRef<ProcessingQueue[]>([]);
   const isProcessing = useRef(false);
   const mountedRef = useRef(true);
 
-  const updateServicesForRoute = async (routeId: string) => {
-    // Verificações de segurança
-    if (!mountedRef.current) return;
-    if (processedRoutes.current.has(routeId)) {
-      console.log("[RouteSync] Rota já processada, ignorando:", routeId);
-      return;
-    }
-    if (isProcessing.current) {
-      console.log("[RouteSync] Processamento em andamento, ignorando nova requisição");
+  // Função para processar a fila
+  const processQueue = async () => {
+    if (!mountedRef.current || isProcessing.current || processingQueue.current.length === 0) {
       return;
     }
 
-    console.log("[RouteSync] Iniciando processamento da rota:", routeId);
     isProcessing.current = true;
+    const { routeId, status } = processingQueue.current[0];
 
     try {
-      // Verifica se a rota ainda está com status 'accepted'
-      const { data: route, error: routeError } = await supabase
+      // Verifica se a rota já foi processada
+      if (processedRoutes.current.has(routeId)) {
+        processingQueue.current.shift();
+        isProcessing.current = false;
+        processQueue();
+        return;
+      }
+
+      // Verifica o status atual da rota
+      const { data: route } = await supabase
         .from("routes")
         .select("status")
         .eq("id", routeId)
         .single();
 
-      if (routeError) {
-        console.error("[RouteSync] Erro ao verificar status da rota:", routeError);
-        return;
-      }
-
-      if (route?.status !== "accepted") {
-        console.log("[RouteSync] Rota não está mais com status 'accepted', ignorando");
+      if (route?.status !== status) {
+        processingQueue.current.shift();
+        isProcessing.current = false;
+        processQueue();
         return;
       }
 
       // Busca os serviços da rota
-      const { data: routeStops, error: stopsError } = await supabase
+      const { data: routeStops } = await supabase
         .from("route_stops")
         .select("service_id")
         .eq("route_id", routeId);
 
-      if (stopsError) {
-        console.error("[RouteSync] Erro ao buscar paradas da rota:", stopsError);
-        return;
-      }
+      if (routeStops?.length) {
+        for (const stop of routeStops) {
+          if (!mountedRef.current) return;
 
-      if (!routeStops?.length) {
-        console.log("[RouteSync] Nenhum serviço encontrado para a rota:", routeId);
-        return;
-      }
-
-      // Atualiza os serviços sequencialmente
-      for (const stop of routeStops) {
-        if (!mountedRef.current) return; // Verifica se o componente ainda está montado
-
-        try {
           await updateServiceStatus.mutateAsync({
             serviceId: stop.service_id,
             status: "accepted"
           });
-          console.log("[RouteSync] Serviço atualizado com sucesso:", stop.service_id);
-        } catch (error) {
-          console.error("[RouteSync] Erro ao atualizar serviço:", error);
-          toast({
-            title: "Erro",
-            description: "Não foi possível atualizar um dos serviços da rota",
-            variant: "destructive",
-          });
-          return;
         }
       }
 
-      // Marca a rota como processada apenas se tudo deu certo
+      // Marca a rota como processada
       processedRoutes.current.add(routeId);
-      console.log("[RouteSync] Rota processada com sucesso:", routeId);
+      processingQueue.current.shift();
 
     } catch (error) {
-      console.error("[RouteSync] Erro inesperado:", error);
+      console.error("[RouteSync] Erro ao processar rota:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao sincronizar status dos serviços",
+        variant: "destructive",
+      });
     } finally {
       if (mountedRef.current) {
         isProcessing.current = false;
+        // Processa o próximo item da fila
+        processQueue();
       }
     }
   };
 
+  // Adiciona uma rota à fila de processamento
+  const addToQueue = (routeId: string, status: string) => {
+    if (!processedRoutes.current.has(routeId)) {
+      processingQueue.current.push({ routeId, status });
+      processQueue();
+    }
+  };
+
   useEffect(() => {
-    console.log("[RouteSync] Iniciando monitoramento de rotas");
+    console.log("[RouteSync] Iniciando monitoramento");
     mountedRef.current = true;
 
-    // Processa rotas já aceitas apenas uma vez na inicialização
+    // Processa rotas já aceitas
     const syncExistingRoutes = async () => {
-      if (!mountedRef.current) return;
-
-      const { data: acceptedRoutes, error } = await supabase
+      const { data: acceptedRoutes } = await supabase
         .from("routes")
         .select("id")
         .eq("status", "accepted");
 
-      if (error) {
-        console.error("[RouteSync] Erro ao buscar rotas aceitas:", error);
-        return;
-      }
-
       if (acceptedRoutes?.length) {
         console.log("[RouteSync] Processando rotas existentes:", acceptedRoutes.length);
-        for (const route of acceptedRoutes) {
-          if (!mountedRef.current) return;
-          await updateServicesForRoute(route.id);
-        }
+        acceptedRoutes.forEach(route => addToQueue(route.id, "accepted"));
       }
     };
 
-    // Monitora apenas mudanças de status para 'accepted'
+    // Monitora mudanças de status
     const channel = supabase
       .channel("route_status_changes")
       .on(
@@ -131,10 +122,10 @@ export const useRouteStatusSync = () => {
           table: "routes",
           filter: "status=accepted"
         },
-        async (payload) => {
+        (payload) => {
           if (!mountedRef.current) return;
           if (payload.old?.status !== "accepted" && payload.new?.status === "accepted") {
-            await updateServicesForRoute(payload.new.id);
+            addToQueue(payload.new.id, "accepted");
           }
         }
       )
@@ -145,10 +136,11 @@ export const useRouteStatusSync = () => {
 
     // Cleanup
     return () => {
-      console.log("[RouteSync] Finalizando monitoramento de rotas");
+      console.log("[RouteSync] Finalizando monitoramento");
       mountedRef.current = false;
       supabase.removeChannel(channel);
       processedRoutes.current.clear();
+      processingQueue.current = [];
       isProcessing.current = false;
     };
   }, [updateServiceStatus, toast]);
