@@ -26,6 +26,7 @@ export const useRouteStatusSync = () => {
 
       if (routeStops && routeStops.length > 0) {
         console.log("Serviços encontrados:", routeStops);
+        let errorCount = 0;
         
         for (const stop of routeStops) {
           try {
@@ -36,12 +37,17 @@ export const useRouteStatusSync = () => {
             console.log("Status do serviço atualizado:", stop.service_id);
           } catch (error) {
             console.error("Erro ao atualizar serviço:", error);
-            toast({
-              title: "Erro",
-              description: "Erro ao atualizar status do serviço",
-              variant: "destructive",
-            });
+            errorCount++;
           }
+        }
+
+        // Mostra uma única notificação ao final das atualizações
+        if (errorCount > 0) {
+          toast({
+            title: "Atenção",
+            description: `${errorCount} serviços não puderam ser atualizados`,
+            variant: "destructive",
+          });
         }
       }
     };
@@ -60,7 +66,7 @@ export const useRouteStatusSync = () => {
         return;
       }
 
-      if (acceptedRoutes) {
+      if (acceptedRoutes && acceptedRoutes.length > 0) {
         console.log("Rotas aceitas encontradas:", acceptedRoutes);
         for (const route of acceptedRoutes) {
           await updateServicesForRoute(route.id);
@@ -90,9 +96,9 @@ export const useRouteStatusSync = () => {
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
-          table: "routes"
+          table: "routes",
         },
         handleRouteStatusChange
       )
