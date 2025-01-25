@@ -86,7 +86,38 @@ export const useRoutes = (routeId?: string) => {
     mutationFn: async ({ routeId, status }: { routeId: string; status: string }) => {
       console.log("Iniciando atualização de status da rota:", { routeId, status });
 
-      // Primeiro atualiza o status da rota
+      // Primeiro busca os serviços vinculados à rota
+      const { data: routeStops, error: stopsError } = await supabase
+        .from("route_stops")
+        .select("service_id")
+        .eq("route_id", routeId);
+
+      if (stopsError) {
+        console.error("Erro ao buscar paradas da rota:", stopsError);
+        throw stopsError;
+      }
+
+      console.log("Paradas da rota encontradas:", routeStops);
+
+      // Se o status for 'accepted', atualiza os serviços primeiro
+      if (status === 'accepted' && routeStops && routeStops.length > 0) {
+        const serviceIds = routeStops.map(stop => stop.service_id);
+        console.log("IDs dos serviços para atualizar:", serviceIds);
+        
+        const { error: servicesError } = await supabase
+          .from("services")
+          .update({ status: 'accepted' })
+          .in("id", serviceIds);
+
+        if (servicesError) {
+          console.error("Erro ao atualizar serviços:", servicesError);
+          throw servicesError;
+        }
+
+        console.log("Serviços atualizados com sucesso");
+      }
+
+      // Depois atualiza o status da rota
       const { data: route, error: routeError } = await supabase
         .from("routes")
         .update({ status })
@@ -100,44 +131,6 @@ export const useRoutes = (routeId?: string) => {
       }
 
       console.log("Status da rota atualizado com sucesso:", route);
-
-      // Se o status for 'accepted', atualiza os serviços vinculados
-      if (status === 'accepted') {
-        console.log("Rota aceita, buscando serviços vinculados...");
-        
-        // Busca todos os serviços vinculados a esta rota
-        const { data: routeStops, error: stopsError } = await supabase
-          .from("route_stops")
-          .select("service_id")
-          .eq("route_id", routeId);
-
-        if (stopsError) {
-          console.error("Erro ao buscar paradas da rota:", stopsError);
-          throw stopsError;
-        }
-
-        console.log("Paradas da rota encontradas:", routeStops);
-
-        if (routeStops && routeStops.length > 0) {
-          const serviceIds = routeStops.map(stop => stop.service_id);
-          console.log("IDs dos serviços para atualizar:", serviceIds);
-          
-          // Atualiza o status de todos os serviços vinculados
-          const { data: updatedServices, error: servicesError } = await supabase
-            .from("services")
-            .update({ status: 'accepted' })
-            .in("id", serviceIds)
-            .select();
-
-          if (servicesError) {
-            console.error("Erro ao atualizar serviços:", servicesError);
-            throw servicesError;
-          }
-
-          console.log("Serviços atualizados com sucesso:", updatedServices);
-        }
-      }
-
       return route;
     },
     onSuccess: () => {
