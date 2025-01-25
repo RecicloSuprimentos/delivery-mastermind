@@ -24,35 +24,37 @@ export const useRouteStatusSync = () => {
         return;
       }
 
-      if (routeStops && routeStops.length > 0) {
-        console.log("Serviços encontrados:", routeStops);
-        let errorCount = 0;
-        
-        for (const stop of routeStops) {
-          try {
-            await updateServiceStatus.mutateAsync({
-              serviceId: stop.service_id,
-              status: "accepted"
-            });
-            console.log("Status do serviço atualizado:", stop.service_id);
-          } catch (error) {
-            console.error("Erro ao atualizar serviço:", error);
-            errorCount++;
-          }
-        }
+      if (!routeStops?.length) {
+        console.log("Nenhum serviço encontrado para a rota:", routeId);
+        return;
+      }
 
-        // Mostra uma única notificação ao final das atualizações
-        if (errorCount > 0) {
-          toast({
-            title: "Atenção",
-            description: `${errorCount} serviços não puderam ser atualizados`,
-            variant: "destructive",
+      console.log("Serviços encontrados:", routeStops);
+      let errorCount = 0;
+      
+      for (const stop of routeStops) {
+        try {
+          await updateServiceStatus.mutateAsync({
+            serviceId: stop.service_id,
+            status: "accepted"
           });
+          console.log("Status do serviço atualizado:", stop.service_id);
+        } catch (error) {
+          console.error("Erro ao atualizar serviço:", error);
+          errorCount++;
         }
+      }
+
+      if (errorCount > 0) {
+        toast({
+          title: "Atenção",
+          description: `${errorCount} serviços não puderam ser atualizados`,
+          variant: "destructive",
+        });
       }
     };
 
-    // Verifica rotas já aceitas e atualiza seus serviços
+    // Verifica rotas já aceitas e atualiza seus serviços (apenas uma vez)
     const syncExistingAcceptedRoutes = async () => {
       console.log("Verificando rotas já aceitas...");
       
@@ -66,16 +68,16 @@ export const useRouteStatusSync = () => {
         return;
       }
 
-      if (acceptedRoutes && acceptedRoutes.length > 0) {
-        console.log("Rotas aceitas encontradas:", acceptedRoutes);
-        for (const route of acceptedRoutes) {
-          await updateServicesForRoute(route.id);
-        }
+      if (!acceptedRoutes?.length) {
+        console.log("Nenhuma rota aceita encontrada");
+        return;
+      }
+
+      console.log("Rotas aceitas encontradas:", acceptedRoutes);
+      for (const route of acceptedRoutes) {
+        await updateServicesForRoute(route.id);
       }
     };
-
-    // Executa sincronização inicial
-    syncExistingAcceptedRoutes();
 
     // Monitora mudanças futuras
     const handleRouteStatusChange = async (payload: any) => {
@@ -86,17 +88,20 @@ export const useRouteStatusSync = () => {
         payload.new.status === "accepted" &&
         payload.old.status !== "accepted"
       ) {
-        const routeId = payload.new.id;
-        await updateServicesForRoute(routeId);
+        await updateServicesForRoute(payload.new.id);
       }
     };
 
+    // Executa sincronização inicial apenas uma vez
+    syncExistingAcceptedRoutes();
+
+    // Configura o canal de monitoramento
     const channel = supabase
       .channel("route_status_changes")
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "UPDATE",
           schema: "public",
           table: "routes",
         },
