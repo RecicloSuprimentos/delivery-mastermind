@@ -86,9 +86,8 @@ export const useRoutes = (routeId?: string) => {
     mutationFn: async ({ routeId, status }: { routeId: string; status: string }) => {
       console.log("[Routes] Iniciando atualização de status da rota:", { routeId, status });
 
-      // Se o status for 'accepted', primeiro atualiza os serviços
+      // Se o status for 'accepted', primeiro busca os serviços da rota
       if (status === 'accepted') {
-        // Busca os serviços vinculados à rota
         const { data: routeStops, error: stopsError } = await supabase
           .from("route_stops")
           .select("service_id")
@@ -103,7 +102,7 @@ export const useRoutes = (routeId?: string) => {
           const serviceIds = routeStops.map(stop => stop.service_id);
           console.log("[Routes] Atualizando status dos serviços:", serviceIds);
 
-          // Atualiza os serviços para 'accepted'
+          // Atualiza os serviços para 'accepted' em uma única transação
           const { error: servicesError } = await supabase
             .from("services")
             .update({ status: 'accepted' })
@@ -112,6 +111,23 @@ export const useRoutes = (routeId?: string) => {
           if (servicesError) {
             console.error("[Routes] Erro ao atualizar serviços:", servicesError);
             throw servicesError;
+          }
+
+          // Verifica se todos os serviços foram atualizados corretamente
+          const { data: updatedServices, error: verificationError } = await supabase
+            .from("services")
+            .select("id, status")
+            .in("id", serviceIds);
+
+          if (verificationError) {
+            console.error("[Routes] Erro ao verificar atualização dos serviços:", verificationError);
+            throw verificationError;
+          }
+
+          const notUpdatedServices = updatedServices.filter(service => service.status !== 'accepted');
+          if (notUpdatedServices.length > 0) {
+            console.error("[Routes] Alguns serviços não foram atualizados:", notUpdatedServices);
+            throw new Error("Alguns serviços não foram atualizados corretamente");
           }
         }
       }
