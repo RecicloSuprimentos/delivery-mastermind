@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServices } from "./useServices";
 import { useToast } from "./use-toast";
@@ -6,12 +6,19 @@ import { useToast } from "./use-toast";
 export const useRouteStatusSync = () => {
   const { updateServiceStatus } = useServices();
   const { toast } = useToast();
+  const processedRouteIds = useRef(new Set<string>());
 
   useEffect(() => {
     console.log("Iniciando monitoramento de status das rotas...");
 
     // Função para atualizar serviços de uma rota
     const updateServicesForRoute = async (routeId: string) => {
+      // Evita processar a mesma rota mais de uma vez
+      if (processedRouteIds.current.has(routeId)) {
+        console.log("Rota já processada:", routeId);
+        return;
+      }
+
       console.log("Atualizando serviços para rota:", routeId);
       
       const { data: routeStops, error: stopsError } = await supabase
@@ -52,6 +59,9 @@ export const useRouteStatusSync = () => {
           variant: "destructive",
         });
       }
+
+      // Marca a rota como processada
+      processedRouteIds.current.add(routeId);
     };
 
     // Verifica rotas já aceitas e atualiza seus serviços (apenas uma vez)
@@ -111,6 +121,7 @@ export const useRouteStatusSync = () => {
 
     return () => {
       console.log("Desativando monitoramento de status das rotas...");
+      processedRouteIds.current.clear();
       supabase.removeChannel(channel);
     };
   }, [updateServiceStatus, toast]);
