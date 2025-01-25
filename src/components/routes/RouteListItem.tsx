@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Printer, Eye, Edit } from "lucide-react";
+import { Printer, Eye, Edit, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useRoutes } from "@/hooks/useRoutes";
 
 interface Route {
   id: string;
@@ -28,6 +29,7 @@ interface RouteListItemProps {
 
 export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListItemProps) => {
   const navigate = useNavigate();
+  const { updateRouteStatus } = useRoutes();
 
   const formatDateTime = (dateString: string) => {
     return format(new Date(dateString), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
@@ -37,6 +39,17 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return `${hours}h${remainingMinutes}min`;
+  };
+
+  const handleAcceptRoute = async () => {
+    try {
+      await updateRouteStatus.mutateAsync({
+        routeId: route.id,
+        status: 'accepted'
+      });
+    } catch (error) {
+      console.error("Error accepting route:", error);
+    }
   };
 
   return (
@@ -50,6 +63,16 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
             </p>
           </div>
           <div className="flex space-x-1">
+            {route.status === 'draft' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleAcceptRoute}
+                className="h-6 w-6 p-0"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <Button 
               variant="ghost" 
               size="sm" 
