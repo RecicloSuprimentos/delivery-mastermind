@@ -4,90 +4,76 @@ import { useServices } from "./useServices";
 import { useToast } from "./use-toast";
 
 export const useRouteStatusSync = () => {
-  // Temporariamente desativado para teste
-  return;
-
-  /* Original code commented out for testing
   const { updateServiceStatus } = useServices();
   const { toast } = useToast();
-  const processedRouteIds = useRef(new Set<string>());
+  const processedRoutes = useRef(new Set<string>());
   const isProcessing = useRef(false);
 
-  useEffect(() => {
-    console.log("Iniciando monitoramento de status das rotas...");
+  const updateServicesForRoute = async (routeId: string) => {
+    // Evita processamento duplicado
+    if (processedRoutes.current.has(routeId)) {
+      console.log("Rota já processada:", routeId);
+      return;
+    }
 
-    // Função para atualizar serviços de uma rota
-    const updateServicesForRoute = async (routeId: string) => {
-      // Evita processamento simultâneo
-      if (isProcessing.current) {
-        console.log("Já existe um processamento em andamento, aguardando...");
+    // Evita processamento simultâneo
+    if (isProcessing.current) {
+      console.log("Processamento em andamento, aguardando...");
+      return;
+    }
+
+    try {
+      isProcessing.current = true;
+      console.log("Iniciando atualização dos serviços da rota:", routeId);
+
+      const { data: routeStops, error: stopsError } = await supabase
+        .from("route_stops")
+        .select("service_id")
+        .eq("route_id", routeId);
+
+      if (stopsError) {
+        console.error("Erro ao buscar paradas da rota:", stopsError);
         return;
       }
 
-      // Evita processar a mesma rota mais de uma vez
-      if (processedRouteIds.current.has(routeId)) {
-        console.log("Rota já processada:", routeId);
+      if (!routeStops?.length) {
+        console.log("Nenhum serviço encontrado para a rota:", routeId);
         return;
       }
 
-      try {
-        isProcessing.current = true;
-        console.log("Atualizando serviços para rota:", routeId);
-        
-        const { data: routeStops, error: stopsError } = await supabase
-          .from("route_stops")
-          .select("service_id")
-          .eq("route_id", routeId);
-
-        if (stopsError) {
-          console.error("Erro ao buscar paradas da rota:", stopsError);
-          return;
-        }
-
-        if (!routeStops?.length) {
-          console.log("Nenhum serviço encontrado para a rota:", routeId);
-          return;
-        }
-
-        console.log("Serviços encontrados:", routeStops);
-        let errorCount = 0;
-        
-        for (const stop of routeStops) {
-          try {
-            await updateServiceStatus.mutateAsync({
-              serviceId: stop.service_id,
-              status: "accepted"
-            });
-            console.log("Status do serviço atualizado:", stop.service_id);
-          } catch (error) {
-            console.error("Erro ao atualizar serviço:", error);
-            errorCount++;
-          }
-        }
-
-        if (errorCount > 0) {
+      // Atualiza os serviços em sequência para evitar sobrecarga
+      for (const stop of routeStops) {
+        try {
+          await updateServiceStatus.mutateAsync({
+            serviceId: stop.service_id,
+            status: "accepted"
+          });
+          console.log("Serviço atualizado com sucesso:", stop.service_id);
+        } catch (error) {
+          console.error("Erro ao atualizar serviço:", error);
           toast({
-            title: "Atenção",
-            description: `${errorCount} serviços não puderam ser atualizados`,
+            title: "Erro",
+            description: "Não foi possível atualizar um dos serviços da rota",
             variant: "destructive",
           });
+          return; // Interrompe o processamento em caso de erro
         }
-
-        // Marca a rota como processada apenas se não houver erros
-        if (errorCount === 0) {
-          processedRouteIds.current.add(routeId);
-        }
-      } finally {
-        isProcessing.current = false;
       }
-    };
 
-    // Verifica rotas já aceitas e atualiza seus serviços (apenas uma vez)
-    const syncExistingAcceptedRoutes = async () => {
-      if (isProcessing.current) return;
+      // Marca a rota como processada apenas se todos os serviços foram atualizados
+      processedRoutes.current.add(routeId);
+      console.log("Rota processada com sucesso:", routeId);
 
-      console.log("Verificando rotas já aceitas...");
-      
+    } finally {
+      isProcessing.current = false;
+    }
+  };
+
+  useEffect(() => {
+    console.log("Iniciando monitoramento de rotas...");
+
+    // Processa rotas já aceitas apenas uma vez na inicialização
+    const syncExistingRoutes = async () => {
       const { data: acceptedRoutes, error } = await supabase
         .from("routes")
         .select("id")
@@ -98,34 +84,15 @@ export const useRouteStatusSync = () => {
         return;
       }
 
-      if (!acceptedRoutes?.length) {
-        console.log("Nenhuma rota aceita encontrada");
-        return;
-      }
-
-      console.log("Rotas aceitas encontradas:", acceptedRoutes);
-      for (const route of acceptedRoutes) {
-        await updateServicesForRoute(route.id);
+      if (acceptedRoutes?.length) {
+        console.log("Processando rotas existentes:", acceptedRoutes.length);
+        for (const route of acceptedRoutes) {
+          await updateServicesForRoute(route.id);
+        }
       }
     };
 
-    // Monitora mudanças futuras
-    const handleRouteStatusChange = async (payload: any) => {
-      console.log("Mudança detectada na rota:", payload);
-
-      if (
-        payload.eventType === "UPDATE" &&
-        payload.new.status === "accepted" &&
-        payload.old.status !== "accepted"
-      ) {
-        await updateServicesForRoute(payload.new.id);
-      }
-    };
-
-    // Executa sincronização inicial apenas uma vez
-    syncExistingAcceptedRoutes();
-
-    // Configura o canal de monitoramento
+    // Monitora apenas mudanças relevantes de status
     const channel = supabase
       .channel("route_status_changes")
       .on(
@@ -136,16 +103,23 @@ export const useRouteStatusSync = () => {
           table: "routes",
           filter: "status=accepted"
         },
-        handleRouteStatusChange
+        async (payload) => {
+          if (payload.old?.status !== "accepted" && payload.new?.status === "accepted") {
+            await updateServicesForRoute(payload.new.id);
+          }
+        }
       )
       .subscribe();
 
+    // Sincroniza rotas existentes
+    syncExistingRoutes();
+
+    // Cleanup
     return () => {
-      console.log("Desativando monitoramento de status das rotas...");
-      processedRouteIds.current.clear();
-      isProcessing.current = false;
+      console.log("Finalizando monitoramento de rotas...");
       supabase.removeChannel(channel);
+      processedRoutes.current.clear();
+      isProcessing.current = false;
     };
   }, [updateServiceStatus, toast]);
-  */
 };
