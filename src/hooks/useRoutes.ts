@@ -84,40 +84,39 @@ export const useRoutes = (routeId?: string) => {
 
   const updateRouteStatus = useMutation({
     mutationFn: async ({ routeId, status }: { routeId: string; status: string }) => {
-      console.log("Iniciando atualização de status da rota:", { routeId, status });
+      console.log("[Routes] Iniciando atualização de status da rota:", { routeId, status });
 
-      // Primeiro busca os serviços vinculados à rota
-      const { data: routeStops, error: stopsError } = await supabase
-        .from("route_stops")
-        .select("service_id")
-        .eq("route_id", routeId);
+      // Se o status for 'accepted', primeiro atualiza os serviços
+      if (status === 'accepted') {
+        // Busca os serviços vinculados à rota
+        const { data: routeStops, error: stopsError } = await supabase
+          .from("route_stops")
+          .select("service_id")
+          .eq("route_id", routeId);
 
-      if (stopsError) {
-        console.error("Erro ao buscar paradas da rota:", stopsError);
-        throw stopsError;
-      }
-
-      console.log("Paradas da rota encontradas:", routeStops);
-
-      // Se o status for 'accepted', atualiza os serviços primeiro
-      if (status === 'accepted' && routeStops && routeStops.length > 0) {
-        const serviceIds = routeStops.map(stop => stop.service_id);
-        console.log("IDs dos serviços para atualizar:", serviceIds);
-        
-        const { error: servicesError } = await supabase
-          .from("services")
-          .update({ status: 'accepted' })
-          .in("id", serviceIds);
-
-        if (servicesError) {
-          console.error("Erro ao atualizar serviços:", servicesError);
-          throw servicesError;
+        if (stopsError) {
+          console.error("[Routes] Erro ao buscar paradas da rota:", stopsError);
+          throw stopsError;
         }
 
-        console.log("Serviços atualizados com sucesso");
+        if (routeStops && routeStops.length > 0) {
+          const serviceIds = routeStops.map(stop => stop.service_id);
+          console.log("[Routes] Atualizando status dos serviços:", serviceIds);
+
+          // Atualiza os serviços para 'accepted'
+          const { error: servicesError } = await supabase
+            .from("services")
+            .update({ status: 'accepted' })
+            .in("id", serviceIds);
+
+          if (servicesError) {
+            console.error("[Routes] Erro ao atualizar serviços:", servicesError);
+            throw servicesError;
+          }
+        }
       }
 
-      // Depois atualiza o status da rota
+      // Atualiza o status da rota
       const { data: route, error: routeError } = await supabase
         .from("routes")
         .update({ status })
@@ -126,11 +125,11 @@ export const useRoutes = (routeId?: string) => {
         .single();
 
       if (routeError) {
-        console.error("Erro ao atualizar status da rota:", routeError);
+        console.error("[Routes] Erro ao atualizar status da rota:", routeError);
         throw routeError;
       }
 
-      console.log("Status da rota atualizado com sucesso:", route);
+      console.log("[Routes] Status da rota atualizado com sucesso:", route);
       return route;
     },
     onSuccess: () => {
@@ -142,7 +141,7 @@ export const useRoutes = (routeId?: string) => {
       });
     },
     onError: (error) => {
-      console.error("Erro ao atualizar status da rota:", error);
+      console.error("[Routes] Erro ao atualizar status da rota:", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao atualizar o status da rota.",

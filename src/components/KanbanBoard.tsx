@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ServiceCard from "./ServiceCard";
 import { Button } from "./ui/button";
-import { useRouteStatusSync } from "@/hooks/useRouteStatusSync";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -35,9 +34,6 @@ interface Service {
 export const KanbanBoard = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  
-  // Ativa o monitoramento de status das rotas
-  useRouteStatusSync();
 
   const fetchServices = async () => {
     console.log("Buscando serviços...");
