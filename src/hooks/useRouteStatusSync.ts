@@ -4,6 +4,10 @@ import { useServices } from "./useServices";
 import { useToast } from "./use-toast";
 
 export const useRouteStatusSync = () => {
+  // Temporariamente desativado para teste
+  return;
+
+  /* Original code commented out for testing
   const { updateServiceStatus } = useServices();
   const { toast } = useToast();
   const processedRouteIds = useRef(new Set<string>());
@@ -143,4 +147,5 @@ export const useRouteStatusSync = () => {
       supabase.removeChannel(channel);
     };
   }, [updateServiceStatus, toast]);
+  */
 };
