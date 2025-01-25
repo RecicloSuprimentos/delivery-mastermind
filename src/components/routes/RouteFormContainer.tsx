@@ -14,10 +14,12 @@ export const RouteFormContainer = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => {
+    console.log("Starting route save process...", { routeData, selectedStops, routeId });
     setIsLoading(true);
     try {
       let route;
       if (routeId) {
+        console.log("Updating existing route...");
         const { data: updatedRoute, error: routeError } = await supabase
           .from("routes")
           .update(routeData)
@@ -25,53 +27,78 @@ export const RouteFormContainer = () => {
           .select()
           .single();
 
-        if (routeError) throw routeError;
+        if (routeError) {
+          console.error("Error updating route:", routeError);
+          throw routeError;
+        }
         route = updatedRoute;
+        console.log("Route updated successfully:", route);
 
-        await supabase
+        console.log("Deleting existing route stops...");
+        const { error: deleteError } = await supabase
           .from("route_stops")
           .delete()
           .eq("route_id", routeId);
+
+        if (deleteError) {
+          console.error("Error deleting route stops:", deleteError);
+          throw deleteError;
+        }
       } else {
+        console.log("Creating new route...");
         const { data: newRoute, error: routeError } = await supabase
           .from("routes")
           .insert(routeData)
           .select()
           .single();
 
-        if (routeError) throw routeError;
+        if (routeError) {
+          console.error("Error creating route:", routeError);
+          throw routeError;
+        }
         route = newRoute;
+        console.log("New route created successfully:", route);
       }
 
+      console.log("Preparing route stops data...");
       const stops = selectedStops.map((service, index) => ({
         route_id: route.id,
         service_id: service.id,
         sequence_number: index + 1,
       }));
 
+      console.log("Inserting route stops...");
       const { error: stopsError } = await supabase
         .from("route_stops")
         .insert(stops);
 
-      if (stopsError) throw stopsError;
+      if (stopsError) {
+        console.error("Error inserting route stops:", stopsError);
+        throw stopsError;
+      }
 
+      console.log("Updating services status...");
       const { error: updateError } = await supabase
         .from("services")
         .update({ status: "assigned" })
         .in("id", selectedStops.map(s => s.id));
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Error updating services status:", updateError);
+        throw updateError;
+      }
 
+      console.log("Route save process completed successfully");
       toast({
         title: routeId ? "Rota atualizada com sucesso!" : "Rota criada com sucesso!",
         description: "A rota foi salva e está pronta para ser utilizada.",
       });
       navigate("/routes");
     } catch (error) {
-      console.error("Erro ao salvar rota:", error);
+      console.error("Erro detalhado ao salvar rota:", error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao salvar a rota.",
+        description: "Ocorreu um erro ao salvar a rota. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
