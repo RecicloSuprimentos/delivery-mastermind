@@ -9,6 +9,58 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_locations: {
+        Row: {
+          agent_id: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          route_id: string | null
+          route_stop_id: string | null
+          timestamp: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          route_id?: string | null
+          route_stop_id?: string | null
+          timestamp?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          route_id?: string | null
+          route_stop_id?: string | null
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_locations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_locations_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_locations_route_stop_id_fkey"
+            columns: ["route_stop_id"]
+            isOneToOne: false
+            referencedRelation: "route_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
