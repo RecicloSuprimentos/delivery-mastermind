@@ -198,6 +198,33 @@ export type Database = {
           },
         ]
       }
+      service_failure_reasons: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_other: boolean | null
+          reason: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_other?: boolean | null
+          reason: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_other?: boolean | null
+          reason?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           address: string
