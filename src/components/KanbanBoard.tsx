@@ -103,18 +103,18 @@ export const KanbanBoard = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Fixed header for column titles */}
-      <div className="flex px-4 py-2 bg-white sticky top-0 z-10">
+      {/* Header for column titles */}
+      <div className="flex sticky top-0 z-10 bg-muted">
         {columns.map((column) => (
           <div 
             key={column.id}
-            className="flex-1 min-w-[300px] max-w-[400px] px-4"
+            className="flex-1 min-w-[300px] max-w-[400px] p-2"
           >
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-sm">
                 {column.title}
               </h2>
-              <span className="bg-muted text-secondary text-sm px-2 py-1 rounded">
+              <span className="bg-background text-secondary text-sm px-2 py-1 rounded">
                 {services.filter(s => s.status === column.id).length}
               </span>
             </div>
@@ -124,14 +124,14 @@ export const KanbanBoard = () => {
 
       {/* Scrollable content area */}
       <div className="flex-1 overflow-x-auto">
-        <div className="flex h-full px-4 min-w-fit">
+        <div className="flex h-full min-w-fit">
           {columns.map((column) => (
             <div 
               key={column.id} 
-              className="flex-1 min-w-[300px] max-w-[400px] px-4"
+              className="flex-1 min-w-[300px] max-w-[400px] p-2"
             >
               <div className="bg-muted rounded-lg h-[calc(100vh-12rem)] overflow-y-auto scrollbar-none hover:scrollbar-thin">
-                <div className="p-4 space-y-4">
+                <div className="p-2 space-y-2">
                   {services
                     .filter(service => service.status === column.id)
                     .map((service) => (
