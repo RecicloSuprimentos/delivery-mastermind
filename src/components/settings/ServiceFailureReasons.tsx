@@ -33,7 +33,10 @@ export function ServiceFailureReasons() {
         .select("*")
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching reasons:", error);
+        throw error;
+      }
       return data as ServiceFailureReason[];
     },
   });
@@ -57,6 +60,11 @@ export function ServiceFailureReasons() {
       return;
     }
 
+    console.log("Attempting to add reason:", newReason);
+    
+    const { data: session } = await supabase.auth.getSession();
+    console.log("Current session:", session);
+
     const { error } = await supabase.from("service_failure_reasons").insert([
       {
         reason: newReason,
@@ -65,6 +73,7 @@ export function ServiceFailureReasons() {
     ]);
 
     if (error) {
+      console.error("Error adding reason:", error);
       toast({
         title: "Erro ao adicionar motivo",
         description: error.message,
@@ -82,12 +91,15 @@ export function ServiceFailureReasons() {
   };
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
+    console.log("Attempting to toggle status for id:", id);
+    
     const { error } = await supabase
       .from("service_failure_reasons")
       .update({ is_active: !currentStatus })
       .eq("id", id);
 
     if (error) {
+      console.error("Error toggling status:", error);
       toast({
         title: "Erro ao atualizar status",
         description: error.message,
