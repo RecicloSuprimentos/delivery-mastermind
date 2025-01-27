@@ -60,11 +60,27 @@ export function ServiceFailureReasons() {
       return;
     }
 
-    console.log("Attempting to add reason:", newReason);
-    
+    // Verificar sessão atual
     const { data: session } = await supabase.auth.getSession();
     console.log("Current session:", session);
 
+    // Verificar perfil do usuário
+    const { data: userProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", session?.session?.user.id)
+      .single();
+
+    console.log("User profile:", userProfile);
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+    }
+
+    console.log("Attempting to add reason with data:", {
+      reason: newReason,
+      is_other: false,
+    });
+    
     const { error } = await supabase.from("service_failure_reasons").insert([
       {
         reason: newReason,
