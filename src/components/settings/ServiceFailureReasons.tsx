@@ -146,15 +146,15 @@ export function ServiceFailureReasons() {
         </p>
       </div>
 
-      <FailureReasonForm onSubmit={(reason) => addReason.mutate(reason)} />
+      <FailureReasonForm onSubmit={(reason) => addReason.mutateAsync(reason)} />
 
       <FailureReasonList
         reasons={reasons || []}
         onToggleActive={(id, currentStatus) => 
-          toggleActive.mutate({ id, status: currentStatus })
+          toggleActive.mutateAsync({ id, status: currentStatus })
         }
         onEdit={setEditingReason}
-        onDelete={(id) => deleteReason.mutate(id)}
+        onDelete={(id) => deleteReason.mutateAsync(id)}
       />
 
       <Dialog open={!!editingReason} onOpenChange={() => setEditingReason(null)}>
