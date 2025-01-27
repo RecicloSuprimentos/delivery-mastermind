@@ -6,11 +6,11 @@ import { LayoutGrid, List } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <Navigation />
-      <div className="pt-16">
-        {/* Filters */}
-        <div className="border-b border-gray-200 bg-white p-4">
+      <div className="flex-1 flex flex-col h-[calc(100vh-4rem)]">
+        {/* Filters - Fixed at top */}
+        <div className="border-b border-gray-200 bg-white p-4 sticky top-16 z-10">
           <div className="flex items-center space-x-4">
             <Input
               type="text"
@@ -50,8 +50,10 @@ const Index = () => {
           </div>
         </div>
         
-        {/* Kanban Board */}
-        <KanbanBoard />
+        {/* Kanban Board with fixed scroll */}
+        <div className="flex-1 overflow-hidden">
+          <KanbanBoard />
+        </div>
       </div>
     </div>
   );

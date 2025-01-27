@@ -57,7 +57,6 @@ export const KanbanBoard = () => {
   useEffect(() => {
     fetchServices();
 
-    // Inscreve no canal para mudanças em tempo real
     const channel = supabase
       .channel('services_changes')
       .on(
@@ -71,7 +70,6 @@ export const KanbanBoard = () => {
         (payload) => {
           console.log("Mudança detectada nos serviços:", payload);
           
-          // Atualiza o estado baseado no tipo de mudança
           if (payload.eventType === 'INSERT') {
             setServices(prev => [payload.new as Service, ...prev]);
           } else if (payload.eventType === 'DELETE') {
@@ -104,14 +102,15 @@ export const KanbanBoard = () => {
   };
 
   return (
-    <div className="flex-1 w-full h-full overflow-hidden">
-      <div className="flex h-full p-4 space-x-4 overflow-x-auto min-w-full">
+    <div className="h-full flex flex-col">
+      {/* Fixed header for column titles */}
+      <div className="flex px-4 py-2 bg-white sticky top-0 z-10">
         {columns.map((column) => (
           <div 
-            key={column.id} 
-            className="flex-1 min-w-[300px] max-w-[400px] flex flex-col"
+            key={column.id}
+            className="flex-1 min-w-[300px] max-w-[400px] px-4"
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               <h2 className="font-semibold text-sm">
                 {column.title}
               </h2>
@@ -119,21 +118,36 @@ export const KanbanBoard = () => {
                 {services.filter(s => s.status === column.id).length}
               </span>
             </div>
-            <div className="bg-muted p-4 rounded-lg flex-1 min-h-[calc(100vh-12rem)] overflow-y-auto">
-              {services
-                .filter(service => service.status === column.id)
-                .map((service) => (
-                  <ServiceCard 
-                    key={service.id}
-                    service={service}
-                    onUpdate={fetchServices}
-                    isSelected={selectedServices.includes(service.id)}
-                    onSelect={handleServiceSelect}
-                  />
-                ))}
-            </div>
           </div>
         ))}
+      </div>
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-x-auto">
+        <div className="flex h-full px-4 min-w-fit">
+          {columns.map((column) => (
+            <div 
+              key={column.id} 
+              className="flex-1 min-w-[300px] max-w-[400px] px-4"
+            >
+              <div className="bg-muted rounded-lg h-[calc(100vh-16rem)] overflow-y-auto">
+                <div className="p-4 space-y-4">
+                  {services
+                    .filter(service => service.status === column.id)
+                    .map((service) => (
+                      <ServiceCard 
+                        key={service.id}
+                        service={service}
+                        onUpdate={fetchServices}
+                        isSelected={selectedServices.includes(service.id)}
+                        onSelect={handleServiceSelect}
+                      />
+                    ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
