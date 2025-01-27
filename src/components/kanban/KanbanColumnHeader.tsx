@@ -7,7 +7,7 @@ interface KanbanColumnHeaderProps {
 
 export const KanbanColumnHeader = ({ title, count }: KanbanColumnHeaderProps) => {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between py-2">
       <h2 className="font-semibold text-sm">{title}</h2>
       <span className="bg-background text-secondary text-sm px-2 py-1 rounded">
         {count}

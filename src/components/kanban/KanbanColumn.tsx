@@ -36,9 +36,11 @@ export const KanbanColumn = ({
   const filteredServices = services.filter((service) => service.status === id);
 
   return (
-    <div className="flex-1 min-w-[300px] max-w-[400px] p-2">
-      <KanbanColumnHeader title={title} count={filteredServices.length} />
-      <div className="bg-muted rounded-lg h-[calc(100vh-12rem)] overflow-y-auto scrollbar-none hover:scrollbar-thin mt-2">
+    <div className="flex flex-col h-full">
+      <div className="p-2 bg-white border-b">
+        <KanbanColumnHeader title={title} count={filteredServices.length} />
+      </div>
+      <div className="flex-1 overflow-y-auto scrollbar-none hover:scrollbar-thin">
         <div className="p-4 space-y-3">
           {filteredServices.map((service) => (
             <ServiceCard
