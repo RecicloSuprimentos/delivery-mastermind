@@ -37,21 +37,19 @@ export const KanbanColumn = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-2 bg-white border-b">
+      <div className="p-2 bg-white border-b sticky top-0 z-10">
         <KanbanColumnHeader title={title} count={filteredServices.length} />
       </div>
-      <div className="flex-1 overflow-y-auto scrollbar-none hover:scrollbar-thin">
-        <div className="p-4 space-y-3">
-          {filteredServices.map((service) => (
-            <ServiceCard
-              key={service.id}
-              service={service}
-              onUpdate={onServiceUpdate}
-              isSelected={selectedServices.includes(service.id)}
-              onSelect={onServiceSelect}
-            />
-          ))}
-        </div>
+      <div className="flex-1 overflow-y-auto scrollbar-none hover:scrollbar-thin p-4 space-y-3">
+        {filteredServices.map((service) => (
+          <ServiceCard
+            key={service.id}
+            service={service}
+            onUpdate={onServiceUpdate}
+            isSelected={selectedServices.includes(service.id)}
+            onSelect={onServiceSelect}
+          />
+        ))}
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export const KanbanColumns = ({
   return (
     <div className="flex bg-muted h-[calc(100vh-11rem)]">
       {columns.map((column) => (
-        <div key={column.id} className="flex-1 min-w-[300px] max-w-[400px]">
+        <div key={column.id} className="flex-1 min-w-[300px] max-w-[400px] border-r border-gray-200">
           <KanbanColumn
             id={column.id}
             title={column.title}
