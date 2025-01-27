@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import ServiceCard from "./ServiceCard";
-import { Button } from "./ui/button";
+import { KanbanColumn } from "./kanban/KanbanColumn";
 
 const columns = [
   { id: "not-assigned", title: "Não Atribuído", count: 3 },
@@ -103,51 +102,19 @@ export const KanbanBoard = () => {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header for column titles */}
       <div className="flex sticky top-0 z-10 bg-muted">
         {columns.map((column) => (
-          <div 
-            key={column.id}
-            className="flex-1 min-w-[300px] max-w-[400px] p-2"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-sm">
-                {column.title}
-              </h2>
-              <span className="bg-background text-secondary text-sm px-2 py-1 rounded">
-                {services.filter(s => s.status === column.id).length}
-              </span>
-            </div>
+          <div key={column.id} className="flex-1 min-w-[300px] max-w-[400px] p-2">
+            <KanbanColumn
+              id={column.id}
+              title={column.title}
+              services={services}
+              onServiceUpdate={fetchServices}
+              selectedServices={selectedServices}
+              onServiceSelect={handleServiceSelect}
+            />
           </div>
         ))}
-      </div>
-
-      {/* Scrollable content area */}
-      <div className="flex-1 overflow-x-auto">
-        <div className="flex h-full min-w-fit">
-          {columns.map((column) => (
-            <div 
-              key={column.id} 
-              className="flex-1 min-w-[300px] max-w-[400px] p-2"
-            >
-              <div className="bg-muted rounded-lg h-[calc(100vh-12rem)] overflow-y-auto scrollbar-none hover:scrollbar-thin">
-                <div className="p-2 space-y-2">
-                  {services
-                    .filter(service => service.status === column.id)
-                    .map((service) => (
-                      <ServiceCard 
-                        key={service.id}
-                        service={service}
-                        onUpdate={fetchServices}
-                        isSelected={selectedServices.includes(service.id)}
-                        onSelect={handleServiceSelect}
-                      />
-                    ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
