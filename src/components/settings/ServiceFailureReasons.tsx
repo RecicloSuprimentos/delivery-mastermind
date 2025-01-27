@@ -1,31 +1,23 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { FailureReasonForm } from "./failure-reasons/FailureReasonForm";
+import { FailureReasonList } from "./failure-reasons/FailureReasonList";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-
-type ServiceFailureReason = {
-  id: string;
-  reason: string;
-  is_other: boolean;
-  is_active: boolean;
-};
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { ServiceFailureReason } from "@/types/routes";
 
 export function ServiceFailureReasons() {
   const { toast } = useToast();
-  const [newReason, setNewReason] = useState("");
+  const queryClient = useQueryClient();
+  const [editingReason, setEditingReason] = useState<ServiceFailureReason | null>(null);
 
-  const { data: reasons, refetch } = useQuery({
+  const { data: reasons } = useQuery({
     queryKey: ["serviceFailureReasons"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -41,95 +33,109 @@ export function ServiceFailureReasons() {
     },
   });
 
-  const handleAddReason = async () => {
-    if (!newReason.trim()) {
+  const addReason = useMutation({
+    mutationFn: async (reason: string) => {
+      const { error } = await supabase
+        .from("service_failure_reasons")
+        .insert([{ reason, is_other: false }]);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["serviceFailureReasons"] });
       toast({
-        title: "Erro",
-        description: "O motivo não pode estar vazio",
-        variant: "destructive",
+        title: "Sucesso",
+        description: "Motivo adicionado com sucesso",
       });
-      return;
-    }
-
-    if (newReason.length > 30) {
-      toast({
-        title: "Erro",
-        description: "O motivo não pode ter mais que 30 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Verificar sessão atual
-    const { data: session } = await supabase.auth.getSession();
-    console.log("Current session:", session);
-
-    // Verificar perfil do usuário
-    const { data: userProfile, error: profileError } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", session?.session?.user.id)
-      .single();
-
-    console.log("User profile:", userProfile);
-    if (profileError) {
-      console.error("Error fetching user profile:", profileError);
-    }
-
-    console.log("Attempting to add reason with data:", {
-      reason: newReason,
-      is_other: false,
-    });
-    
-    const { error } = await supabase.from("service_failure_reasons").insert([
-      {
-        reason: newReason,
-        is_other: false,
-      },
-    ]);
-
-    if (error) {
+    },
+    onError: (error) => {
       console.error("Error adding reason:", error);
       toast({
         title: "Erro ao adicionar motivo",
-        description: error.message,
+        description: "Ocorreu um erro ao adicionar o motivo",
         variant: "destructive",
       });
-      return;
-    }
+    },
+  });
 
-    toast({
-      title: "Sucesso",
-      description: "Motivo adicionado com sucesso",
-    });
-    setNewReason("");
-    refetch();
-  };
+  const updateReason = useMutation({
+    mutationFn: async (data: { id: string; reason: string }) => {
+      const { error } = await supabase
+        .from("service_failure_reasons")
+        .update({ reason: data.reason })
+        .eq("id", data.id);
 
-  const toggleActive = async (id: string, currentStatus: boolean) => {
-    console.log("Attempting to toggle status for id:", id);
-    
-    const { error } = await supabase
-      .from("service_failure_reasons")
-      .update({ is_active: !currentStatus })
-      .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["serviceFailureReasons"] });
+      setEditingReason(null);
+      toast({
+        title: "Sucesso",
+        description: "Motivo atualizado com sucesso",
+      });
+    },
+    onError: (error) => {
+      console.error("Error updating reason:", error);
+      toast({
+        title: "Erro ao atualizar motivo",
+        description: "Ocorreu um erro ao atualizar o motivo",
+        variant: "destructive",
+      });
+    },
+  });
 
-    if (error) {
+  const deleteReason = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("service_failure_reasons")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["serviceFailureReasons"] });
+      toast({
+        title: "Sucesso",
+        description: "Motivo excluído com sucesso",
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting reason:", error);
+      toast({
+        title: "Erro ao excluir motivo",
+        description: "Ocorreu um erro ao excluir o motivo",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleActive = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: boolean }) => {
+      const { error } = await supabase
+        .from("service_failure_reasons")
+        .update({ is_active: !status })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["serviceFailureReasons"] });
+      toast({
+        title: "Sucesso",
+        description: "Status atualizado com sucesso",
+      });
+    },
+    onError: (error) => {
       console.error("Error toggling status:", error);
       toast({
         title: "Erro ao atualizar status",
-        description: error.message,
+        description: "Ocorreu um erro ao atualizar o status",
         variant: "destructive",
       });
-      return;
-    }
-
-    toast({
-      title: "Sucesso",
-      description: "Status atualizado com sucesso",
-    });
-    refetch();
-  };
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -140,40 +146,36 @@ export function ServiceFailureReasons() {
         </p>
       </div>
 
-      <div className="flex gap-4">
-        <Input
-          placeholder="Novo motivo"
-          value={newReason}
-          onChange={(e) => setNewReason(e.target.value)}
-          maxLength={30}
-          className="max-w-md"
-        />
-        <Button onClick={handleAddReason}>Adicionar</Button>
-      </div>
+      <FailureReasonForm onSubmit={(reason) => addReason.mutate(reason)} />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Motivo</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Ativo</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reasons?.map((reason) => (
-            <TableRow key={reason.id}>
-              <TableCell>{reason.reason}</TableCell>
-              <TableCell>{reason.is_other ? "Outros" : "Predefinido"}</TableCell>
-              <TableCell>
-                <Switch
-                  checked={reason.is_active}
-                  onCheckedChange={() => toggleActive(reason.id, reason.is_active)}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <FailureReasonList
+        reasons={reasons || []}
+        onToggleActive={(id, currentStatus) => 
+          toggleActive.mutate({ id, status: currentStatus })
+        }
+        onEdit={setEditingReason}
+        onDelete={(id) => deleteReason.mutate(id)}
+      />
+
+      <Dialog open={!!editingReason} onOpenChange={() => setEditingReason(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Motivo</DialogTitle>
+          </DialogHeader>
+          <FailureReasonForm
+            initialValue={editingReason?.reason}
+            buttonLabel="Salvar"
+            onSubmit={async (reason) => {
+              if (editingReason) {
+                await updateReason.mutateAsync({
+                  id: editingReason.id,
+                  reason,
+                });
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

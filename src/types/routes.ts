@@ -46,3 +46,12 @@ export interface Route {
     service_id: string;
   }[];
 }
+
+export interface ServiceFailureReason {
+  id: string;
+  reason: string;
+  is_other: boolean;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
