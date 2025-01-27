@@ -57,6 +57,7 @@ export const KanbanBoard = () => {
   useEffect(() => {
     fetchServices();
 
+    // Inscreve no canal para mudanças em tempo real
     const channel = supabase
       .channel('services_changes')
       .on(
@@ -64,14 +65,29 @@ export const KanbanBoard = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'services'
+          table: 'services',
+          filter: `status=neq.cancelled`
         },
         (payload) => {
           console.log("Mudança detectada nos serviços:", payload);
-          fetchServices();
+          
+          // Atualiza o estado baseado no tipo de mudança
+          if (payload.eventType === 'INSERT') {
+            setServices(prev => [payload.new as Service, ...prev]);
+          } else if (payload.eventType === 'DELETE') {
+            setServices(prev => prev.filter(service => service.id !== payload.old.id));
+          } else if (payload.eventType === 'UPDATE') {
+            setServices(prev => 
+              prev.map(service => 
+                service.id === payload.new.id ? payload.new as Service : service
+              )
+            );
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Status da inscrição:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
