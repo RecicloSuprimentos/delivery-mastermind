@@ -101,8 +101,8 @@ export const KanbanBoard = () => {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex sticky top-0 z-10 bg-muted">
+    <div className="h-full flex flex-col pt-4">
+      <div className="flex bg-muted">
         {columns.map((column) => (
           <div key={column.id} className="flex-1 min-w-[300px] max-w-[400px] p-2">
             <KanbanColumn

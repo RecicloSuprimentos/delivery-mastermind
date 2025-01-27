@@ -10,7 +10,7 @@ const Index = () => {
       <Navigation />
       <div className="flex-1 flex flex-col">
         {/* Filters - Fixed at top */}
-        <div className="border-b border-gray-200 bg-white p-4 sticky top-16 z-10">
+        <div className="border-b border-gray-200 bg-white p-4 sticky top-16 z-50">
           <div className="flex items-center space-x-4">
             <Input
               type="text"
