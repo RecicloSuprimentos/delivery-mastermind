@@ -80,6 +80,7 @@ export default {
   },
   plugins: [
     require("tailwindcss-animate"),
-    require('tailwind-scrollbar')
+    require('@tailwindcss/forms'),
+    require('tailwind-scrollbar')({ nocompatible: true })
   ],
 } satisfies Config;
