@@ -1,4 +1,4 @@
-import { MapPin, Key, Clock, Users, Link, AlertTriangle } from "lucide-react";
+import { MapPin, Key, Clock, Users, Link, AlertTriangle, Wallet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAssignments } from "@/components/settings/UserAssignments";
 import { OperationalBase } from "@/components/settings/OperationalBase";
@@ -6,6 +6,7 @@ import { ServiceSettings } from "@/components/settings/ServiceSettings";
 import { ApiKeys } from "@/components/settings/ApiKeys";
 import { ApiIntegration } from "@/components/settings/ApiIntegration";
 import { ServiceFailureReasons } from "@/components/settings/ServiceFailureReasons";
+import { PaymentMethods } from "@/components/settings/PaymentMethods";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 
 const SettingsPage = () => {
@@ -35,6 +36,10 @@ const SettingsPage = () => {
             <AlertTriangle className="h-4 w-4" />
             Motivos de Insucesso
           </TabsTrigger>
+          <TabsTrigger value="payment-methods" className="gap-2">
+            <Wallet className="h-4 w-4" />
+            Formas de Pagamento
+          </TabsTrigger>
           <TabsTrigger value="integrations" className="gap-2">
             <Link className="h-4 w-4" />
             Integrações
@@ -60,6 +65,10 @@ const SettingsPage = () => {
 
           <TabsContent value="failure-reasons">
             <ServiceFailureReasons />
+          </TabsContent>
+
+          <TabsContent value="payment-methods">
+            <PaymentMethods />
           </TabsContent>
 
           <TabsContent value="integrations">
