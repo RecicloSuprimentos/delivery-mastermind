@@ -6,9 +6,9 @@ import { LayoutGrid, List } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="h-screen bg-white flex flex-col">
       <Navigation />
-      <div className="flex-1 flex flex-col h-[calc(100vh-4rem)]">
+      <div className="flex-1 flex flex-col">
         {/* Filters - Fixed at top */}
         <div className="border-b border-gray-200 bg-white p-4 sticky top-16 z-10">
           <div className="flex items-center space-x-4">

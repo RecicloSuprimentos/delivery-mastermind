@@ -130,7 +130,7 @@ export const KanbanBoard = () => {
               key={column.id} 
               className="flex-1 min-w-[300px] max-w-[400px] px-4"
             >
-              <div className="bg-muted rounded-lg h-[calc(100vh-16rem)] overflow-y-auto">
+              <div className="bg-muted rounded-lg h-[calc(100vh-12rem)] overflow-y-auto scrollbar-none hover:scrollbar-thin">
                 <div className="p-4 space-y-4">
                   {services
                     .filter(service => service.status === column.id)
