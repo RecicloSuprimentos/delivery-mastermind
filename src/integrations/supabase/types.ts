@@ -284,30 +284,50 @@ export type Database = {
       }
       service_failure_reasons: {
         Row: {
+          completed_at: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
           is_other: boolean | null
+          latitude: number | null
+          longitude: number | null
           reason: string
+          service_id: string | null
           updated_at: string | null
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
           is_other?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
           reason: string
+          service_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          completed_at?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
           is_other?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
           reason?: string
+          service_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_failure_reasons_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
