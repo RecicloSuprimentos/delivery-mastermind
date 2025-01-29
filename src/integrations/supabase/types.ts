@@ -222,6 +222,66 @@ export type Database = {
           },
         ]
       }
+      service_checklists: {
+        Row: {
+          collected_items: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          observations: string | null
+          payment_method_id: string | null
+          responsible_name: string
+          service_id: string
+          type: Database["public"]["Enums"]["checklist_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          collected_items?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          observations?: string | null
+          payment_method_id?: string | null
+          responsible_name: string
+          service_id: string
+          type: Database["public"]["Enums"]["checklist_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          collected_items?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          observations?: string | null
+          payment_method_id?: string | null
+          responsible_name?: string
+          service_id?: string
+          type?: Database["public"]["Enums"]["checklist_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_checklists_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_checklists_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_failure_reasons: {
         Row: {
           created_at: string | null
@@ -371,6 +431,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      checklist_type: "coleta" | "pedido"
       location_type: "operational_base" | "service"
       service_type: "coleta" | "entrega"
       user_type: "admin" | "user" | "agent"
