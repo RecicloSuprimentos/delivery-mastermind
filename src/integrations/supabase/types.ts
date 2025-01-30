@@ -291,6 +291,7 @@ export type Database = {
           is_other: boolean | null
           latitude: number | null
           longitude: number | null
+          observations: string | null
           reason: string
           service_id: string | null
           updated_at: string | null
@@ -303,6 +304,7 @@ export type Database = {
           is_other?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          observations?: string | null
           reason: string
           service_id?: string | null
           updated_at?: string | null
@@ -315,6 +317,7 @@ export type Database = {
           is_other?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          observations?: string | null
           reason?: string
           service_id?: string | null
           updated_at?: string | null
