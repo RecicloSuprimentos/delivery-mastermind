@@ -141,9 +141,11 @@ export const OperationalBase = () => {
               <div className="flex gap-2">
                 <div className="flex-1">
                   <AddressSearch
-                    value={address}
-                    onChange={setAddress}
-                    onLocationSelect={setSelectedLocation}
+                    defaultValue={address}
+                    onAddressSelect={(newAddress, latitude, longitude) => {
+                      setAddress(newAddress);
+                      setSelectedLocation({ lat: latitude, lng: longitude });
+                    }}
                   />
                 </div>
                 <Button onClick={handleSave} className="whitespace-nowrap gap-2">
