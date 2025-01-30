@@ -17,9 +17,17 @@ export const useAddressAutocomplete = ({ onAddressSelect }: UseAddressAutocomple
   const inputRef = useRef<HTMLInputElement>(null);
 
   const initializeAutocomplete = () => {
-    if (!inputRef.current || !window.google || autocompleteRef.current) return;
+    if (!inputRef.current || !window.google || autocompleteRef.current) {
+      console.log("Condições para inicializar autocomplete:", {
+        inputRefExists: !!inputRef.current,
+        googleExists: !!window.google,
+        autocompleteExists: !!autocompleteRef.current
+      });
+      return;
+    }
 
     try {
+      console.log("Iniciando configuração do Autocomplete");
       const options = {
         componentRestrictions: { country: "br" },
         types: ["address"],
@@ -30,14 +38,19 @@ export const useAddressAutocomplete = ({ onAddressSelect }: UseAddressAutocomple
         options
       );
 
+      console.log("Autocomplete configurado com sucesso");
+
       autocompleteRef.current.addListener("place_changed", () => {
         if (!autocompleteRef.current) return;
 
         setIsLoading(true);
+        console.log("Place changed event triggered");
+        
         const place = autocompleteRef.current.getPlace();
 
         if (!place.geometry?.location) {
           setIsLoading(false);
+          console.error("Endereço selecionado inválido:", place);
           toast.error("Endereço inválido selecionado");
           return;
         }
@@ -45,6 +58,12 @@ export const useAddressAutocomplete = ({ onAddressSelect }: UseAddressAutocomple
         const latitude = place.geometry.location.lat();
         const longitude = place.geometry.location.lng();
         const address = place.formatted_address || "";
+
+        console.log("Endereço selecionado:", {
+          address,
+          latitude,
+          longitude
+        });
 
         onAddressSelect(address, latitude, longitude);
         setIsLoading(false);

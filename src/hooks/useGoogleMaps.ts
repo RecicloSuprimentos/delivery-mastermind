@@ -19,21 +19,31 @@ export const useGoogleMaps = () => {
         throw error;
       }
 
+      console.log("Google Maps Key:", data?.google_maps_key ? "Existe" : "Não existe");
       return data;
     },
   });
 
   const loadGoogleMapsScript = async (apiKey: string): Promise<void> => {
-    if (window.google) return;
+    if (window.google) {
+      console.log("Google Maps já está carregado");
+      return;
+    }
 
+    console.log("Iniciando carregamento do Google Maps");
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
       
-      script.onload = () => resolve();
+      script.onload = () => {
+        console.log("Google Maps carregado com sucesso");
+        resolve();
+      };
+      
       script.onerror = () => {
+        console.error("Erro ao carregar o Google Maps");
         reject(new Error("Erro ao carregar o Google Maps"));
       };
 
@@ -42,7 +52,11 @@ export const useGoogleMaps = () => {
   };
 
   const initializeGoogleMaps = async () => {
-    if (!settings?.google_maps_key) return;
+    if (!settings?.google_maps_key) {
+      console.error("Chave do Google Maps não encontrada");
+      toast.error("Erro: Chave do Google Maps não configurada");
+      return;
+    }
 
     try {
       setIsLoading(true);
