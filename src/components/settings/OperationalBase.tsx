@@ -5,7 +5,7 @@ import { MapPin, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import AddressSearch from "@/components/AddressSearch";
+import { AddressSearch } from "@/components/AddressSearch";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Database } from "@/integrations/supabase/types";
