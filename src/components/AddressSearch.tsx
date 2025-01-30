@@ -16,10 +16,10 @@ export const AddressSearch = ({
   disabled = false 
 }: AddressSearchProps) => {
   const [searchInput, setSearchInput] = useState(defaultValue);
-  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Buscar a chave da API do Google Maps
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings } = useQuery({
     queryKey: ["system_settings"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,8 +42,8 @@ export const AddressSearch = ({
       return;
     }
 
-    // Carregar o script do Google Maps
-    const loadGoogleMapsScript = () => {
+    // Carregar o script do Google Maps apenas uma vez
+    if (!window.google && !document.querySelector('script[src*="maps.googleapis.com"]')) {
       const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${settings.google_maps_key}&libraries=places`;
       script.async = true;
@@ -52,14 +52,10 @@ export const AddressSearch = ({
       script.onerror = () => {
         console.error("Erro ao carregar o script do Google Maps");
         toast.error("Erro ao carregar o serviço de busca de endereços");
+        setIsLoading(false);
       };
       document.head.appendChild(script);
-    };
-
-    // Verificar se o script já está carregado
-    if (!window.google) {
-      loadGoogleMapsScript();
-    } else {
+    } else if (window.google) {
       initializeAutocomplete();
     }
   }, [settings]);
@@ -79,14 +75,15 @@ export const AddressSearch = ({
         types: ["address"],
       };
 
-      const autocompleteInstance = new google.maps.places.Autocomplete(input, options);
-      setAutocomplete(autocompleteInstance);
+      const autocomplete = new google.maps.places.Autocomplete(input, options);
 
-      autocompleteInstance.addListener("place_changed", () => {
-        const place = autocompleteInstance.getPlace();
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        setIsLoading(true);
         
         if (!place.geometry?.location) {
           toast.error("Endereço inválido selecionado");
+          setIsLoading(false);
           return;
         }
 
@@ -95,32 +92,32 @@ export const AddressSearch = ({
         const address = place.formatted_address || "";
 
         onAddressSelect(address, latitude, longitude);
+        setIsLoading(false);
       });
     } catch (error) {
       console.error("Erro ao inicializar autocompletar:", error);
       toast.error("Erro ao inicializar busca de endereços");
+      setIsLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <Input
-        type="text"
-        placeholder="Carregando busca de endereços..."
-        disabled
-        value={searchInput}
-      />
-    );
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+    // Não bloquear a interface durante a digitação
+    if (isLoading) {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Input
       id="address-search"
       type="text"
-      placeholder="Digite o endereço para buscar"
+      placeholder={isLoading ? "Carregando..." : "Digite o endereço para buscar"}
       value={searchInput}
-      onChange={(e) => setSearchInput(e.target.value)}
-      disabled={disabled}
+      onChange={handleInputChange}
+      disabled={disabled || isLoading}
+      className={isLoading ? "opacity-70" : ""}
     />
   );
 };
