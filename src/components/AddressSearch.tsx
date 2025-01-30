@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,9 @@ export const AddressSearch = ({
 }: AddressSearchProps) => {
   const [searchInput, setSearchInput] = useState(defaultValue);
   const [isLoading, setIsLoading] = useState(false);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Buscar a chave da API do Google Maps
   const { data: settings } = useQuery({
     queryKey: ["system_settings"],
     queryFn: async () => {
@@ -36,54 +37,50 @@ export const AddressSearch = ({
     },
   });
 
-  useEffect(() => {
-    if (!settings?.google_maps_key) {
-      console.log("Chave do Google Maps não encontrada");
-      return;
-    }
-
-    // Carregar o script do Google Maps apenas uma vez
-    if (!window.google && !document.querySelector('script[src*="maps.googleapis.com"]')) {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${settings.google_maps_key}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initializeAutocomplete;
-      script.onerror = () => {
-        console.error("Erro ao carregar o script do Google Maps");
-        toast.error("Erro ao carregar o serviço de busca de endereços");
-        setIsLoading(false);
-      };
-      document.head.appendChild(script);
-    } else if (window.google) {
-      initializeAutocomplete();
-    }
-  }, [settings]);
-
-  const initializeAutocomplete = () => {
-    try {
-      if (!window.google) {
-        console.error("Google Maps não está disponível");
+  const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (window.google) {
+        resolve();
         return;
       }
 
-      const input = document.getElementById("address-search") as HTMLInputElement;
-      if (!input) return;
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => resolve();
+      script.onerror = () => {
+        reject(new Error("Erro ao carregar o Google Maps"));
+      };
 
+      document.head.appendChild(script);
+    });
+  };
+
+  const initializeAutocomplete = () => {
+    if (!inputRef.current || !window.google || autocompleteRef.current) return;
+
+    try {
       const options = {
         componentRestrictions: { country: "br" },
         types: ["address"],
       };
 
-      const autocomplete = new google.maps.places.Autocomplete(input, options);
+      autocompleteRef.current = new google.maps.places.Autocomplete(
+        inputRef.current,
+        options
+      );
 
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
+      autocompleteRef.current.addListener("place_changed", () => {
+        if (!autocompleteRef.current) return;
+
         setIsLoading(true);
-        
+        const place = autocompleteRef.current.getPlace();
+
         if (!place.geometry?.location) {
-          toast.error("Endereço inválido selecionado");
           setIsLoading(false);
+          toast.error("Endereço inválido selecionado");
           return;
         }
 
@@ -95,22 +92,36 @@ export const AddressSearch = ({
         setIsLoading(false);
       });
     } catch (error) {
-      console.error("Erro ao inicializar autocompletar:", error);
+      console.error("Erro ao inicializar autocomplete:", error);
       toast.error("Erro ao inicializar busca de endereços");
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (!settings?.google_maps_key) return;
+
+    const initializeGoogleMaps = async () => {
+      try {
+        await loadGoogleMapsScript(settings.google_maps_key);
+        initializeAutocomplete();
+      } catch (error) {
+        console.error("Erro ao carregar Google Maps:", error);
+        toast.error("Erro ao carregar serviço de busca de endereços");
+      }
+    };
+
+    initializeGoogleMaps();
+  }, [settings]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
-    // Não bloquear a interface durante a digitação
-    if (isLoading) {
-      setIsLoading(false);
-    }
+    if (isLoading) setIsLoading(false);
   };
 
   return (
     <Input
+      ref={inputRef}
       id="address-search"
       type="text"
       placeholder={isLoading ? "Carregando..." : "Digite o endereço para buscar"}
