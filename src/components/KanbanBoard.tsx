@@ -31,7 +31,11 @@ interface Service {
   created_at?: string;
 }
 
-export const KanbanBoard = () => {
+interface KanbanBoardProps {
+  searchTerm: string;
+}
+
+export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
@@ -103,6 +107,26 @@ export const KanbanBoard = () => {
     });
   };
 
+  // Função para filtrar serviços baseado no termo de busca
+  const filterServices = (services: Service[], searchTerm: string) => {
+    if (!searchTerm.trim()) return services;
+    
+    const term = searchTerm.toLowerCase().trim();
+    return services.filter(service => {
+      return (
+        service.service_id.toLowerCase().includes(term) ||
+        service.customer_name.toLowerCase().includes(term) ||
+        service.address.toLowerCase().includes(term) ||
+        service.phone.toLowerCase().includes(term) ||
+        (service.email?.toLowerCase().includes(term) || false) ||
+        (service.observations?.toLowerCase().includes(term) || false)
+      );
+    });
+  };
+
+  // Filtra os serviços antes de exibi-los
+  const filteredServices = filterServices(services, searchTerm);
+
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
       <div className="flex h-full p-4 space-x-4 overflow-x-auto min-w-full">
@@ -116,11 +140,11 @@ export const KanbanBoard = () => {
                 {column.title}
               </h2>
               <span className="bg-muted text-secondary text-sm px-2 py-1 rounded">
-                {services.filter(s => s.status === column.id).length}
+                {filteredServices.filter(s => s.status === column.id).length}
               </span>
             </div>
             <div className="bg-muted p-4 rounded-lg flex-1 min-h-[calc(100vh-12rem)] overflow-y-auto">
-              {services
+              {filteredServices
                 .filter(service => service.status === column.id)
                 .map((service) => (
                   <ServiceCard 

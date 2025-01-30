@@ -3,8 +3,11 @@ import { KanbanBoard } from "@/components/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LayoutGrid, List } from "lucide-react";
+import { useState } from "react";
 
 const Index = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
@@ -17,6 +20,8 @@ const Index = () => {
                 type="text"
                 placeholder="Digite para filtrar ..."
                 className="max-w-xs"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-secondary">Tamanho</span>
@@ -54,7 +59,7 @@ const Index = () => {
         
         {/* Ajuste do padding-top para acomodar a barra de filtros fixa */}
         <div className="pt-20">
-          <KanbanBoard />
+          <KanbanBoard searchTerm={searchTerm} />
         </div>
       </div>
     </div>
