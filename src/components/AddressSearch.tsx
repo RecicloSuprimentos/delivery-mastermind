@@ -1,87 +1,126 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
-
-interface Location {
-  lat: number;
-  lng: number;
-}
+import { toast } from "sonner";
 
 interface AddressSearchProps {
-  value: string;
-  onChange: (address: string) => void;
-  onLocationSelect: (location: Location) => void;
+  onAddressSelect: (address: string, latitude: number, longitude: number) => void;
+  defaultValue?: string;
+  disabled?: boolean;
 }
 
-const AddressSearch = ({ value, onChange, onLocationSelect }: AddressSearchProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export const AddressSearch = ({ 
+  onAddressSelect, 
+  defaultValue = "", 
+  disabled = false 
+}: AddressSearchProps) => {
+  const [searchInput, setSearchInput] = useState(defaultValue);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+
+  // Buscar a chave da API do Google Maps
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ["system_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("google_maps_key")
+        .single();
+
+      if (error) {
+        console.error("Erro ao buscar configurações:", error);
+        throw error;
+      }
+
+      return data;
+    },
+  });
 
   useEffect(() => {
-    if (!inputRef.current || !window.google) return;
-
-    try {
-      // Initialize Autocomplete
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(
-        inputRef.current,
-        {
-          componentRestrictions: { country: "br" },
-          fields: ["formatted_address", "geometry"],
-        }
-      );
-
-      // Add place_changed listener
-      const listener = autocompleteRef.current.addListener(
-        "place_changed",
-        () => {
-          const place = autocompleteRef.current?.getPlace();
-          
-          if (place?.geometry?.location) {
-            onChange(place.formatted_address || "");
-            onLocationSelect({
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            });
-          }
-          setIsLoading(false);
-        }
-      );
-
-      // Cleanup listener on unmount
-      return () => {
-        if (window.google) {
-          window.google.maps.event.removeListener(listener);
-        }
-      };
-    } catch (error) {
-      console.error("Error initializing Google Maps Autocomplete:", error);
-      setIsLoading(false);
+    if (!settings?.google_maps_key) {
+      console.log("Chave do Google Maps não encontrada");
+      return;
     }
-  }, [onChange, onLocationSelect]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsLoading(true);
-    onChange(e.target.value);
+    // Carregar o script do Google Maps
+    const loadGoogleMapsScript = () => {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${settings.google_maps_key}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeAutocomplete;
+      script.onerror = () => {
+        console.error("Erro ao carregar o script do Google Maps");
+        toast.error("Erro ao carregar o serviço de busca de endereços");
+      };
+      document.head.appendChild(script);
+    };
+
+    // Verificar se o script já está carregado
+    if (!window.google) {
+      loadGoogleMapsScript();
+    } else {
+      initializeAutocomplete();
+    }
+  }, [settings]);
+
+  const initializeAutocomplete = () => {
+    try {
+      if (!window.google) {
+        console.error("Google Maps não está disponível");
+        return;
+      }
+
+      const input = document.getElementById("address-search") as HTMLInputElement;
+      if (!input) return;
+
+      const options = {
+        componentRestrictions: { country: "br" },
+        types: ["address"],
+      };
+
+      const autocompleteInstance = new google.maps.places.Autocomplete(input, options);
+      setAutocomplete(autocompleteInstance);
+
+      autocompleteInstance.addListener("place_changed", () => {
+        const place = autocompleteInstance.getPlace();
+        
+        if (!place.geometry?.location) {
+          toast.error("Endereço inválido selecionado");
+          return;
+        }
+
+        const latitude = place.geometry.location.lat();
+        const longitude = place.geometry.location.lng();
+        const address = place.formatted_address || "";
+
+        onAddressSelect(address, latitude, longitude);
+      });
+    } catch (error) {
+      console.error("Erro ao inicializar autocompletar:", error);
+      toast.error("Erro ao inicializar busca de endereços");
+    }
   };
 
-  return (
-    <div className="relative">
+  if (isLoading) {
+    return (
       <Input
-        ref={inputRef}
         type="text"
-        value={value}
-        onChange={handleInputChange}
-        placeholder="Digite o endereço"
-        className="pr-10"
+        placeholder="Carregando busca de endereços..."
+        disabled
+        value={searchInput}
       />
-      {isLoading && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-        </div>
-      )}
-    </div>
+    );
+  }
+
+  return (
+    <Input
+      id="address-search"
+      type="text"
+      placeholder="Digite o endereço para buscar"
+      value={searchInput}
+      onChange={(e) => setSearchInput(e.target.value)}
+      disabled={disabled}
+    />
   );
 };
-
-export default AddressSearch;
