@@ -234,7 +234,7 @@ export type Database = {
           payment_method_id: string | null
           responsible_name: string
           service_id: string
-          type: Database["public"]["Enums"]["service_type"]
+          type: Database["public"]["Enums"]["checklist_type"]
           updated_at: string | null
         }
         Insert: {
@@ -248,7 +248,7 @@ export type Database = {
           payment_method_id?: string | null
           responsible_name: string
           service_id: string
-          type: Database["public"]["Enums"]["service_type"]
+          type: Database["public"]["Enums"]["checklist_type"]
           updated_at?: string | null
         }
         Update: {
@@ -262,7 +262,7 @@ export type Database = {
           payment_method_id?: string | null
           responsible_name?: string
           service_id?: string
-          type?: Database["public"]["Enums"]["service_type"]
+          type?: Database["public"]["Enums"]["checklist_type"]
           updated_at?: string | null
         }
         Relationships: [
@@ -457,6 +457,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      checklist_type: "coleta" | "pedido"
       location_type: "operational_base" | "service"
       service_type: "coleta" | "entrega"
       user_type: "admin" | "user" | "agent"

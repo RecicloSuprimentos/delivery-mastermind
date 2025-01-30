@@ -1,5 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { AddressSearch } from "./AddressSearch";
+import AddressSearch from "./AddressSearch";
 import InputMask from 'react-input-mask';
 
 interface Location {
@@ -35,11 +35,9 @@ const AddressFields = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">Endereço</label>
         <AddressSearch
-          onAddressSelect={(address, latitude, longitude) => {
-            onAddressChange(address);
-            onLocationSelect({ lat: latitude, lng: longitude });
-          }}
-          defaultValue={address}
+          value={address}
+          onChange={onAddressChange}
+          onLocationSelect={onLocationSelect}
         />
       </div>
 

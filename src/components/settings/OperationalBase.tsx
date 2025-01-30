@@ -5,7 +5,7 @@ import { MapPin, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { AddressSearch } from "@/components/AddressSearch";
+import AddressSearch from "@/components/AddressSearch";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Database } from "@/integrations/supabase/types";
@@ -141,11 +141,9 @@ export const OperationalBase = () => {
               <div className="flex gap-2">
                 <div className="flex-1">
                   <AddressSearch
-                    defaultValue={address}
-                    onAddressSelect={(newAddress, latitude, longitude) => {
-                      setAddress(newAddress);
-                      setSelectedLocation({ lat: latitude, lng: longitude });
-                    }}
+                    value={address}
+                    onChange={setAddress}
+                    onLocationSelect={setSelectedLocation}
                   />
                 </div>
                 <Button onClick={handleSave} className="whitespace-nowrap gap-2">
