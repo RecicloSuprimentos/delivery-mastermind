@@ -293,6 +293,7 @@ export type Database = {
           longitude: number | null
           observations: string | null
           reason: string
+          reason_id: string | null
           service_id: string | null
           updated_at: string | null
         }
@@ -306,6 +307,7 @@ export type Database = {
           longitude?: number | null
           observations?: string | null
           reason: string
+          reason_id?: string | null
           service_id?: string | null
           updated_at?: string | null
         }
@@ -319,6 +321,7 @@ export type Database = {
           longitude?: number | null
           observations?: string | null
           reason?: string
+          reason_id?: string | null
           service_id?: string | null
           updated_at?: string | null
         }
