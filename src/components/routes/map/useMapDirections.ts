@@ -28,11 +28,7 @@ export const useMapDirections = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
 
   useEffect(() => {
-    if (!shouldOptimize) {
-      setDirections(null);
-      return;
-    }
-
+    // Sempre recalcular a rota quando os pontos mudarem, independente da otimização
     if (!window.google || !settings) {
       console.log("Google Maps ou configurações não disponíveis");
       return;
@@ -74,7 +70,8 @@ export const useMapDirections = ({
           onRouteStats(totalDistance, totalDuration, estimatedTimes);
         }
         
-        if (onOptimizedStops) {
+        // Apenas atualiza a ordem dos pontos se estiver otimizando
+        if (shouldOptimize && onOptimizedStops) {
           const optimizedWaypoints = waypointOrder.map(index => selectedStops[index]);
           onOptimizedStops(optimizedWaypoints);
         }
