@@ -49,13 +49,7 @@ export const RouteStopsList = ({
     <div className="space-y-4">
       <RouteStopsHeader
         onOptimize={onOptimize || (() => {})}
-        onInvert={() => {
-          handleInvertStops();
-          // Força o recálculo da rota após inverter
-          if (onOptimize) {
-            setTimeout(onOptimize, 0);
-          }
-        }}
+        onInvert={handleInvertStops}
         onAddAll={handleAddAllStops}
         disabled={disabled}
         hasAvailableServices={availableServices.length > 0}
