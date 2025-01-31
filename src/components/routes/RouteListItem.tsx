@@ -23,6 +23,11 @@ interface Route {
   }[];
 }
 
+interface RouteStats {
+  total_distance: number;
+  total_duration: string;
+}
+
 interface RouteListItemProps {
   route: Route;
   onPrint: (route: Route) => void;
@@ -34,7 +39,7 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
   const { updateRouteStatus } = useRoutes();
 
   // Busca os dados reais de distância e tempo
-  const { data: realStats } = useQuery({
+  const { data: realStats } = useQuery<RouteStats | null>({
     queryKey: ["route-stats", route.id],
     queryFn: async () => {
       const { data, error } = await supabase
