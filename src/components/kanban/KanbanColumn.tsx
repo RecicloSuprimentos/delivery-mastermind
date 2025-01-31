@@ -1,4 +1,4 @@
-import { ServiceCard } from "../ServiceCard";
+import ServiceCard from "../ServiceCard";
 import type { Service } from "@/types/services";
 
 interface KanbanColumnProps {
