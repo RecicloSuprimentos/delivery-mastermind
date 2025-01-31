@@ -31,81 +31,82 @@ const RealTimeMonitoring = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              {/* Header com título e filtros */}
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-medium">Agentes</h2>
-                <div className="flex items-center gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "justify-start text-left font-normal",
-                          !selectedDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {getDateLabel(selectedDate)}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => date && setSelectedDate(date)}
-                        disabled={(date) => date > new Date()}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedDate(startOfToday())}
-                    className={cn(isToday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
-                  >
-                    Hoje
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedDate(subDays(startOfToday(), 1))}
-                    className={cn(isYesterday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
-                  >
-                    Ontem
-                  </Button>
-                </div>
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Coluna da esquerda - Lista de Agentes */}
+        <div className="w-[500px] min-w-[500px] overflow-y-auto p-4">
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            {/* Header com título e filtros */}
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium">Agentes</h2>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "justify-start text-left font-normal",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {getDateLabel(selectedDate)}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSelectedDate(startOfToday())}
+                  className={cn(isToday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
+                >
+                  Hoje
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSelectedDate(subDays(startOfToday(), 1))}
+                  className={cn(isYesterday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
+                >
+                  Ontem
+                </Button>
               </div>
-
-              {/* Lista de Agentes */}
-              {isLoading ? (
-                <div>Carregando...</div>
-              ) : (
-                <AgentsList agents={agents || []} />
-              )}
             </div>
+
+            {/* Lista de Agentes */}
+            {isLoading ? (
+              <div>Carregando...</div>
+            ) : (
+              <AgentsList agents={agents || []} />
+            )}
           </div>
-          <div className="lg:h-[calc(100vh-12rem)] bg-white rounded-lg shadow-sm relative">
-            <AgentLocationMap 
-              agents={agents || []} 
-              showAgents={showAgents}
-              showBases={showBases}
-              showServices={showServices}
-              showUnassignedServices={showUnassignedServices}
-            />
-            <MapControls
-              showAgents={showAgents}
-              setShowAgents={setShowAgents}
-              showBases={showBases}
-              setShowBases={setShowBases}
-              showServices={showServices}
-              setShowServices={setShowServices}
-              showUnassignedServices={showUnassignedServices}
-              setShowUnassignedServices={setShowUnassignedServices}
-            />
-          </div>
+        </div>
+
+        {/* Coluna da direita - Mapa */}
+        <div className="flex-1 relative">
+          <AgentLocationMap 
+            agents={agents || []} 
+            showAgents={showAgents}
+            showBases={showBases}
+            showServices={showServices}
+            showUnassignedServices={showUnassignedServices}
+          />
+          <MapControls
+            showAgents={showAgents}
+            setShowAgents={setShowAgents}
+            showBases={showBases}
+            setShowBases={setShowBases}
+            showServices={showServices}
+            setShowServices={setShowServices}
+            showUnassignedServices={showUnassignedServices}
+            setShowUnassignedServices={setShowUnassignedServices}
+          />
         </div>
       </div>
     </div>
