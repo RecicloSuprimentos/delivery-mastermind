@@ -76,18 +76,26 @@ export const useAgentsData = () => {
           // Combinar todas as paradas de todas as rotas do dia
           const allStops = routes?.flatMap((route) => route.route_stops) || [];
           const totalServices = allStops.length;
-          const completedServices = allStops.filter(
+
+          // Separar serviços por tipo
+          const collectionsStops = allStops.filter(
+            (stop) => stop.service?.type === "coleta"
+          );
+          const deliveriesStops = allStops.filter(
+            (stop) => stop.service?.type === "entrega"
+          );
+
+          // Calcular serviços completados por tipo
+          const completedCollections = collectionsStops.filter(
+            (stop) => stop.service?.status === "completed"
+          ).length;
+          const completedDeliveries = deliveriesStops.filter(
             (stop) => stop.service?.status === "completed"
           ).length;
 
-          const collections = allStops.filter(
-            (stop) => stop.service?.type === "coleta"
-          ).length;
-
-          const deliveries = allStops.filter(
-            (stop) => stop.service?.type === "entrega"
-          ).length;
-
+          const completedServices = completedCollections + completedDeliveries;
+          const collections = collectionsStops.length;
+          const deliveries = deliveriesStops.length;
           const pendingServices = totalServices - completedServices;
 
           // Calcular performance de tempo considerando todas as rotas
