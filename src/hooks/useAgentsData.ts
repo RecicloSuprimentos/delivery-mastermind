@@ -1,29 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfDay, endOfDay, parseISO, format } from "date-fns";
-
-export interface AgentData {
-  id: string;
-  name: string;
-  status: "online" | "offline" | "in-transit" | "arrived";
-  completedServices: number;
-  totalServices: number;
-  collections: number;
-  deliveries: number;
-  pendingServices: number;
-  onTimePerformance: number;
-  currentLocation?: {
-    latitude: number;
-    longitude: number;
-  };
-  timeline: {
-    id: string;
-    serviceNumber: number;
-    status: "completed" | "current" | "pending";
-    estimatedTime: string;
-    actualTime?: string;
-  }[];
-}
+import { startOfDay, endOfDay } from "date-fns";
+import type { AgentData } from "@/types/monitoring";
+import { 
+  calculateCompletedServices, 
+  calculateOnTimePerformance,
+  buildTimeline 
+} from "@/utils/agentDataUtils";
 
 export const useAgentsData = () => {
   const today = new Date();
@@ -35,7 +18,6 @@ export const useAgentsData = () => {
     queryFn: async () => {
       console.log("Buscando dados dos agentes e rotas...");
       
-      // Buscar todos os agentes ativos
       const { data: systemUsers, error: usersError } = await supabase
         .from("system_users")
         .select("*")
@@ -44,10 +26,8 @@ export const useAgentsData = () => {
 
       if (usersError) throw usersError;
 
-      // Para cada agente, buscar suas rotas do dia
       const agentsWithRoutes = await Promise.all(
         (systemUsers || []).map(async (user) => {
-          // Buscar todas as rotas do dia para o agente
           const { data: routes, error: routesError } = await supabase
             .from("routes")
             .select(`
@@ -64,7 +44,6 @@ export const useAgentsData = () => {
 
           if (routesError) throw routesError;
 
-          // Buscar última localização conhecida
           const { data: lastLocation } = await supabase
             .from("agent_locations")
             .select("*")
@@ -73,87 +52,39 @@ export const useAgentsData = () => {
             .limit(1)
             .maybeSingle();
 
-          // Combinar todas as paradas de todas as rotas do dia
           const allStops = routes?.flatMap((route) => route.route_stops) || [];
-          const totalServices = allStops.length;
+          
+          const {
+            completedCollections,
+            completedDeliveries,
+            totalCompleted,
+            collections,
+            deliveries
+          } = calculateCompletedServices(allStops);
 
-          // Separar serviços por tipo
-          const collectionsStops = allStops.filter(
-            (stop) => stop.service?.type === "coleta"
-          );
-          const deliveriesStops = allStops.filter(
-            (stop) => stop.service?.type === "entrega"
-          );
-
-          // Calcular serviços completados por tipo (incluindo cancelados)
-          const completedCollections = collectionsStops.filter(
-            (stop) => ["completed", "cancelled"].includes(stop.service?.status || "")
-          ).length;
-          const completedDeliveries = deliveriesStops.filter(
-            (stop) => ["completed", "cancelled"].includes(stop.service?.status || "")
-          ).length;
-
-          const completedServices = completedCollections + completedDeliveries;
-          const collections = collectionsStops.length;
-          const deliveries = deliveriesStops.length;
-          const pendingServices = totalServices - completedServices;
-
-          // Calcular performance de tempo considerando todas as rotas
-          let onTimeServices = 0;
-          allStops.forEach((stop) => {
-            if (["completed", "cancelled"].includes(stop.service?.status || "") && stop.estimated_arrival_time) {
-              const estimatedTime = parseISO(stop.estimated_arrival_time);
-              const actualTime = stop.estimated_departure_time 
-                ? parseISO(stop.estimated_departure_time)
-                : null;
-              
-              if (actualTime && actualTime <= estimatedTime) {
-                onTimeServices++;
-              }
-            }
-          });
-
-          const onTimePerformance = totalServices > 0 
-            ? (onTimeServices / totalServices) * 100 
-            : 0;
-
-          // Determinar status do agente baseado em todas as rotas
+          const onTimePerformance = calculateOnTimePerformance(allStops);
+          
           let status: AgentData["status"] = "offline";
           if (lastLocation) {
-            const currentStop = allStops[completedServices];
+            const currentStop = allStops[totalCompleted];
             if (currentStop?.service?.status === "arrived") {
               status = "arrived";
-            } else if (completedServices < totalServices) {
+            } else if (totalCompleted < allStops.length) {
               status = "in-transit";
             }
           }
 
-          // Construir timeline com todas as paradas do dia
-          const timeline = allStops.map((stop, index) => ({
-            id: stop.id,
-            serviceNumber: index + 1,
-            status: ["completed", "cancelled"].includes(stop.service?.status || "")
-              ? "completed" as const
-              : index === completedServices
-              ? "current" as const
-              : "pending" as const,
-            estimatedTime: stop.estimated_arrival_time 
-              ? format(parseISO(stop.estimated_arrival_time), "HH:mm")
-              : "",
-            actualTime: ["completed", "cancelled"].includes(stop.service?.status || "") && stop.estimated_departure_time
-              ? format(parseISO(stop.estimated_departure_time), "HH:mm")
-              : undefined,
-          }));
+          const timeline = buildTimeline(allStops, totalCompleted);
 
           return {
             id: user.id,
             name: user.name,
             status,
-            completedServices,
-            totalServices,
+            completedServices: totalCompleted,
+            totalServices: allStops.length,
             collections,
             deliveries,
-            pendingServices,
+            pendingServices: allStops.length - totalCompleted,
             onTimePerformance,
             currentLocation: lastLocation
               ? {
@@ -168,6 +99,6 @@ export const useAgentsData = () => {
 
       return agentsWithRoutes;
     },
-    refetchInterval: 30000, // Atualiza a cada 30 segundos
+    refetchInterval: 30000,
   });
 };

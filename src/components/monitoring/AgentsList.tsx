@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Check, MapPin, Navigation } from "lucide-react";
-import type { AgentData } from "@/hooks/useAgentsData";
+import { Check, MapPin, Navigation, X } from "lucide-react";
+import type { AgentData } from "@/types/monitoring";
 
 interface AgentsListProps {
   agents: AgentData[];
@@ -31,6 +31,34 @@ export function AgentsList({ agents }: AgentsListProps) {
           </Badge>
         );
     }
+  };
+
+  const getStopIcon = (status: string, completionOrder?: number) => {
+    if (status === "completed") {
+      return (
+        <div className="relative">
+          <Check className="w-4 h-4" />
+          {completionOrder && (
+            <span className="absolute -top-2 -right-2 bg-green-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+              {completionOrder}
+            </span>
+          )}
+        </div>
+      );
+    }
+    if (status === "cancelled") {
+      return (
+        <div className="relative">
+          <X className="w-4 h-4" />
+          {completionOrder && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+              {completionOrder}
+            </span>
+          )}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -74,19 +102,19 @@ export function AgentsList({ agents }: AgentsListProps) {
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
                     stop.status === "completed"
                       ? "bg-green-100 text-green-800"
+                      : stop.status === "cancelled"
+                      ? "bg-red-100 text-red-800"
                       : stop.status === "current"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {stop.status === "completed" ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    stop.serviceNumber.toString()
-                  )}
+                  {stop.status === "completed" || stop.status === "cancelled"
+                    ? getStopIcon(stop.status, stop.completionOrder)
+                    : stop.serviceNumber}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {stop.status === "completed" ? "✓" : stop.estimatedTime}
+                  {stop.actualTime || stop.estimatedTime}
                 </div>
               </div>
             ))}
