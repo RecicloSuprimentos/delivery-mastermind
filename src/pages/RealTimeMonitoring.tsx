@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { AgentsList } from "@/components/monitoring/AgentsList";
 import { AgentLocationMap } from "@/components/monitoring/AgentLocationMap";
+import { MapControls } from "@/components/monitoring/MapControls";
 import { useAgentsData } from "@/hooks/useAgentsData";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,6 +15,12 @@ import { cn } from "@/lib/utils";
 const RealTimeMonitoring = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const { data: agents, isLoading } = useAgentsData(selectedDate);
+  
+  // Adiciona estados para controle de visibilidade do mapa
+  const [showAgents, setShowAgents] = useState(true);
+  const [showBases, setShowBases] = useState(true);
+  const [showServices, setShowServices] = useState(true);
+  const [showUnassignedServices, setShowUnassignedServices] = useState(false);
 
   const getDateLabel = (date: Date) => {
     if (isToday(date)) return "Hoje";
@@ -78,8 +85,24 @@ const RealTimeMonitoring = () => {
               )}
             </div>
           </div>
-          <div className="lg:h-[calc(100vh-12rem)] bg-white rounded-lg shadow-sm">
-            <AgentLocationMap agents={agents || []} />
+          <div className="lg:h-[calc(100vh-12rem)] bg-white rounded-lg shadow-sm relative">
+            <AgentLocationMap 
+              agents={agents || []} 
+              showAgents={showAgents}
+              showBases={showBases}
+              showServices={showServices}
+              showUnassignedServices={showUnassignedServices}
+            />
+            <MapControls
+              showAgents={showAgents}
+              setShowAgents={setShowAgents}
+              showBases={showBases}
+              setShowBases={setShowBases}
+              showServices={showServices}
+              setShowServices={setShowServices}
+              showUnassignedServices={showUnassignedServices}
+              setShowUnassignedServices={setShowUnassignedServices}
+            />
           </div>
         </div>
       </div>
