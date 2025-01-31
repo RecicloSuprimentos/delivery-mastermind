@@ -93,10 +93,10 @@ export default function RealTimeMonitoring() {
             completedServices,
             totalServices,
             collections: route?.route_stops?.filter(
-              (stop) => stop.service?.type === "collection"
+              (stop) => stop.service?.type === "coleta"
             ).length || 0,
             deliveries: route?.route_stops?.filter(
-              (stop) => stop.service?.type === "delivery"
+              (stop) => stop.service?.type === "entrega"
             ).length || 0,
             pendingServices: totalServices - completedServices,
             onTimePerformance: totalServices > 0 ? (completedServices / totalServices) * 100 : 0,
