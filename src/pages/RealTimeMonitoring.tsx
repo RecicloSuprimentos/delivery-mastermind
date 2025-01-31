@@ -16,7 +16,6 @@ const RealTimeMonitoring = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const { data: agents, isLoading } = useAgentsData(selectedDate);
   
-  // Adiciona estados para controle de visibilidade do mapa
   const [showAgents, setShowAgents] = useState(true);
   const [showBases, setShowBases] = useState(true);
   const [showServices, setShowServices] = useState(true);
@@ -31,10 +30,10 @@ const RealTimeMonitoring = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className="flex h-[calc(100vh-4rem)] pt-4">
         {/* Coluna da esquerda - Lista de Agentes */}
-        <div className="w-[500px] min-w-[500px] overflow-y-auto p-4">
-          <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="flex-1 overflow-y-auto px-4">
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
             {/* Header com título e filtros */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">Agentes</h2>
@@ -89,7 +88,7 @@ const RealTimeMonitoring = () => {
         </div>
 
         {/* Coluna da direita - Mapa */}
-        <div className="flex-1 relative">
+        <div className="w-[40%] relative">
           <AgentLocationMap 
             agents={agents || []} 
             showAgents={showAgents}
