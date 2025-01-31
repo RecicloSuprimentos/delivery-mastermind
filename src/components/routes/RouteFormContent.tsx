@@ -2,6 +2,7 @@ import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
 import { RouteBasicFields } from "./RouteBasicFields";
 import { useRouteFormState } from "./form/useRouteFormState";
+import { useToast } from "@/components/ui/use-toast";
 import type { Service, SystemSettings } from "@/types/routes";
 
 interface RouteFormContentProps {
@@ -28,6 +29,8 @@ interface RouteFormContentProps {
   services?: Service[];
   settings?: SystemSettings;
   isViewMode?: boolean;
+  routeStatus?: string;
+  originalStops?: Service[];
 }
 
 export const RouteFormContent = ({
@@ -54,8 +57,53 @@ export const RouteFormContent = ({
   services,
   settings,
   isViewMode,
+  routeStatus,
+  originalStops = [],
 }: RouteFormContentProps) => {
+  const { toast } = useToast();
   const { shouldOptimize, handleOptimize, resetOptimization } = useRouteFormState();
+
+  // Verifica se a rota está finalizada
+  const isCompleted = routeStatus === "completed";
+  
+  // Verifica se a rota está em andamento (atribuída ou aceita)
+  const isInProgress = routeStatus === "assigned" || routeStatus === "accepted";
+
+  // Função para validar alterações nos serviços
+  const handleStopsChange = (newStops: Service[]) => {
+    if (isCompleted) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível editar uma rota finalizada.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isInProgress) {
+      // Verifica se algum serviço existente foi alterado (exceto remoção)
+      const hasInvalidChanges = originalStops.some(originalStop => {
+        const stillExists = newStops.find(s => s.id === originalStop.id);
+        // Se o serviço ainda existe na rota, não permitimos alteração
+        if (stillExists && originalStop.status !== stillExists.status) {
+          return true;
+        }
+        return false;
+      });
+
+      if (hasInvalidChanges) {
+        toast({
+          title: "Operação não permitida",
+          description: "Não é possível alterar o status de serviços em uma rota em andamento.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setSelectedStops(newStops);
+    resetOptimization();
+  };
 
   return (
     <div className="grid grid-cols-2 gap-8">
@@ -77,18 +125,15 @@ export const RouteFormContent = ({
           setSelectedEndService={setSelectedEndService}
           agents={agents}
           services={services}
-          disabled={isViewMode}
+          disabled={isViewMode || isCompleted}
         />
 
         <RouteStopsList 
           services={services || []}
           selectedStops={selectedStops}
-          onStopsChange={(stops) => {
-            setSelectedStops(stops);
-            resetOptimization();
-          }}
+          onStopsChange={handleStopsChange}
           onOptimize={() => handleOptimize(onOptimize)}
-          disabled={isViewMode}
+          disabled={isViewMode || isCompleted}
         />
       </div>
 

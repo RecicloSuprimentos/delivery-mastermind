@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteFormContent } from "./RouteFormContent";
 import { useRouteFormState } from "@/hooks/useRouteFormState";
+import { useToast } from "@/components/ui/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 import type { Service } from "@/types/routes";
 
@@ -20,6 +21,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const routeId = searchParams.get("id");
   const mode = searchParams.get("mode");
   const isViewMode = mode === "view";
+  const { toast } = useToast();
 
   const {
     date,
@@ -44,6 +46,11 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
     handleOptimize,
     validateForm,
   } = useRouteFormState();
+
+  // Estado para armazenar os serviços originais da rota
+  const [originalStops, setOriginalStops] = useState<Service[]>([]);
+  // Estado para armazenar o status da rota
+  const [routeStatus, setRouteStatus] = useState<string>();
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -87,25 +94,26 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   useEffect(() => {
     if (routeId) {
       const fetchRoute = async () => {
-        const { data, error } = await supabase
+        const { data: routeData, error: routeError } = await supabase
           .from("routes")
           .select("*")
           .eq("id", routeId)
           .single();
 
-        if (error) {
-          console.error("Error fetching route:", error);
+        if (routeError) {
+          console.error("Error fetching route:", routeError);
           return;
         }
 
-        if (data) {
-          setRouteName(data.name);
-          setSelectedAgent(data.agent_id);
-          setDate(new Date(data.start_time));
-          setStartLocationType(data.start_location_type);
-          setEndLocationType(data.end_location_type);
-          setSelectedStartService(data.start_location_reference);
-          setSelectedEndService(data.end_location_reference);
+        if (routeData) {
+          setRouteName(routeData.name);
+          setSelectedAgent(routeData.agent_id);
+          setDate(new Date(routeData.start_time));
+          setStartLocationType(routeData.start_location_type);
+          setEndLocationType(routeData.end_location_type);
+          setSelectedStartService(routeData.start_location_reference);
+          setSelectedEndService(routeData.end_location_reference);
+          setRouteStatus(routeData.status);
           
           const { data: stopsData } = await supabase
             .from("route_stops")
@@ -114,7 +122,9 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
             .order("sequence_number");
 
           if (stopsData) {
-            setSelectedStops(stopsData.map((stop: any) => stop.service));
+            const stops = stopsData.map((stop: any) => stop.service);
+            setSelectedStops(stops);
+            setOriginalStops(stops); // Armazena os serviços originais
           }
         }
       };
@@ -126,6 +136,15 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (routeStatus === "completed") {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível editar uma rota finalizada.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!validateForm()) return;
 
     const routeData: RouteInsert = {
@@ -140,7 +159,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
         settings?.id : selectedEndService!,
       total_distance: routeStats?.distance,
       total_duration: routeStats?.duration,
-      status: "assigned",
+      status: routeStatus || "assigned",
     };
 
     await onSave(routeData, selectedStops, routeId || undefined);
@@ -153,6 +172,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
         isLoading={isLoading}
         routeId={routeId}
         isViewMode={isViewMode}
+        isCompleted={routeStatus === "completed"}
       />
       
       <RouteFormContent
@@ -179,6 +199,8 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
         services={services}
         settings={settings}
         isViewMode={isViewMode}
+        routeStatus={routeStatus}
+        originalStops={originalStops}
       />
     </form>
   );
