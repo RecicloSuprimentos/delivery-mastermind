@@ -85,12 +85,12 @@ export const useAgentsData = () => {
             (stop) => stop.service?.type === "entrega"
           );
 
-          // Calcular serviços completados por tipo
+          // Calcular serviços completados por tipo (incluindo cancelados)
           const completedCollections = collectionsStops.filter(
-            (stop) => stop.service?.status === "completed"
+            (stop) => ["completed", "cancelled"].includes(stop.service?.status || "")
           ).length;
           const completedDeliveries = deliveriesStops.filter(
-            (stop) => stop.service?.status === "completed"
+            (stop) => ["completed", "cancelled"].includes(stop.service?.status || "")
           ).length;
 
           const completedServices = completedCollections + completedDeliveries;
@@ -101,7 +101,7 @@ export const useAgentsData = () => {
           // Calcular performance de tempo considerando todas as rotas
           let onTimeServices = 0;
           allStops.forEach((stop) => {
-            if (stop.service?.status === "completed" && stop.estimated_arrival_time) {
+            if (["completed", "cancelled"].includes(stop.service?.status || "") && stop.estimated_arrival_time) {
               const estimatedTime = parseISO(stop.estimated_arrival_time);
               const actualTime = stop.estimated_departure_time 
                 ? parseISO(stop.estimated_departure_time)
@@ -132,7 +132,7 @@ export const useAgentsData = () => {
           const timeline = allStops.map((stop, index) => ({
             id: stop.id,
             serviceNumber: index + 1,
-            status: stop.service?.status === "completed"
+            status: ["completed", "cancelled"].includes(stop.service?.status || "")
               ? "completed" as const
               : index === completedServices
               ? "current" as const
@@ -140,7 +140,7 @@ export const useAgentsData = () => {
             estimatedTime: stop.estimated_arrival_time 
               ? format(parseISO(stop.estimated_arrival_time), "HH:mm")
               : "",
-            actualTime: stop.service?.status === "completed" && stop.estimated_departure_time
+            actualTime: ["completed", "cancelled"].includes(stop.service?.status || "") && stop.estimated_departure_time
               ? format(parseISO(stop.estimated_departure_time), "HH:mm")
               : undefined,
           }));
