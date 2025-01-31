@@ -81,10 +81,8 @@ export const RouteFormContent = ({
     }
 
     if (isInProgress) {
-      // Verifica se algum serviço existente foi alterado (exceto remoção)
       const hasInvalidChanges = originalStops.some(originalStop => {
         const stillExists = newStops.find(s => s.id === originalStop.id);
-        // Se o serviço ainda existe na rota, não permitimos alteração
         if (stillExists && originalStop.status !== stillExists.status) {
           return true;
         }
