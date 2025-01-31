@@ -118,15 +118,15 @@ export const useAgentsData = () => {
             }
           }
 
-          // Construir timeline
+          // Construir timeline com status tipado corretamente
           const timeline = routeStops.map((stop, index) => ({
             id: stop.id,
             serviceNumber: index + 1,
             status: stop.service?.status === "completed"
-              ? "completed"
+              ? "completed" as const
               : index === completedServices
-              ? "current"
-              : "pending",
+              ? "current" as const
+              : "pending" as const,
             estimatedTime: stop.estimated_arrival_time 
               ? format(parseISO(stop.estimated_arrival_time), "HH:mm")
               : "",
