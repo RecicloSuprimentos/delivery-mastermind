@@ -53,7 +53,7 @@ export const Navigation = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="ghost">TEMPO REAL</Button>
+              <Button variant="ghost" onClick={() => navigate('/real-time')}>TEMPO REAL</Button>
               <Button variant="ghost">ANÁLISE</Button>
               <Button variant="ghost">COMUNICAÇÃO</Button>
             </div>
