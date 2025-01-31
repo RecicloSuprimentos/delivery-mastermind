@@ -479,7 +479,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_distance: {
+        Args: {
+          lat1: number
+          lon1: number
+          lat2: number
+          lon2: number
+        }
+        Returns: number
+      }
+      calculate_route_distance: {
+        Args: {
+          route_id_param: string
+        }
+        Returns: {
+          total_distance: number
+          total_duration: unknown
+        }[]
+      }
     }
     Enums: {
       location_type: "operational_base" | "service"

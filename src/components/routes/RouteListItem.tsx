@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useRoutes } from "@/hooks/useRoutes";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Route {
   id: string;
@@ -31,6 +33,25 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
   const navigate = useNavigate();
   const { updateRouteStatus } = useRoutes();
 
+  // Busca os dados reais de distância e tempo
+  const { data: realStats } = useQuery({
+    queryKey: ["route-stats", route.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('calculate_route_distance', {
+          route_id_param: route.id
+        });
+
+      if (error) {
+        console.error("Error fetching route stats:", error);
+        return null;
+      }
+
+      return data?.[0] || null;
+    },
+    enabled: route.status !== 'draft' // Só busca dados se a rota não estiver em rascunho
+  });
+
   const formatDateTime = (dateString: string) => {
     return format(new Date(dateString), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
   };
@@ -39,6 +60,15 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return `${hours}h${remainingMinutes}min`;
+  };
+
+  // Formata a duração do intervalo retornado pela função
+  const formatIntervalDuration = (interval: string) => {
+    const matches = interval.match(/(\d+):(\d+):(\d+)/);
+    if (!matches) return "0h0min";
+    
+    const [_, hours, minutes] = matches;
+    return `${hours}h${minutes}min`;
   };
 
   const handleAcceptRoute = async () => {
@@ -119,7 +149,11 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
           </div>
           <div>
             <p className="text-gray-500">Km percorrida</p>
-            <p className="font-medium">Em breve</p>
+            <p className="font-medium">
+              {realStats?.total_distance 
+                ? `${(realStats.total_distance / 1000).toFixed(1)} km` 
+                : "N/A"}
+            </p>
           </div>
           <div>
             <p className="text-gray-500">Tempo estimado</p>
@@ -129,7 +163,11 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
           </div>
           <div>
             <p className="text-gray-500">Tempo gasto</p>
-            <p className="font-medium">Em breve</p>
+            <p className="font-medium">
+              {realStats?.total_duration 
+                ? formatIntervalDuration(realStats.total_duration) 
+                : "N/A"}
+            </p>
           </div>
         </div>
       </div>
