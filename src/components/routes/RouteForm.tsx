@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteFormContent } from "./RouteFormContent";
-import { useRouteFormState } from "./form/useRouteFormState";
-import { useRouteValidation } from "./form/useRouteValidation";
-import { useRouteFormQueries } from "./form/RouteFormQueries";
+import { useRouteFormState } from "@/hooks/useRouteFormState";
+import { useToast } from "@/components/ui/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 import type { Service } from "@/types/routes";
 
@@ -21,9 +21,12 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const routeId = searchParams.get("id");
   const mode = searchParams.get("mode");
   const isViewMode = mode === "view";
+  const { toast } = useToast();
 
-  const { handleRouteValidation, handleStopsValidation } = useRouteValidation();
-  const { agents, services, settings } = useRouteFormQueries();
+  // Estado para armazenar os serviços originais da rota
+  const [originalStops, setOriginalStops] = useState<Service[]>([]);
+  // Estado para armazenar o status da rota
+  const [routeStatus, setRouteStatus] = useState<string>();
 
   const {
     date,
@@ -49,8 +52,44 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
     validateForm,
   } = useRouteFormState();
 
-  const [routeStatus, setRouteStatus] = useState<string>();
-  const [originalStops, setOriginalStops] = useState<Service[]>([]);
+  const { data: agents } = useQuery({
+    queryKey: ["agents"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_users")
+        .select("*")
+        .eq("user_type", "agent");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: services } = useQuery({
+    queryKey: ["available_services"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .eq("status", "not-assigned");
+
+      if (error) throw error;
+      return data as Service[];
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["system_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("*")
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   useEffect(() => {
     if (routeId) {
@@ -97,8 +136,15 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!handleRouteValidation(routeStatus)) return;
-    if (!handleStopsValidation(selectedStops, originalStops, routeStatus)) return;
+    if (routeStatus === "completed") {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível editar uma rota finalizada.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!validateForm()) return;
 
     const routeData: RouteInsert = {

@@ -63,9 +63,13 @@ export const RouteFormContent = ({
   const { toast } = useToast();
   const { shouldOptimize, handleOptimize, resetOptimization } = useRouteFormState();
 
+  // Verifica se a rota está finalizada
   const isCompleted = routeStatus === "completed";
+  
+  // Verifica se a rota está em andamento (atribuída ou aceita)
   const isInProgress = routeStatus === "assigned" || routeStatus === "accepted";
 
+  // Função para validar alterações nos serviços
   const handleStopsChange = (newStops: Service[]) => {
     if (isCompleted) {
       toast({
@@ -77,8 +81,10 @@ export const RouteFormContent = ({
     }
 
     if (isInProgress) {
+      // Verifica se algum serviço existente foi alterado (exceto remoção)
       const hasInvalidChanges = originalStops.some(originalStop => {
         const stillExists = newStops.find(s => s.id === originalStop.id);
+        // Se o serviço ainda existe na rota, não permitimos alteração
         if (stillExists && originalStop.status !== stillExists.status) {
           return true;
         }

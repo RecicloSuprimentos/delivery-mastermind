@@ -19,10 +19,6 @@ export const RoutesList = () => {
           total_distance,
           total_duration,
           status,
-          start_location_type,
-          start_location_reference,
-          end_location_type,
-          end_location_reference,
           agent:system_users(name),
           route_stops(service_id)
         `)
