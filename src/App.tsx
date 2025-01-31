@@ -14,6 +14,7 @@ import SettingsPage from "./pages/Settings";
 import RoutesPage from "./pages/RoutesPage";
 import CreateRoutePage from "./pages/CreateRoutePage";
 import AgentPage from "./pages/AgentPage";
+import RealTimeMonitoring from "./pages/RealTimeMonitoring";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,7 +25,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Componente para carregar as configurações e o Google Maps
 const AppContent = () => {
   const { data: settings } = useQuery({
     queryKey: ["systemSettings"],
@@ -38,7 +38,6 @@ const AppContent = () => {
     },
   });
 
-  // Se não houver configurações ou chave do Google Maps, não carrega o script
   if (!settings?.google_maps_key) {
     console.warn("Google Maps API key not found in settings");
     return null;
@@ -56,6 +55,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/realtime"
+            element={
+              <ProtectedRoute>
+                <RealTimeMonitoring />
               </ProtectedRoute>
             }
           />
