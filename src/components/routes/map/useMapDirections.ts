@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { calculateRoute } from "./mapDirectionsUtils";
 import type { Service, SystemSettings } from "@/types/routes";
 
@@ -26,19 +26,77 @@ export const useMapDirections = ({
   shouldOptimize,
 }: UseMapDirectionsProps) => {
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  
+  // Referência para armazenar o último estado calculado
+  const lastCalculation = useRef<{
+    stopsIds: string[];
+    startType: string;
+    endType: string;
+    startId?: string;
+    endId?: string;
+  }>();
+
+  // Função para verificar se houve mudança real nos pontos
+  const hasRouteChanged = () => {
+    const currentStopsIds = selectedStops.map(stop => stop.id);
+    const currentStartId = selectedStartService?.id;
+    const currentEndId = selectedEndService?.id;
+
+    // Se não há cálculo anterior, precisamos calcular
+    if (!lastCalculation.current) {
+      lastCalculation.current = {
+        stopsIds: currentStopsIds,
+        startType: startLocationType,
+        endType: endLocationType,
+        startId: currentStartId,
+        endId: currentEndId,
+      };
+      return true;
+    }
+
+    // Verifica se houve mudança real
+    const hasChanged = 
+      lastCalculation.current.startType !== startLocationType ||
+      lastCalculation.current.endType !== endLocationType ||
+      lastCalculation.current.startId !== currentStartId ||
+      lastCalculation.current.endId !== currentEndId ||
+      lastCalculation.current.stopsIds.length !== currentStopsIds.length ||
+      !lastCalculation.current.stopsIds.every((id, index) => id === currentStopsIds[index]);
+
+    // Atualiza a referência se houve mudança
+    if (hasChanged) {
+      lastCalculation.current = {
+        stopsIds: currentStopsIds,
+        startType: startLocationType,
+        endType: endLocationType,
+        startId: currentStartId,
+        endId: currentEndId,
+      };
+    }
+
+    return hasChanged;
+  };
 
   useEffect(() => {
-    // Sempre recalcular a rota quando os pontos mudarem, independente da otimização
+    // Não calcula se não tiver o Google Maps ou configurações
     if (!window.google || !settings) {
       console.log("Google Maps ou configurações não disponíveis");
       return;
     }
 
+    // Não calcula se não houver pontos
     if (selectedStops.length === 0) {
       setDirections(null);
       return;
     }
 
+    // Verifica se precisa realmente recalcular
+    if (!hasRouteChanged() && !shouldOptimize) {
+      console.log("Rota não mudou, mantendo cálculo anterior");
+      return;
+    }
+
+    console.log("Calculando nova rota...");
     const directionsService = new google.maps.DirectionsService();
 
     const fetchDirections = async () => {
@@ -61,7 +119,7 @@ export const useMapDirections = ({
         const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0);
         
         if (onRouteStats) {
-          const estimatedTimes = legs.map((leg, index) => {
+          const estimatedTimes = legs.map((leg) => {
             const time = new Date();
             time.setSeconds(time.getSeconds() + leg.duration.value);
             return time;
