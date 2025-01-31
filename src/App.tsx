@@ -14,7 +14,6 @@ import SettingsPage from "./pages/Settings";
 import RoutesPage from "./pages/RoutesPage";
 import CreateRoutePage from "./pages/CreateRoutePage";
 import AgentPage from "./pages/AgentPage";
-import RealTimeMonitoring from "./pages/RealTimeMonitoring";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,14 +56,6 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <Index />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/real-time"
-            element={
-              <ProtectedRoute>
-                <RealTimeMonitoring />
               </ProtectedRoute>
             }
           />
