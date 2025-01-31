@@ -1,20 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Check, MapPin, Navigation } from "lucide-react";
-
-interface Agent {
-  id: string;
-  name: string;
-  status?: string;
-  email?: string;
-}
+import type { AgentData } from "@/hooks/useAgentsData";
 
 interface AgentsListProps {
-  agents: Agent[];
+  agents: AgentData[];
 }
 
 export function AgentsList({ agents }: AgentsListProps) {
-  const getStatusBadge = (status: string = "offline") => {
+  const getStatusBadge = (status: AgentData["status"]) => {
     switch (status) {
       case "in-transit":
         return (
@@ -39,17 +33,6 @@ export function AgentsList({ agents }: AgentsListProps) {
     }
   };
 
-  const getTimelineStatus = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-500";
-      case "current":
-        return "bg-blue-500";
-      default:
-        return "bg-gray-300";
-    }
-  };
-
   return (
     <div className="space-y-4">
       {agents.map((agent) => (
@@ -65,37 +48,45 @@ export function AgentsList({ agents }: AgentsListProps) {
             </div>
             <div className="text-right">
               <div className="text-sm text-gray-500">Progresso</div>
-              <div className="text-lg font-semibold">14/27</div>
+              <div className="text-lg font-semibold">
+                {agent.completedServices}/{agent.totalServices}
+              </div>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <Progress value={52} className="mb-4" />
+          <Progress 
+            value={agent.totalServices > 0 
+              ? (agent.completedServices / agent.totalServices) * 100 
+              : 0
+            } 
+            className="mb-4" 
+          />
 
           {/* Timeline */}
           <div className="flex space-x-2 overflow-x-auto pb-2">
-            {Array.from({ length: 10 }).map((_, index) => (
+            {agent.timeline.map((stop) => (
               <div
-                key={index}
+                key={stop.id}
                 className="flex flex-col items-center min-w-[40px]"
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                    index < 5
+                    stop.status === "completed"
                       ? "bg-green-100 text-green-800"
-                      : index === 5
+                      : stop.status === "current"
                       ? "bg-blue-100 text-blue-800"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {index < 5 ? (
+                  {stop.status === "completed" ? (
                     <Check className="w-4 h-4" />
                   ) : (
-                    (index + 15).toString()
+                    stop.serviceNumber.toString()
                   )}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {index < 5 ? "✓" : `${14 + index}:00`}
+                  {stop.status === "completed" ? "✓" : stop.estimatedTime}
                 </div>
               </div>
             ))}
@@ -105,19 +96,21 @@ export function AgentsList({ agents }: AgentsListProps) {
           <div className="grid grid-cols-4 gap-4 mt-4 text-sm">
             <div>
               <div className="text-gray-500">Coletas</div>
-              <div className="font-semibold">6</div>
+              <div className="font-semibold">{agent.collections}</div>
             </div>
             <div>
               <div className="text-gray-500">Entregas</div>
-              <div className="font-semibold">8</div>
+              <div className="font-semibold">{agent.deliveries}</div>
             </div>
             <div>
               <div className="text-gray-500">Pendentes</div>
-              <div className="font-semibold">13</div>
+              <div className="font-semibold">{agent.pendingServices}</div>
             </div>
             <div>
               <div className="text-gray-500">No prazo</div>
-              <div className="font-semibold text-green-600">92%</div>
+              <div className="font-semibold text-green-600">
+                {Math.round(agent.onTimePerformance)}%
+              </div>
             </div>
           </div>
         </div>

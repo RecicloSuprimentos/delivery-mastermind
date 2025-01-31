@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfDay, endOfDay } from "date-fns";
+import { startOfDay, endOfDay, parseISO, format } from "date-fns";
 
 export interface AgentData {
   id: string;
@@ -33,6 +33,7 @@ export const useAgentsData = () => {
   return useQuery({
     queryKey: ["agents-data"],
     queryFn: async () => {
+      // Buscar agentes ativos
       const { data: systemUsers, error: usersError } = await supabase
         .from("system_users")
         .select("*")
@@ -43,6 +44,7 @@ export const useAgentsData = () => {
 
       const agentsWithRoutes = await Promise.all(
         (systemUsers || []).map(async (user) => {
+          // Buscar rota ativa do dia para o agente
           const { data: routes, error: routesError } = await supabase
             .from("routes")
             .select(`
@@ -55,10 +57,12 @@ export const useAgentsData = () => {
             .eq("agent_id", user.id)
             .gte("start_time", startOfToday.toISOString())
             .lte("start_time", endOfToday.toISOString())
-            .eq("is_active", true);
+            .eq("is_active", true)
+            .maybeSingle();
 
           if (routesError) throw routesError;
 
+          // Buscar última localização conhecida
           const { data: lastLocation } = await supabase
             .from("agent_locations")
             .select("*")
@@ -67,51 +71,93 @@ export const useAgentsData = () => {
             .limit(1)
             .maybeSingle();
 
-          const route = routes?.[0];
-          const totalServices = route?.route_stops?.length || 0;
-          const completedServices = route?.route_stops?.filter(
+          // Calcular métricas
+          const routeStops = routes?.route_stops || [];
+          const totalServices = routeStops.length;
+          const completedServices = routeStops.filter(
             (stop) => stop.service?.status === "completed"
-          ).length || 0;
+          ).length;
+
+          const collections = routeStops.filter(
+            (stop) => stop.service?.type === "coleta"
+          ).length;
+
+          const deliveries = routeStops.filter(
+            (stop) => stop.service?.type === "entrega"
+          ).length;
+
+          const pendingServices = totalServices - completedServices;
+
+          // Calcular performance de tempo
+          let onTimeServices = 0;
+          routeStops.forEach((stop) => {
+            if (stop.service?.status === "completed" && stop.estimated_arrival_time) {
+              const estimatedTime = parseISO(stop.estimated_arrival_time);
+              const actualTime = stop.estimated_departure_time 
+                ? parseISO(stop.estimated_departure_time)
+                : null;
+              
+              if (actualTime && actualTime <= estimatedTime) {
+                onTimeServices++;
+              }
+            }
+          });
+
+          const onTimePerformance = totalServices > 0 
+            ? (onTimeServices / totalServices) * 100 
+            : 0;
+
+          // Determinar status do agente
+          let status: AgentData["status"] = "offline";
+          if (lastLocation) {
+            const currentStop = routeStops[completedServices];
+            if (currentStop?.service?.status === "arrived") {
+              status = "arrived";
+            } else if (completedServices < totalServices) {
+              status = "in-transit";
+            }
+          }
+
+          // Construir timeline
+          const timeline = routeStops.map((stop, index) => ({
+            id: stop.id,
+            serviceNumber: index + 1,
+            status: stop.service?.status === "completed"
+              ? "completed"
+              : index === completedServices
+              ? "current"
+              : "pending",
+            estimatedTime: stop.estimated_arrival_time 
+              ? format(parseISO(stop.estimated_arrival_time), "HH:mm")
+              : "",
+            actualTime: stop.service?.status === "completed" && stop.estimated_departure_time
+              ? format(parseISO(stop.estimated_departure_time), "HH:mm")
+              : undefined,
+          }));
 
           return {
             id: user.id,
             name: user.name,
-            status: lastLocation ? "online" : "offline",
+            status,
             completedServices,
             totalServices,
-            collections: route?.route_stops?.filter(
-              (stop) => stop.service?.type === "coleta"
-            ).length || 0,
-            deliveries: route?.route_stops?.filter(
-              (stop) => stop.service?.type === "entrega"
-            ).length || 0,
-            pendingServices: totalServices - completedServices,
-            onTimePerformance: totalServices > 0 ? (completedServices / totalServices) * 100 : 0,
+            collections,
+            deliveries,
+            pendingServices,
+            onTimePerformance,
             currentLocation: lastLocation
               ? {
                   latitude: lastLocation.latitude,
                   longitude: lastLocation.longitude,
                 }
               : undefined,
-            timeline: route?.route_stops?.map((stop, index) => ({
-              id: stop.id,
-              serviceNumber: index + 1,
-              status: stop.service?.status === "completed"
-                ? "completed"
-                : index === completedServices
-                ? "current"
-                : "pending",
-              estimatedTime: stop.estimated_arrival_time,
-              actualTime: stop.service?.status === "completed"
-                ? stop.estimated_departure_time
-                : undefined,
-            })) || [],
+            timeline,
           };
         })
       );
 
       return agentsWithRoutes;
     },
-    refetchInterval: 30000,
+    refetchInterval: 30000, // Atualiza a cada 30 segundos
   });
 };
