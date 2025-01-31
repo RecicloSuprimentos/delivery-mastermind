@@ -8,13 +8,12 @@ import {
   buildTimeline 
 } from "@/utils/agentDataUtils";
 
-export const useAgentsData = () => {
-  const today = new Date();
-  const startOfToday = startOfDay(today);
-  const endOfToday = endOfDay(today);
+export const useAgentsData = (selectedDate: Date) => {
+  const startOfSelectedDay = startOfDay(selectedDate);
+  const endOfSelectedDay = endOfDay(selectedDate);
 
   return useQuery({
-    queryKey: ["agents-data"],
+    queryKey: ["agents-data", selectedDate.toISOString()],
     queryFn: async () => {
       console.log("Buscando dados dos agentes e rotas...");
       
@@ -38,8 +37,8 @@ export const useAgentsData = () => {
               )
             `)
             .eq("agent_id", user.id)
-            .gte("start_time", startOfToday.toISOString())
-            .lte("start_time", endOfToday.toISOString())
+            .gte("start_time", startOfSelectedDay.toISOString())
+            .lte("start_time", endOfSelectedDay.toISOString())
             .order("start_time", { ascending: true });
 
           if (routesError) throw routesError;
