@@ -32,52 +32,54 @@ const RealTimeMonitoring = () => {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {getDateLabel(selectedDate)}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={(date) => date > new Date()}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            <Button 
-              variant="outline" 
-              onClick={() => setSelectedDate(startOfToday())}
-              className={cn(isToday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
-            >
-              Hoje
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setSelectedDate(subDays(startOfToday(), 1))}
-              className={cn(isYesterday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
-            >
-              Ontem
-            </Button>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-medium mb-4">Agentes</h2>
+              {/* Header com título e filtros */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium">Agentes</h2>
+                <div className="flex items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "justify-start text-left font-normal",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {getDateLabel(selectedDate)}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => date && setSelectedDate(date)}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedDate(startOfToday())}
+                    className={cn(isToday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
+                  >
+                    Hoje
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedDate(subDays(startOfToday(), 1))}
+                    className={cn(isYesterday(selectedDate) && "bg-primary text-primary-foreground hover:bg-primary/90")}
+                  >
+                    Ontem
+                  </Button>
+                </div>
+              </div>
+
+              {/* Lista de Agentes */}
               {isLoading ? (
                 <div>Carregando...</div>
               ) : (
