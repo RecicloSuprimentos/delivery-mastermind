@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useMapConfiguration } from "../routes/map/useMapConfiguration";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin } from "lucide-react";
 
 interface AgentLocation {
   id: string;
@@ -90,7 +89,7 @@ export const AgentLocationMap = () => {
               lng: location.longitude
             }}
             icon={{
-              path: MapPin,
+              path: "M20 10c0 5.523-4.477 10-10 10S0 15.523 0 10 4.477 0 10 0s10 4.477 10 10z",
               fillColor: "#0EA5E9",
               fillOpacity: 1,
               strokeWeight: 1,

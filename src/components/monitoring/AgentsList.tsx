@@ -113,7 +113,7 @@ export const AgentsList = () => {
                     </div>
                   )}
                 </div>
-                <Badge variant={agent.lastLocation ? "success" : "secondary"}>
+                <Badge variant={agent.lastLocation ? "default" : "secondary"}>
                   {agent.lastLocation ? "Online" : "Offline"}
                 </Badge>
               </div>
