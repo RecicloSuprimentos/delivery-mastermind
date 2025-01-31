@@ -284,50 +284,75 @@ export type Database = {
       }
       service_failure_reasons: {
         Row: {
-          completed_at: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
           is_other: boolean | null
+          reason: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_other?: boolean | null
+          reason: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_other?: boolean | null
+          reason?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      service_failures: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
           latitude: number | null
           longitude: number | null
           observations: string | null
-          reason: string
-          reason_id: string | null
-          service_id: string | null
+          reason_id: string
+          service_id: string
           updated_at: string | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string | null
           id?: string
-          is_active?: boolean | null
-          is_other?: boolean | null
           latitude?: number | null
           longitude?: number | null
           observations?: string | null
-          reason: string
-          reason_id?: string | null
-          service_id?: string | null
+          reason_id: string
+          service_id: string
           updated_at?: string | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string | null
           id?: string
-          is_active?: boolean | null
-          is_other?: boolean | null
           latitude?: number | null
           longitude?: number | null
           observations?: string | null
-          reason?: string
-          reason_id?: string | null
-          service_id?: string | null
+          reason_id?: string
+          service_id?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "service_failure_reasons_service_id_fkey"
+            foreignKeyName: "service_failures_reason_id_fkey"
+            columns: ["reason_id"]
+            isOneToOne: false
+            referencedRelation: "service_failure_reasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_failures_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
