@@ -39,7 +39,7 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
   const { updateRouteStatus } = useRoutes();
 
   // Busca os dados reais de distância e tempo
-  const { data: realStats } = useQuery<RouteStats | null>({
+  const { data: realStats } = useQuery<RouteStats>({
     queryKey: ["route-stats", route.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -49,10 +49,21 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
 
       if (error) {
         console.error("Error fetching route stats:", error);
-        return null;
+        throw error;
       }
 
-      return data?.[0] || null;
+      // Garantir que o retorno corresponde à interface RouteStats
+      if (data && data[0]) {
+        return {
+          total_distance: Number(data[0].total_distance),
+          total_duration: data[0].total_duration as string
+        };
+      }
+
+      return {
+        total_distance: 0,
+        total_duration: '00:00:00'
+      };
     },
     enabled: route.status !== 'draft' // Só busca dados se a rota não estiver em rascunho
   });
