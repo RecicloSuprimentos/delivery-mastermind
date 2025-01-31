@@ -173,6 +173,7 @@ export type Database = {
           end_location_reference: string
           end_location_type: Database["public"]["Enums"]["location_type"]
           id: string
+          is_active: boolean | null
           name: string
           start_location_reference: string
           start_location_type: Database["public"]["Enums"]["location_type"]
@@ -188,6 +189,7 @@ export type Database = {
           end_location_reference: string
           end_location_type: Database["public"]["Enums"]["location_type"]
           id?: string
+          is_active?: boolean | null
           name: string
           start_location_reference: string
           start_location_type: Database["public"]["Enums"]["location_type"]
@@ -203,6 +205,7 @@ export type Database = {
           end_location_reference?: string
           end_location_type?: Database["public"]["Enums"]["location_type"]
           id?: string
+          is_active?: boolean | null
           name?: string
           start_location_reference?: string
           start_location_type?: Database["public"]["Enums"]["location_type"]
