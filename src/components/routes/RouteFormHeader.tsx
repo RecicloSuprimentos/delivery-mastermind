@@ -7,9 +7,16 @@ interface RouteFormHeaderProps {
   isLoading: boolean;
   routeId?: string | null;
   isViewMode?: boolean;
+  isCompleted?: boolean;
 }
 
-export const RouteFormHeader = ({ onSave, isLoading, routeId, isViewMode }: RouteFormHeaderProps) => {
+export const RouteFormHeader = ({ 
+  onSave, 
+  isLoading, 
+  routeId, 
+  isViewMode,
+  isCompleted 
+}: RouteFormHeaderProps) => {
   const navigate = useNavigate();
 
   return (
@@ -27,7 +34,7 @@ export const RouteFormHeader = ({ onSave, isLoading, routeId, isViewMode }: Rout
             {routeId ? (isViewMode ? "Visualizar Rota" : "Editar Rota") : "Nova Rota"}
           </h1>
         </div>
-        {!isViewMode && (
+        {!isViewMode && !isCompleted && (
           <Button 
             onClick={onSave}
             disabled={isLoading}

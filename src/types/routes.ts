@@ -12,6 +12,7 @@ export interface Service {
   latitude: number;
   longitude: number;
   time_window?: string;
+  status?: string;
 }
 
 export interface SystemSettings {

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,11 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const isViewMode = mode === "view";
   const { toast } = useToast();
 
+  // Estado para armazenar os serviços originais da rota
+  const [originalStops, setOriginalStops] = useState<Service[]>([]);
+  // Estado para armazenar o status da rota
+  const [routeStatus, setRouteStatus] = useState<string>();
+
   const {
     date,
     setDate,
@@ -46,11 +51,6 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
     handleOptimize,
     validateForm,
   } = useRouteFormState();
-
-  // Estado para armazenar os serviços originais da rota
-  const [originalStops, setOriginalStops] = useState<Service[]>([]);
-  // Estado para armazenar o status da rota
-  const [routeStatus, setRouteStatus] = useState<string>();
 
   const { data: agents } = useQuery({
     queryKey: ["agents"],
@@ -124,7 +124,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
           if (stopsData) {
             const stops = stopsData.map((stop: any) => stop.service);
             setSelectedStops(stops);
-            setOriginalStops(stops); // Armazena os serviços originais
+            setOriginalStops(stops);
           }
         }
       };
