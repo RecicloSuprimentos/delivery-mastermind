@@ -51,14 +51,24 @@ export default function RealTimeMonitoring() {
 
   return (
     <div className="flex flex-col h-screen pt-16">
-      <div className="flex flex-1 overflow-hidden">
+      <div className="container mx-auto px-4 py-6 flex-1 flex flex-col lg:flex-row gap-6">
         {/* Left Panel - Agents List */}
-        <div className="w-1/3 border-r border-gray-200 overflow-y-auto p-4">
-          <AgentsList agents={agents || []} />
+        <div className="lg:w-3/5 h-full flex flex-col">
+          <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              Agentes em Campo
+            </h2>
+            <div className="text-sm text-gray-500">
+              {agents?.length || 0} agentes ativos
+            </div>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <AgentsList agents={agents || []} />
+          </div>
         </div>
 
         {/* Right Panel - Map */}
-        <div className="flex-1 relative">
+        <div className="lg:w-2/5 h-[500px] lg:h-auto relative bg-white rounded-lg shadow-sm">
           <AgentLocationMap
             agents={agents || []}
             showAgents={showAgents}
@@ -69,36 +79,40 @@ export default function RealTimeMonitoring() {
           
           {/* Map Controls */}
           <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg">
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2">
+            <div className="space-y-2 text-sm">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showAgents}
                   onChange={(e) => setShowAgents(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span>Agentes</span>
               </label>
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showBases}
                   onChange={(e) => setShowBases(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span>Bases Operacionais</span>
               </label>
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showServices}
                   onChange={(e) => setShowServices(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span>Serviços</span>
               </label>
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showUnassignedServices}
                   onChange={(e) => setShowUnassignedServices(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span>Serviços não atribuídos</span>
               </label>
