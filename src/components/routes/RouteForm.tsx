@@ -3,8 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteFormContent } from "./RouteFormContent";
-import { useRouteFormState } from "@/hooks/useRouteFormState";
-import { useRouteState } from "@/hooks/routes/useRouteState";
+import { useRouteFormState } from "./form/useRouteFormState";
+import { useRouteValidation } from "./form/useRouteValidation";
 import { useRouteFormQueries } from "./form/RouteFormQueries";
 import type { Database } from "@/integrations/supabase/types";
 import type { Service } from "@/types/routes";
@@ -22,15 +22,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   const mode = searchParams.get("mode");
   const isViewMode = mode === "view";
 
-  const {
-    originalStops,
-    setOriginalStops,
-    routeStatus,
-    setRouteStatus,
-    handleRouteValidation,
-    handleStopsValidation,
-  } = useRouteState();
-
+  const { handleRouteValidation, handleStopsValidation } = useRouteValidation();
   const { agents, services, settings } = useRouteFormQueries();
 
   const {
@@ -56,6 +48,9 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
     handleOptimize,
     validateForm,
   } = useRouteFormState();
+
+  const [routeStatus, setRouteStatus] = useState<string>();
+  const [originalStops, setOriginalStops] = useState<Service[]>([]);
 
   useEffect(() => {
     if (routeId) {
