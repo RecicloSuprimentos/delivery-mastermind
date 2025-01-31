@@ -27,9 +27,9 @@ export interface Route {
   start_location_reference: string;
   end_location_type: "operational_base" | "service";
   end_location_reference: string;
-  total_distance?: number;
-  total_duration?: number;
-  status?: string;
+  total_distance: number;
+  total_duration: number;
+  status: string;
   route_stops?: Array<{
     service_id: string;
   }>;
