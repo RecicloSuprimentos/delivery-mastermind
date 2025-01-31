@@ -39,7 +39,7 @@ export function AgentLocationMap({
   };
 
   useEffect(() => {
-    if (map) {
+    if (map && agents.length > 0) {
       const bounds = new google.maps.LatLngBounds();
       agents.forEach((agent) => {
         if (agent.currentLocation) {
@@ -50,6 +50,8 @@ export function AgentLocationMap({
         }
       });
       map.fitBounds(bounds);
+      // Ajusta o zoom para uma visão mais ampla
+      map.setZoom(Math.min(map.getZoom() || 12, 12));
     }
   }, [map, agents]);
 
@@ -57,7 +59,7 @@ export function AgentLocationMap({
     <GoogleMap
       mapContainerClassName="w-full h-full"
       center={defaultCenter}
-      zoom={12}
+      zoom={11}
       onLoad={onLoad}
       options={{
         styles: [
@@ -67,6 +69,8 @@ export function AgentLocationMap({
             stylers: [{ visibility: "off" }],
           },
         ],
+        maxZoom: 16,
+        minZoom: 8,
       }}
     >
       {showAgents &&

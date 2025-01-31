@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { AgentsList } from "@/components/monitoring/AgentsList";
 import { AgentLocationMap } from "@/components/monitoring/AgentLocationMap";
 import { Navigation } from "@/components/Navigation";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { startOfDay, endOfDay } from "date-fns";
 
 interface Agent {
@@ -52,7 +50,6 @@ export default function RealTimeMonitoring() {
 
       if (usersError) throw usersError;
 
-      // Buscar rotas do dia atual para cada agente
       const agentsWithRoutes = await Promise.all(
         (systemUsers || []).map(async (user) => {
           const { data: routes, error: routesError } = await supabase
@@ -71,7 +68,6 @@ export default function RealTimeMonitoring() {
 
           if (routesError) throw routesError;
 
-          // Buscar última localização do agente
           const { data: lastLocation } = await supabase
             .from("agent_locations")
             .select("*")
@@ -125,10 +121,9 @@ export default function RealTimeMonitoring() {
 
       return agentsWithRoutes;
     },
-    refetchInterval: 30000, // Atualiza a cada 30 segundos
+    refetchInterval: 30000,
   });
 
-  // Configurar canal de tempo real para atualizações de localização
   useEffect(() => {
     const channel = supabase
       .channel('agent-locations')
@@ -141,7 +136,6 @@ export default function RealTimeMonitoring() {
         },
         (payload) => {
           console.log('Nova localização:', payload);
-          // Aqui você pode atualizar o estado local ou forçar um refetch
         }
       )
       .subscribe();
@@ -154,9 +148,9 @@ export default function RealTimeMonitoring() {
   return (
     <div className="flex flex-col h-screen">
       <Navigation />
-      <div className="container mx-auto px-4 py-6 flex-1 flex flex-col lg:flex-row gap-6">
+      <div className="flex-1 flex flex-col lg:flex-row">
         {/* Left Panel - Agents List */}
-        <div className="lg:w-3/5 h-full flex flex-col">
+        <div className="lg:w-3/5 h-full overflow-auto p-4">
           <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
               Agentes em Campo
@@ -165,13 +159,13 @@ export default function RealTimeMonitoring() {
               {agents?.length || 0} agentes ativos
             </div>
           </div>
-          <div className="flex-1 overflow-auto">
+          <div className="space-y-4">
             <AgentsList agents={agents || []} />
           </div>
         </div>
 
         {/* Right Panel - Map */}
-        <div className="lg:w-2/5 h-[500px] lg:h-auto relative bg-white rounded-lg shadow-sm">
+        <div className="lg:w-2/5 h-[calc(100vh-4rem)] relative">
           <AgentLocationMap
             agents={agents || []}
             showAgents={showAgents}
