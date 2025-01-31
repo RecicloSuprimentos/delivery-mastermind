@@ -18,7 +18,7 @@ export interface Location {
 export interface Route {
   id: string;
   name: string;
-  agent_id?: string;
+  agent_id: string;
   agent?: {
     name: string;
   };
@@ -31,7 +31,7 @@ export interface Route {
   total_duration?: number;
   status?: string;
   route_stops?: Array<{
-    service: Service;
+    service_id: string;
   }>;
 }
 
