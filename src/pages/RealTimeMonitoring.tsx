@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AgentsList } from "@/components/monitoring/AgentsList";
 import { AgentLocationMap } from "@/components/monitoring/AgentLocationMap";
+import { Navigation } from "@/components/Navigation";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { startOfDay, endOfDay } from "date-fns";
 
 interface Agent {
   id: string;
@@ -35,22 +37,123 @@ export default function RealTimeMonitoring() {
   const [showServices, setShowServices] = useState(true);
   const [showUnassignedServices, setShowUnassignedServices] = useState(false);
 
+  const today = new Date();
+  const startOfToday = startOfDay(today);
+  const endOfToday = endOfDay(today);
+
   const { data: agents, isLoading } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: systemUsers, error: usersError } = await supabase
         .from("system_users")
         .select("*")
         .eq("user_type", "agent")
         .eq("is_active", true);
 
-      if (error) throw error;
-      return data;
+      if (usersError) throw usersError;
+
+      // Buscar rotas do dia atual para cada agente
+      const agentsWithRoutes = await Promise.all(
+        (systemUsers || []).map(async (user) => {
+          const { data: routes, error: routesError } = await supabase
+            .from("routes")
+            .select(`
+              *,
+              route_stops(
+                *,
+                service:services(*)
+              )
+            `)
+            .eq("agent_id", user.id)
+            .gte("start_time", startOfToday.toISOString())
+            .lte("start_time", endOfToday.toISOString())
+            .eq("is_active", true);
+
+          if (routesError) throw routesError;
+
+          // Buscar última localização do agente
+          const { data: lastLocation } = await supabase
+            .from("agent_locations")
+            .select("*")
+            .eq("agent_id", user.id)
+            .order("timestamp", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const route = routes?.[0];
+          const totalServices = route?.route_stops?.length || 0;
+          const completedServices = route?.route_stops?.filter(
+            (stop) => stop.service?.status === "completed"
+          ).length || 0;
+
+          return {
+            id: user.id,
+            name: user.name,
+            status: lastLocation ? "online" : "offline",
+            completedServices,
+            totalServices,
+            collections: route?.route_stops?.filter(
+              (stop) => stop.service?.type === "collection"
+            ).length || 0,
+            deliveries: route?.route_stops?.filter(
+              (stop) => stop.service?.type === "delivery"
+            ).length || 0,
+            pendingServices: totalServices - completedServices,
+            onTimePerformance: totalServices > 0 ? (completedServices / totalServices) * 100 : 0,
+            currentLocation: lastLocation
+              ? {
+                  latitude: lastLocation.latitude,
+                  longitude: lastLocation.longitude,
+                }
+              : undefined,
+            timeline: route?.route_stops?.map((stop, index) => ({
+              id: stop.id,
+              serviceNumber: index + 1,
+              status: stop.service?.status === "completed"
+                ? "completed"
+                : index === completedServices
+                ? "current"
+                : "pending",
+              estimatedTime: stop.estimated_arrival_time,
+              actualTime: stop.service?.status === "completed"
+                ? stop.estimated_departure_time
+                : undefined,
+            })) || [],
+          };
+        })
+      );
+
+      return agentsWithRoutes;
     },
+    refetchInterval: 30000, // Atualiza a cada 30 segundos
   });
 
+  // Configurar canal de tempo real para atualizações de localização
+  useEffect(() => {
+    const channel = supabase
+      .channel('agent-locations')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'agent_locations'
+        },
+        (payload) => {
+          console.log('Nova localização:', payload);
+          // Aqui você pode atualizar o estado local ou forçar um refetch
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col h-screen pt-16">
+    <div className="flex flex-col h-screen">
+      <Navigation />
       <div className="container mx-auto px-4 py-6 flex-1 flex flex-col lg:flex-row gap-6">
         {/* Left Panel - Agents List */}
         <div className="lg:w-3/5 h-full flex flex-col">
