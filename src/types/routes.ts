@@ -19,7 +19,7 @@ export interface Route {
   id: string;
   name: string;
   agent_id: string;
-  agent?: {
+  agent: {
     name: string;
   };
   start_time: string;
@@ -30,7 +30,7 @@ export interface Route {
   total_distance: number;
   total_duration: number;
   status: string;
-  route_stops?: Array<{
+  route_stops: Array<{
     service_id: string;
   }>;
 }
