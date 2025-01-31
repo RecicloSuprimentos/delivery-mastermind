@@ -91,11 +91,11 @@ export const useMapDirections = ({
     }
 
     // Verifica se precisa realmente recalcular
-    // Agora só recalcula se:
+    // Agora recalcula se:
     // 1. É a primeira vez (não tem directions)
-    // 2. Houve mudança nos pontos E não tem directions ainda
+    // 2. Houve mudança nos pontos
     // 3. O usuário clicou em otimizar (shouldOptimize é true)
-    if (!directions || (!directions && hasRouteChanged()) || shouldOptimize) {
+    if (!directions || hasRouteChanged() || shouldOptimize) {
       console.log("Calculando nova rota...", { isFirstTime: !directions, shouldOptimize });
       const directionsService = new google.maps.DirectionsService();
 
