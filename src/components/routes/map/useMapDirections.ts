@@ -91,52 +91,54 @@ export const useMapDirections = ({
     }
 
     // Verifica se precisa realmente recalcular
-    if (!hasRouteChanged() && !shouldOptimize) {
-      console.log("Rota não mudou, mantendo cálculo anterior");
-      return;
-    }
+    // Agora só recalcula se:
+    // 1. É a primeira vez (não tem directions)
+    // 2. Houve mudança nos pontos E não tem directions ainda
+    // 3. O usuário clicou em otimizar (shouldOptimize é true)
+    if (!directions || (!directions && hasRouteChanged()) || shouldOptimize) {
+      console.log("Calculando nova rota...", { isFirstTime: !directions, shouldOptimize });
+      const directionsService = new google.maps.DirectionsService();
 
-    console.log("Calculando nova rota...");
-    const directionsService = new google.maps.DirectionsService();
+      const fetchDirections = async () => {
+        const result = await calculateRoute(
+          directionsService,
+          settings,
+          selectedStops,
+          startLocationType,
+          endLocationType,
+          selectedStartService,
+          selectedEndService,
+          shouldOptimize // Passa o flag de otimização para o cálculo da rota
+        );
 
-    const fetchDirections = async () => {
-      const result = await calculateRoute(
-        directionsService,
-        settings,
-        selectedStops,
-        startLocationType,
-        endLocationType,
-        selectedStartService,
-        selectedEndService
-      );
-
-      if (result) {
-        setDirections(result);
-        
-        const legs = result.routes[0].legs;
-        const waypointOrder = result.routes[0].waypoint_order;
-        const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
-        const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0);
-        
-        if (onRouteStats) {
-          const estimatedTimes = legs.map((leg) => {
-            const time = new Date();
-            time.setSeconds(time.getSeconds() + leg.duration.value);
-            return time;
-          });
+        if (result) {
+          setDirections(result);
           
-          onRouteStats(totalDistance, totalDuration, estimatedTimes);
+          const legs = result.routes[0].legs;
+          const waypointOrder = result.routes[0].waypoint_order;
+          const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
+          const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0);
+          
+          if (onRouteStats) {
+            const estimatedTimes = legs.map((leg) => {
+              const time = new Date();
+              time.setSeconds(time.getSeconds() + leg.duration.value);
+              return time;
+            });
+            
+            onRouteStats(totalDistance, totalDuration, estimatedTimes);
+          }
+          
+          // Apenas atualiza a ordem dos pontos se estiver otimizando
+          if (shouldOptimize && onOptimizedStops) {
+            const optimizedWaypoints = waypointOrder.map(index => selectedStops[index]);
+            onOptimizedStops(optimizedWaypoints);
+          }
         }
-        
-        // Apenas atualiza a ordem dos pontos se estiver otimizando
-        if (shouldOptimize && onOptimizedStops) {
-          const optimizedWaypoints = waypointOrder.map(index => selectedStops[index]);
-          onOptimizedStops(optimizedWaypoints);
-        }
-      }
-    };
+      };
 
-    fetchDirections();
+      fetchDirections();
+    }
   }, [
     settings,
     selectedStops,
