@@ -38,7 +38,6 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
   const navigate = useNavigate();
   const { updateRouteStatus } = useRoutes();
 
-  // Busca os dados reais de distância e tempo
   const { data: realStats } = useQuery<RouteStats>({
     queryKey: ["route-stats", route.id],
     queryFn: async () => {
@@ -52,7 +51,6 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
         throw error;
       }
 
-      // Garantir que o retorno corresponde à interface RouteStats
       if (data && data[0]) {
         return {
           total_distance: Number(data[0].total_distance),
@@ -65,20 +63,20 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
         total_duration: '00:00:00'
       };
     },
-    enabled: route.status !== 'draft' // Só busca dados se a rota não estiver em rascunho
+    enabled: route.status !== 'draft'
   });
 
   const formatDateTime = (dateString: string) => {
     return format(new Date(dateString), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
   };
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return `${hours}h${remainingMinutes}min`;
+  // Atualizada para trabalhar com segundos ao invés de minutos
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h${minutes}min`;
   };
 
-  // Formata a duração do intervalo retornado pela função
   const formatIntervalDuration = (interval: string) => {
     const matches = interval.match(/(\d+):(\d+):(\d+)/);
     if (!matches) return "0h0min";

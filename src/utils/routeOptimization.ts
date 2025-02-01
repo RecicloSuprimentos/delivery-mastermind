@@ -37,9 +37,13 @@ export const optimizeRoute = async (
           // Reorder waypoints based on optimization
           const optimizedWaypoints = waypointOrder.map(index => waypoints[index]);
           
-          // Calculate total service duration including default duration for each stop
-          const totalServiceDuration = (waypoints.length + 2) * defaultDuration * 60;
+          // Converter defaultDuration de minutos para segundos
+          const serviceTimeInSeconds = defaultDuration * 60;
+          // Calcular tempo total de serviço em segundos
+          const totalServiceDuration = (waypoints.length + 2) * serviceTimeInSeconds;
+          
           const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
+          // Manter tudo em segundos
           const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0) + totalServiceDuration;
 
           // Calculate estimated arrival times considering service duration and time windows
@@ -66,14 +70,14 @@ export const optimizeRoute = async (
             // Store estimated arrival time
             estimatedTimes.push(new Date(currentTime));
             
-            // Add service duration for this stop
-            currentTime = new Date(currentTime.getTime() + defaultDuration * 60 * 1000);
+            // Add service duration for this stop (em milissegundos)
+            currentTime = new Date(currentTime.getTime() + serviceTimeInSeconds * 1000);
           });
 
           resolve({
             directions: result,
             totalDistance,
-            totalDuration: Math.round(totalDuration / 60),
+            totalDuration, // Mantendo em segundos
             estimatedTimes,
             optimizedWaypoints,
           });
