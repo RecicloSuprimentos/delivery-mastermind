@@ -169,14 +169,14 @@ export const useDirectionsCache = (
       return result;
     },
     enabled: !!cacheKey,
-    staleTime: 30 * 60 * 1000, // Cache válido por 30 minutos
-    gcTime: 60 * 60 * 1000, // Mantém no cache por 1 hora
+    staleTime: 48 * 60 * 60 * 1000, // Cache válido por 48 horas
+    gcTime: 72 * 60 * 60 * 1000, // Mantém no cache por 72 horas
   });
 
   return {
     directions,
     isLoading,
     prefetchNextRoute: (nextKey: string) => debouncedPrefetch(nextKey),
-    getMetrics: () => [...metricsCache], // Expõe as métricas para análise
+    getMetrics: () => [...metricsCache],
   };
 };
