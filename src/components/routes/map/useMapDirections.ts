@@ -45,9 +45,11 @@ export const useMapDirections = ({
   );
 
   useEffect(() => {
-    if (directions && directions.routes && directions.routes.length > 0) {
-      const legs = directions.routes[0].legs;
-      const waypointOrder = directions.routes[0].waypoint_order;
+    const directionsResult = directions as google.maps.DirectionsResult | null;
+    
+    if (directionsResult?.routes && directionsResult.routes.length > 0) {
+      const legs = directionsResult.routes[0].legs;
+      const waypointOrder = directionsResult.routes[0].waypoint_order;
       
       const totalDistance = legs.reduce((acc, leg) => acc + leg.distance.value, 0);
       const totalDuration = legs.reduce((acc, leg) => acc + leg.duration.value, 0);
