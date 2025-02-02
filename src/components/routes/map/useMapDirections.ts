@@ -45,7 +45,7 @@ export const useMapDirections = ({
   );
 
   useEffect(() => {
-    if (directions) {
+    if (directions && directions.routes && directions.routes.length > 0) {
       const legs = directions.routes[0].legs;
       const waypointOrder = directions.routes[0].waypoint_order;
       
@@ -69,5 +69,5 @@ export const useMapDirections = ({
     }
   }, [directions, onRouteStats, onOptimizedStops, shouldOptimize, selectedStops]);
 
-  return directions;
+  return directions as google.maps.DirectionsResult | null;
 };
