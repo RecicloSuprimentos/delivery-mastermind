@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { debounce } from "lodash";
 import type { Service, SystemSettings } from "@/types/routes";
+import { calculateRoute } from "@/components/routes/map/mapDirectionsUtils";
 
 interface DirectionsKey {
   startLocation: google.maps.LatLngLiteral;
@@ -110,7 +111,7 @@ export const useDirectionsCache = (
     },
     enabled: !!cacheKey,
     staleTime: 5 * 60 * 1000, // Cache válido por 5 minutos
-    cacheTime: 30 * 60 * 1000, // Mantém no cache por 30 minutos
+    gcTime: 30 * 60 * 1000, // Mantém no cache por 30 minutos (anteriormente cacheTime)
   });
 
   return {
