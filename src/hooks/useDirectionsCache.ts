@@ -46,33 +46,6 @@ const calculateDirectionsKey = (
   });
 };
 
-const calculateRoute = async (
-  directionsService: google.maps.DirectionsService,
-  key: DirectionsKey
-): Promise<google.maps.DirectionsResult> => {
-  return new Promise((resolve, reject) => {
-    directionsService.route(
-      {
-        origin: key.startLocation,
-        destination: key.endLocation,
-        waypoints: key.waypoints.map(wp => ({
-          location: wp,
-          stopover: true,
-        })),
-        optimizeWaypoints: key.optimize,
-        travelMode: google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK && result) {
-          resolve(result);
-        } else {
-          reject(new Error(`Failed to calculate route: ${status}`));
-        }
-      }
-    );
-  });
-};
-
 export const useDirectionsCache = (
   directionsService: google.maps.DirectionsService,
   settings: SystemSettings | undefined,
@@ -98,7 +71,7 @@ export const useDirectionsCache = (
     const parsedKey: DirectionsKey = JSON.parse(key);
     queryClient.prefetchQuery({
       queryKey: ["directions", key],
-      queryFn: () => calculateRoute(directionsService, parsedKey),
+      queryFn: () => calculateRoute(directionsService, settings!, selectedStops, startLocationType, endLocationType, selectedStartService, selectedEndService, shouldOptimize),
     });
   }, 1000);
 
@@ -106,8 +79,7 @@ export const useDirectionsCache = (
     queryKey: ["directions", cacheKey],
     queryFn: () => {
       if (!cacheKey) return null;
-      const key: DirectionsKey = JSON.parse(cacheKey);
-      return calculateRoute(directionsService, key);
+      return calculateRoute(directionsService, settings!, selectedStops, startLocationType, endLocationType, selectedStartService, selectedEndService, shouldOptimize);
     },
     enabled: !!cacheKey,
     staleTime: 5 * 60 * 1000, // Cache válido por 5 minutos
