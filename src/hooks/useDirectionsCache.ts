@@ -68,7 +68,6 @@ export const useDirectionsCache = (
   );
 
   const debouncedPrefetch = debounce((key: string) => {
-    const parsedKey: DirectionsKey = JSON.parse(key);
     queryClient.prefetchQuery({
       queryKey: ["directions", key],
       queryFn: () => calculateRoute(directionsService, settings!, selectedStops, startLocationType, endLocationType, selectedStartService, selectedEndService, shouldOptimize),
