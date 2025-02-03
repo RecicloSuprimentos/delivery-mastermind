@@ -3,4 +3,3 @@ project_id = "tmqgmbnbjklkgeiveanb"
 verify_jwt = true
 
 [functions.data-analysis]
-verify_jwt = true
