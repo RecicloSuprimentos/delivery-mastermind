@@ -3,10 +3,16 @@ import { Link } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ApiIntegration = () => {
   const { toast } = useToast();
-  const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/routes-api`;
+  const [jsonData, setJsonData] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/data-analysis`;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -16,16 +22,49 @@ export const ApiIntegration = () => {
     });
   };
 
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Validar se é um JSON válido
+      const parsedData = JSON.parse(jsonData);
+      
+      const { data, error } = await supabase.functions.invoke('data-analysis', {
+        body: parsedData,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: `Dados enviados para análise. ID: ${data.id}`,
+      });
+
+      // Limpar o campo após sucesso
+      setJsonData("");
+      
+    } catch (error) {
+      console.error('Erro ao enviar dados:', error);
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao enviar dados",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Link className="h-5 w-5" />
-          API de Rotas
+          Integração de Dados
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <h3 className="text-sm font-medium mb-2">Endpoint da API</h3>
             <Alert>
@@ -42,34 +81,22 @@ export const ApiIntegration = () => {
             </Alert>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Parâmetros</h3>
-            <div className="text-sm">
-              <p><code>id</code> (opcional) - ID da rota específica</p>
-              <p className="text-gray-500 mt-1">
-                Se não for fornecido, retorna todas as rotas
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Exemplo de uso</h3>
-            <div className="bg-gray-50 p-4 rounded-md">
-              <p className="text-sm font-mono">
-                GET {apiUrl}?id=route_id
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Retorno</h3>
-            <div className="text-sm space-y-1">
-              <p>A API retorna um array com os seguintes dados para cada rota:</p>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Informações da rota (nome, agente, horários)</li>
-                <li>Lista de paradas ordenadas</li>
-                <li>Detalhes dos serviços associados</li>
-              </ul>
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Testar Integração</h3>
+            <div className="space-y-2">
+              <Textarea
+                placeholder="Cole aqui seu JSON de teste..."
+                value={jsonData}
+                onChange={(e) => setJsonData(e.target.value)}
+                className="min-h-[200px] font-mono"
+              />
+              <Button 
+                onClick={handleSubmit} 
+                disabled={!jsonData.trim() || isLoading}
+                className="w-full"
+              >
+                {isLoading ? "Enviando..." : "Enviar dados para análise"}
+              </Button>
             </div>
           </div>
         </div>
