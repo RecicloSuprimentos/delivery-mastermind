@@ -4,12 +4,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    })
   }
 
   try {
@@ -18,8 +22,11 @@ serve(async (req) => {
       throw new Error('Method not allowed')
     }
 
+    console.log('Received request:', req.method)
+
     // Get the request body
     const body = await req.json()
+    console.log('Received data:', JSON.stringify(body))
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -36,7 +43,12 @@ serve(async (req) => {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Database error:', error)
+      throw error
+    }
+
+    console.log('Data stored successfully:', data.id)
 
     // Return success response with the analysis ID
     return new Response(
@@ -51,6 +63,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('Error processing request:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
