@@ -1,3 +1,6 @@
 project_id = "tmqgmbnbjklkgeiveanb"
 [functions.list-auth-users]
 verify_jwt = true
+
+[functions.data-analysis]
+verify_jwt = true
