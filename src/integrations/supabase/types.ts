@@ -61,6 +61,33 @@ export type Database = {
           },
         ]
       }
+      integration_data_analysis: {
+        Row: {
+          analysis_result: Json | null
+          created_at: string | null
+          id: string
+          raw_data: Json
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          analysis_result?: Json | null
+          created_at?: string | null
+          id?: string
+          raw_data: Json
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          analysis_result?: Json | null
+          created_at?: string | null
+          id?: string
+          raw_data?: Json
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           created_at: string | null
