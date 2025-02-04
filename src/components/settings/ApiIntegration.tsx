@@ -40,7 +40,7 @@ export const ApiIntegration = () => {
 
       toast({
         title: "Sucesso!",
-        description: `Dados enviados para análise. ID: ${data.id}`,
+        description: `Dados processados. ${data.services?.length || 0} serviços criados.`,
       });
 
       // Limpar o campo após sucesso
@@ -98,7 +98,7 @@ export const ApiIntegration = () => {
                 disabled={!jsonData.trim() || isLoading}
                 className="w-full"
               >
-                {isLoading ? "Enviando..." : "Enviar dados para análise"}
+                {isLoading ? "Processando..." : "Enviar dados para análise"}
               </Button>
             </div>
           </div>
