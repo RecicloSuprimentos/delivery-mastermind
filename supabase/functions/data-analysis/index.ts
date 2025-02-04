@@ -98,12 +98,17 @@ serve(async (req) => {
     const processedServices = servicesData.map((service, index) => {
       console.log(`Processing service at index ${index}:`, service);
       
+      // Extrair dados do cliente do objeto customer se existir
+      const customerName = service.customer?.name || service.customer_name;
+      const customerPhone = service.customer?.phone_number || service.phone;
+      const addressComplement = service.customer?.address_complement || service.complement;
+      
       // Validate required fields
-      if (!service.customer_name) {
-        console.error(`Missing customer_name in service:`, service);
-        throw new Error(`Service at index ${index} is missing required field: customer_name`);
+      if (!customerName) {
+        console.error(`Missing customer name in service:`, service);
+        throw new Error(`Service at index ${index} is missing required field: customer name`);
       }
-      if (!service.phone) {
+      if (!customerPhone) {
         console.error(`Missing phone in service:`, service);
         throw new Error(`Service at index ${index} is missing required field: phone`);
       }
@@ -113,20 +118,23 @@ serve(async (req) => {
       }
 
       const processedService = {
-        // Converter 'pickup' para 'coleta' e outros valores para o tipo correto
         type: service.type === 'pickup' ? 'coleta' : 
               service.type === 'delivery' ? 'entrega' : 
               service.type || 'coleta',
-        service_id: service.service_id || `SRV-${Date.now()}`,
-        customer_name: service.customer_name,
-        phone: service.phone,
-        email: service.email,
+        service_id: service.code ? `SRV-${service.code}` : 
+                   service.service_id || 
+                   `SRV-${Date.now()}`,
+        customer_name: customerName.trim(),
+        phone: customerPhone.trim(),
+        email: service.customer?.email || service.email,
         address: service.address,
-        complement: service.complement,
-        time_window: service.time_window,
-        observations: service.observations,
-        latitude: service.latitude,
-        longitude: service.longitude,
+        complement: addressComplement,
+        time_window: service.duration_prevision_time ? 
+                    `${service.duration_prevision_time} minutos` : 
+                    service.time_window,
+        observations: service.note || service.observations,
+        latitude: service.latitude ? Number(service.latitude) : null,
+        longitude: service.longitude ? Number(service.longitude) : null,
       };
 
       console.log('Processed service:', processedService);
