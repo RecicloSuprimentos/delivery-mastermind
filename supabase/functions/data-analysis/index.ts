@@ -12,18 +12,7 @@ serve(async (req) => {
   const url = new URL(req.url);
   const path = url.pathname;
 
-  // Only proceed if the path ends with /services
-  if (!path.endsWith('/services')) {
-    return new Response(
-      JSON.stringify({ error: 'Invalid endpoint. Use /services for data analysis.' }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 404,
-      }
-    )
-  }
-
-  // Handle CORS preflight requests
+  // Handle CORS preflight requests first
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
@@ -31,17 +20,42 @@ serve(async (req) => {
     })
   }
 
+  // Only proceed if the path ends with /services
+  if (!path.endsWith('/services')) {
+    console.error('Invalid endpoint:', path);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Invalid endpoint. Use /services for data analysis.',
+        path: path 
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404,
+      }
+    )
+  }
+
   try {
     // Only accept POST requests
     if (req.method !== 'POST') {
-      throw new Error('Method not allowed')
+      throw new Error(`Method ${req.method} not allowed`)
     }
 
-    console.log('Received request:', req.method)
+    console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+    
+    // Get and validate the request body
+    let body;
+    try {
+      body = await req.json();
+      console.log('Received data:', JSON.stringify(body, null, 2));
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      throw new Error('Invalid JSON payload');
+    }
 
-    // Get the request body
-    const body = await req.json()
-    console.log('Received data:', JSON.stringify(body))
+    if (!body || typeof body !== 'object') {
+      throw new Error('Request body must be a valid JSON object or array');
+    }
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -59,12 +73,14 @@ serve(async (req) => {
       .single()
 
     if (integrationError) {
-      console.error('Integration data storage error:', integrationError)
-      throw integrationError
+      console.error('Integration data storage error:', integrationError);
+      throw integrationError;
     }
 
+    console.log('Integration data stored:', integrationData);
+
     // Process and store the services data
-    let servicesData = Array.isArray(body) ? body : [body]
+    let servicesData = Array.isArray(body) ? body : [body];
     const processedServices = servicesData.map(service => ({
       type: service.type || 'coleta',
       service_id: service.service_id || `SRV-${Date.now()}`,
@@ -86,14 +102,11 @@ serve(async (req) => {
       .select()
 
     if (servicesError) {
-      console.error('Services data storage error:', servicesError)
-      throw servicesError
+      console.error('Services data storage error:', servicesError);
+      throw servicesError;
     }
 
-    console.log('Data stored successfully:', {
-      integration_id: integrationData.id,
-      services_count: services.length
-    })
+    console.log('Services stored successfully:', services);
 
     // Return success response
     return new Response(
@@ -108,7 +121,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('Error processing request:', error)
+    console.error('Error processing request:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
