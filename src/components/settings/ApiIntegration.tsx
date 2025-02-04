@@ -3,17 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 export const ApiIntegration = () => {
   const { toast } = useToast();
   const [jsonData, setJsonData] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/data-analysis`;
+  const apiUrl = "https://tmqgmbnbjklkgeiveanb.supabase.co/functions/v1/data-analysis";
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -30,12 +29,21 @@ export const ApiIntegration = () => {
       // Validar se é um JSON válido
       const parsedData = JSON.parse(jsonData);
       
-      // Corrigido: removido o /services do endpoint
-      const { data, error } = await supabase.functions.invoke('data-analysis', {
-        body: parsedData,
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        },
+        body: JSON.stringify(parsedData),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`Erro na requisição: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       toast({
         title: "Sucesso!",
