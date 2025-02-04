@@ -41,16 +41,26 @@ serve(async (req) => {
       throw new Error(`Method ${req.method} not allowed`)
     }
 
+    // Log headers and raw request for debugging
     console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
     
     // Get and validate the request body
     let body;
     try {
-      body = await req.json();
-      console.log('Received data:', JSON.stringify(body, null, 2));
+      const rawBody = await req.text(); // Get raw body first
+      console.log('Raw request body:', rawBody);
+      
+      try {
+        body = JSON.parse(rawBody);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Invalid JSON format in request body');
+      }
+      
+      console.log('Parsed request body:', JSON.stringify(body, null, 2));
     } catch (e) {
-      console.error('Error parsing request body:', e);
-      throw new Error('Invalid JSON payload');
+      console.error('Error reading/parsing request body:', e);
+      throw new Error('Error processing request body');
     }
 
     if (!body || typeof body !== 'object') {
@@ -82,20 +92,27 @@ serve(async (req) => {
     // Process and store the services data
     let servicesData = Array.isArray(body) ? body : [body];
     
+    console.log('Services data before processing:', JSON.stringify(servicesData, null, 2));
+    
     // Validate required fields before processing
     const processedServices = servicesData.map((service, index) => {
+      console.log(`Processing service at index ${index}:`, service);
+      
       // Validate required fields
       if (!service.customer_name) {
+        console.error(`Missing customer_name in service:`, service);
         throw new Error(`Service at index ${index} is missing required field: customer_name`);
       }
       if (!service.phone) {
+        console.error(`Missing phone in service:`, service);
         throw new Error(`Service at index ${index} is missing required field: phone`);
       }
       if (!service.address) {
+        console.error(`Missing address in service:`, service);
         throw new Error(`Service at index ${index} is missing required field: address`);
       }
 
-      return {
+      const processedService = {
         // Converter 'pickup' para 'coleta' e outros valores para o tipo correto
         type: service.type === 'pickup' ? 'coleta' : 
               service.type === 'delivery' ? 'entrega' : 
@@ -111,9 +128,12 @@ serve(async (req) => {
         latitude: service.latitude,
         longitude: service.longitude,
       };
+
+      console.log('Processed service:', processedService);
+      return processedService;
     });
 
-    console.log('Processed services:', JSON.stringify(processedServices, null, 2));
+    console.log('All processed services:', JSON.stringify(processedServices, null, 2));
 
     // Insert into services_copia table
     const { data: services, error: servicesError } = await supabaseClient
@@ -154,3 +174,4 @@ serve(async (req) => {
     )
   }
 })
+
