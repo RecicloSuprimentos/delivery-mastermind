@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ApiIntegration = () => {
   const { toast } = useToast();
@@ -29,21 +30,13 @@ export const ApiIntegration = () => {
       // Validar se é um JSON válido
       const parsedData = JSON.parse(jsonData);
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-        },
-        body: JSON.stringify(parsedData),
+      const { data, error } = await supabase.functions.invoke('data-analysis', {
+        body: parsedData
       });
 
-      if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.status}`);
+      if (error) {
+        throw error;
       }
-
-      const data = await response.json();
 
       toast({
         title: "Sucesso!",
