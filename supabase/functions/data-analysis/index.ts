@@ -82,7 +82,10 @@ serve(async (req) => {
     // Process and store the services data
     let servicesData = Array.isArray(body) ? body : [body];
     const processedServices = servicesData.map(service => ({
-      type: service.type || 'coleta',
+      // Converter 'pickup' para 'coleta' e outros valores para o tipo correto
+      type: service.type === 'pickup' ? 'coleta' : 
+            service.type === 'delivery' ? 'entrega' : 
+            service.type || 'coleta',
       service_id: service.service_id || `SRV-${Date.now()}`,
       customer_name: service.customer_name,
       phone: service.phone,
@@ -94,6 +97,8 @@ serve(async (req) => {
       latitude: service.latitude,
       longitude: service.longitude,
     }))
+
+    console.log('Processed services:', JSON.stringify(processedServices, null, 2));
 
     // Insert into services_copia table
     const { data: services, error: servicesError } = await supabaseClient
@@ -134,3 +139,4 @@ serve(async (req) => {
     )
   }
 })
+
