@@ -81,22 +81,37 @@ serve(async (req) => {
 
     // Process and store the services data
     let servicesData = Array.isArray(body) ? body : [body];
-    const processedServices = servicesData.map(service => ({
-      // Converter 'pickup' para 'coleta' e outros valores para o tipo correto
-      type: service.type === 'pickup' ? 'coleta' : 
-            service.type === 'delivery' ? 'entrega' : 
-            service.type || 'coleta',
-      service_id: service.service_id || `SRV-${Date.now()}`,
-      customer_name: service.customer_name,
-      phone: service.phone,
-      email: service.email,
-      address: service.address,
-      complement: service.complement,
-      time_window: service.time_window,
-      observations: service.observations,
-      latitude: service.latitude,
-      longitude: service.longitude,
-    }))
+    
+    // Validate required fields before processing
+    const processedServices = servicesData.map((service, index) => {
+      // Validate required fields
+      if (!service.customer_name) {
+        throw new Error(`Service at index ${index} is missing required field: customer_name`);
+      }
+      if (!service.phone) {
+        throw new Error(`Service at index ${index} is missing required field: phone`);
+      }
+      if (!service.address) {
+        throw new Error(`Service at index ${index} is missing required field: address`);
+      }
+
+      return {
+        // Converter 'pickup' para 'coleta' e outros valores para o tipo correto
+        type: service.type === 'pickup' ? 'coleta' : 
+              service.type === 'delivery' ? 'entrega' : 
+              service.type || 'coleta',
+        service_id: service.service_id || `SRV-${Date.now()}`,
+        customer_name: service.customer_name,
+        phone: service.phone,
+        email: service.email,
+        address: service.address,
+        complement: service.complement,
+        time_window: service.time_window,
+        observations: service.observations,
+        latitude: service.latitude,
+        longitude: service.longitude,
+      };
+    });
 
     console.log('Processed services:', JSON.stringify(processedServices, null, 2));
 
@@ -139,4 +154,3 @@ serve(async (req) => {
     )
   }
 })
-
