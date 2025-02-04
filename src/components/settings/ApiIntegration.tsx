@@ -13,6 +13,7 @@ export const ApiIntegration = () => {
   const [jsonData, setJsonData] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Removido o sufixo /services da URL
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/data-analysis`;
 
   const copyToClipboard = (text: string) => {
