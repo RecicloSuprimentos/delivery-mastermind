@@ -13,7 +13,7 @@ export const ApiIntegration = () => {
   const [jsonData, setJsonData] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const apiUrl = "https://tmqgmbnbjklkgeiveanb.supabase.co/functions/v1/data-analysis";
+  const apiUrl = "https://tmqgmbnbjklkgeiveanb.supabase.co/functions/v1/data-analysis/services";
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

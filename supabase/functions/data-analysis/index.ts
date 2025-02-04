@@ -9,6 +9,20 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  const url = new URL(req.url);
+  const path = url.pathname;
+
+  // Only proceed if the path ends with /services
+  if (!path.endsWith('/services')) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid endpoint. Use /services for data analysis.' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404,
+      }
+    )
+  }
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
