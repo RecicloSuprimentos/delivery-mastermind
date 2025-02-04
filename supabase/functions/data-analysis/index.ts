@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -12,7 +11,6 @@ serve(async (req) => {
   const url = new URL(req.url);
   const path = url.pathname;
 
-  // Handle CORS preflight requests first
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
@@ -20,7 +18,6 @@ serve(async (req) => {
     })
   }
 
-  // Only proceed if the path ends with /services
   if (!path.endsWith('/services')) {
     console.error('Invalid endpoint:', path);
     return new Response(
@@ -36,18 +33,15 @@ serve(async (req) => {
   }
 
   try {
-    // Only accept POST requests
     if (req.method !== 'POST') {
       throw new Error(`Method ${req.method} not allowed`)
     }
 
-    // Log headers and raw request for debugging
     console.log('Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
     
-    // Get and validate the request body
     let body;
     try {
-      const rawBody = await req.text(); // Get raw body first
+      const rawBody = await req.text();
       console.log('Raw request body:', rawBody);
       
       try {
@@ -67,13 +61,11 @@ serve(async (req) => {
       throw new Error('Request body must be a valid JSON object or array');
     }
 
-    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Store the raw data in integration_data_analysis table
     const { data: integrationData, error: integrationError } = await supabaseClient
       .from('integration_data_analysis')
       .insert({
@@ -89,21 +81,17 @@ serve(async (req) => {
 
     console.log('Integration data stored:', integrationData);
 
-    // Process and store the services data
     let servicesData = Array.isArray(body) ? body : [body];
     
     console.log('Services data before processing:', JSON.stringify(servicesData, null, 2));
     
-    // Validate required fields before processing
     const processedServices = servicesData.map((service, index) => {
       console.log(`Processing service at index ${index}:`, service);
       
-      // Extrair dados do cliente do objeto customer se existir
       const customerName = service.customer?.name || service.customer_name;
       const customerPhone = service.customer?.phone_number || service.phone;
       const addressComplement = service.customer?.address_complement || service.complement;
       
-      // Validate required fields
       if (!customerName) {
         console.error(`Missing customer name in service:`, service);
         throw new Error(`Service at index ${index} is missing required field: customer name`);
@@ -117,34 +105,27 @@ serve(async (req) => {
         throw new Error(`Service at index ${index} is missing required field: address`);
       }
 
-      // Processar o número de telefone para mover o DDD para o início
       let formattedPhone = customerPhone.trim();
       const dddMatch = formattedPhone.match(/(\d+)-(\d+)\((\d+)\)/);
       if (dddMatch) {
-        // Se o telefone estiver no formato XXXX-XXXX(DDD)
         formattedPhone = `(${dddMatch[3]})${dddMatch[1]}-${dddMatch[2]}`;
       }
 
-      // Extrair time_window se existir
       let timeWindow = null;
       if (service.duration_prevision_time) {
         timeWindow = `${service.duration_prevision_time} minutos`;
       } else if (service.time_window) {
-        // Se time_window estiver no formato "HH:mm às HH:mm", usar diretamente
         if (/^\d{2}:\d{2} às \d{2}:\d{2}$/.test(service.time_window)) {
           timeWindow = service.time_window;
         }
-        // Se estiver no formato "Coletar entre DD/MM/YYYY HH:mm e DD/MM/YYYY HH:mm"
-        // A função extract_time_window no banco irá processar
       }
       
-      // Combinar todas as informações relevantes nas observações
       let observations = service.note || service.observations || '';
       if (service.time_window && !timeWindow) {
         observations = observations ? `${observations}\n${service.time_window}` : service.time_window;
       }
 
-      const processedService = {
+      return {
         type: service.type === 'pickup' ? 'coleta' : 
               service.type === 'delivery' ? 'entrega' : 
               service.type || 'coleta',
@@ -161,16 +142,13 @@ serve(async (req) => {
         latitude: service.latitude ? Number(service.latitude) : null,
         longitude: service.longitude ? Number(service.longitude) : null,
       };
-
-      console.log('Processed service:', processedService);
-      return processedService;
     });
 
     console.log('All processed services:', JSON.stringify(processedServices, null, 2));
 
-    // Insert into services_copia table
+    // Alterado de services_copia para services
     const { data: services, error: servicesError } = await supabaseClient
-      .from('services_copia')
+      .from('services')
       .insert(processedServices)
       .select()
 
@@ -181,7 +159,6 @@ serve(async (req) => {
 
     console.log('Services stored successfully:', services);
 
-    // Return success response
     return new Response(
       JSON.stringify({
         message: 'Data received and processed successfully',
