@@ -117,6 +117,25 @@ serve(async (req) => {
         throw new Error(`Service at index ${index} is missing required field: address`);
       }
 
+      // Extrair time_window se existir
+      let timeWindow = null;
+      if (service.duration_prevision_time) {
+        timeWindow = `${service.duration_prevision_time} minutos`;
+      } else if (service.time_window) {
+        // Se time_window estiver no formato "HH:mm às HH:mm", usar diretamente
+        if (/^\d{2}:\d{2} às \d{2}:\d{2}$/.test(service.time_window)) {
+          timeWindow = service.time_window;
+        }
+        // Se estiver no formato "Coletar entre DD/MM/YYYY HH:mm e DD/MM/YYYY HH:mm"
+        // A função extract_time_window no banco irá processar
+      }
+      
+      // Combinar todas as informações relevantes nas observações
+      let observations = service.note || service.observations || '';
+      if (service.time_window && !timeWindow) {
+        observations = observations ? `${observations}\n${service.time_window}` : service.time_window;
+      }
+
       const processedService = {
         type: service.type === 'pickup' ? 'coleta' : 
               service.type === 'delivery' ? 'entrega' : 
@@ -129,10 +148,8 @@ serve(async (req) => {
         email: service.customer?.email || service.email,
         address: service.address,
         complement: addressComplement,
-        time_window: service.duration_prevision_time ? 
-                    `${service.duration_prevision_time} minutos` : 
-                    service.time_window,
-        observations: service.note || service.observations,
+        time_window: timeWindow,
+        observations: observations,
         latitude: service.latitude ? Number(service.latitude) : null,
         longitude: service.longitude ? Number(service.longitude) : null,
       };

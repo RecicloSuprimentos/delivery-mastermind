@@ -578,6 +578,12 @@ export type Database = {
           total_duration: unknown
         }[]
       }
+      extract_time_window: {
+        Args: {
+          observation_text: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       location_type: "operational_base" | "service"
