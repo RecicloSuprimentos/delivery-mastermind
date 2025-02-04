@@ -117,6 +117,14 @@ serve(async (req) => {
         throw new Error(`Service at index ${index} is missing required field: address`);
       }
 
+      // Processar o número de telefone para mover o DDD para o início
+      let formattedPhone = customerPhone.trim();
+      const dddMatch = formattedPhone.match(/(\d+)-(\d+)\((\d+)\)/);
+      if (dddMatch) {
+        // Se o telefone estiver no formato XXXX-XXXX(DDD)
+        formattedPhone = `(${dddMatch[3]})${dddMatch[1]}-${dddMatch[2]}`;
+      }
+
       // Extrair time_window se existir
       let timeWindow = null;
       if (service.duration_prevision_time) {
@@ -140,11 +148,11 @@ serve(async (req) => {
         type: service.type === 'pickup' ? 'coleta' : 
               service.type === 'delivery' ? 'entrega' : 
               service.type || 'coleta',
-        service_id: service.code ? `SRV-${service.code}` : 
+        service_id: service.code || 
                    service.service_id || 
-                   `SRV-${Date.now()}`,
+                   `${Date.now()}`,
         customer_name: customerName.trim(),
-        phone: customerPhone.trim(),
+        phone: formattedPhone,
         email: service.customer?.email || service.email,
         address: service.address,
         complement: addressComplement,
@@ -199,4 +207,3 @@ serve(async (req) => {
     )
   }
 })
-
