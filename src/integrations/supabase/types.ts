@@ -441,57 +441,6 @@ export type Database = {
         }
         Relationships: []
       }
-      services_copia: {
-        Row: {
-          address: string
-          complement: string | null
-          created_at: string | null
-          customer_name: string
-          email: string | null
-          id: string
-          latitude: number | null
-          longitude: number | null
-          observations: string | null
-          phone: string
-          service_id: string
-          status: string | null
-          time_window: string | null
-          type: Database["public"]["Enums"]["service_type"]
-        }
-        Insert: {
-          address: string
-          complement?: string | null
-          created_at?: string | null
-          customer_name: string
-          email?: string | null
-          id?: string
-          latitude?: number | null
-          longitude?: number | null
-          observations?: string | null
-          phone: string
-          service_id: string
-          status?: string | null
-          time_window?: string | null
-          type: Database["public"]["Enums"]["service_type"]
-        }
-        Update: {
-          address?: string
-          complement?: string | null
-          created_at?: string | null
-          customer_name?: string
-          email?: string | null
-          id?: string
-          latitude?: number | null
-          longitude?: number | null
-          observations?: string | null
-          phone?: string
-          service_id?: string
-          status?: string | null
-          time_window?: string | null
-          type?: Database["public"]["Enums"]["service_type"]
-        }
-        Relationships: []
-      }
       system_settings: {
         Row: {
           created_at: string | null
