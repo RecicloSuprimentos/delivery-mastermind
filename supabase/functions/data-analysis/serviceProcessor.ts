@@ -1,3 +1,4 @@
+
 import { ServiceData, ProcessedService } from './types.ts';
 
 export function processPhoneNumber(phone: string): string {
@@ -29,7 +30,44 @@ export function processObservations(service: ServiceData): string {
   return observations;
 }
 
-export function processService(service: ServiceData): ProcessedService {
+async function generateUniqueServiceId(supabaseClient: any, baseServiceId: string): Promise<string> {
+  // Primeiro, verifica se o ID base já existe
+  const { data: existingService } = await supabaseClient
+    .from('services')
+    .select('service_id')
+    .eq('service_id', baseServiceId)
+    .maybeSingle();
+
+  if (!existingService) {
+    return baseServiceId;
+  }
+
+  // Se existe, busca todas as variações com letras
+  const { data: variations } = await supabaseClient
+    .from('services')
+    .select('service_id')
+    .like('service_id', `${baseServiceId}%`)
+    .order('service_id', { ascending: false });
+
+  if (!variations || variations.length === 0) {
+    return `${baseServiceId}B`;
+  }
+
+  // Encontra a última letra usada
+  const lastVariation = variations[0].service_id;
+  const lastLetter = lastVariation.slice(-1);
+  
+  // Se não for uma letra, começa com 'B'
+  if (!/[A-Z]/.test(lastLetter)) {
+    return `${baseServiceId}B`;
+  }
+
+  // Gera a próxima letra
+  const nextLetter = String.fromCharCode(lastLetter.charCodeAt(0) + 1);
+  return `${baseServiceId}${nextLetter}`;
+}
+
+export async function processService(service: ServiceData, supabaseClient: any): Promise<ProcessedService> {
   const customerName = service.customer?.name || service.customer_name;
   const customerPhone = service.customer?.phone_number || service.phone;
   const addressComplement = service.customer?.address_complement || service.complement;
@@ -44,13 +82,14 @@ export function processService(service: ServiceData): ProcessedService {
     throw new Error('Missing required field: address');
   }
 
+  const baseServiceId = service.code || service.service_id || `${Date.now()}`;
+  const uniqueServiceId = await generateUniqueServiceId(supabaseClient, baseServiceId);
+
   return {
     type: service.type === 'pickup' ? 'coleta' : 
           service.type === 'delivery' ? 'entrega' : 
           service.type || 'coleta',
-    service_id: service.code || 
-                service.service_id || 
-                `${Date.now()}`,
+    service_id: uniqueServiceId,
     customer_name: customerName.trim(),
     phone: processPhoneNumber(customerPhone),
     email: service.customer?.email || service.email,

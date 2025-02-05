@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { processService } from './serviceProcessor.ts'
@@ -88,14 +89,16 @@ serve(async (req) => {
     const servicesData: ServiceData[] = Array.isArray(body) ? body : [body];
     console.log('Services data before processing:', JSON.stringify(servicesData, null, 2));
     
-    const processedServices = servicesData.map((service, index) => {
-      console.log(`Processing service at index ${index}:`, service);
+    const processedServices = [];
+    for (const service of servicesData) {
       try {
-        return processService(service);
+        const processedService = await processService(service, supabaseClient);
+        processedServices.push(processedService);
       } catch (error) {
-        throw new Error(`Error processing service at index ${index}: ${error.message}`);
+        console.error('Error processing service:', error);
+        throw error;
       }
-    });
+    }
 
     console.log('All processed services:', JSON.stringify(processedServices, null, 2));
 
