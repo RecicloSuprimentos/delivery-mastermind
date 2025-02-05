@@ -1,4 +1,3 @@
-
 import { ServiceData, ProcessedService } from './types.ts';
 
 export function processPhoneNumber(phone: string): string {
@@ -21,19 +20,19 @@ export function processPaymentInfo(text: string): string {
 
   // Processa cada linha separadamente
   return text.split('\n').map(line => {
-    // Regex para identificar o padrão de pagamento
-    const paymentMatch = line.match(/F\.PAGTO\.: Dinheiro: (\d*\.?\d{4}) Levar troco: (\d*\.?\d{4})/);
+    // Regex atualizado para capturar qualquer texto adicional após o troco
+    const paymentMatch = line.match(/F\.PAGTO\.: Dinheiro: (\d*\.?\d{4}) Levar troco: (\d*\.?\d{4})(.*)/);
     
     if (paymentMatch) {
-      const [, mainAmount, changeAmount] = paymentMatch;
+      const [, mainAmount, changeAmount, additionalText] = paymentMatch;
       
       // Se o troco for zero (0.0000 ou .0000), remove a parte do troco
       if (changeAmount === '.0000' || changeAmount === '0.0000') {
-        return `Dinheiro: ${formatCurrency(mainAmount)}`;
+        return `Dinheiro: ${formatCurrency(mainAmount)}${additionalText}`;
       }
       
       // Se houver troco diferente de zero, formata ambos os valores
-      return `Dinheiro: ${formatCurrency(mainAmount)} Levar troco: ${formatCurrency(changeAmount)}`;
+      return `Dinheiro: ${formatCurrency(mainAmount)} Levar troco: ${formatCurrency(changeAmount)}${additionalText}`;
     }
     
     return line;
