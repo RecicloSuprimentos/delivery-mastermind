@@ -11,29 +11,29 @@ export function processPhoneNumber(phone: string): string {
 }
 
 export function formatCurrency(value: string): string {
-  // Remove pontos e zeros extras
-  const numericValue = parseFloat(value);
+  const numericValue = parseFloat(value.replace(/\.0+$/, ''));
   return `R$ ${numericValue.toFixed(2).replace('.', ',')}`;
 }
 
 export function processPaymentInfo(text: string): string {
   if (!text) return '';
-
-  // Processa cada linha separadamente
+  
   return text.split('\n').map(line => {
-    // Regex atualizado para capturar qualquer texto adicional após o troco
-    const paymentMatch = line.match(/F\.PAGTO\.: Dinheiro: (\d*\.?\d{4}) Levar troco: (\d*\.?\d{4})(.*)/);
+    // Regex para capturar pagamento, troco e observações
+    const pattern = /F\.PAGTO\.: Dinheiro: (\d+\.?\d*) Levar troco: (\d+\.?\d*)(.*)$/;
+    const match = line.match(pattern);
     
-    if (paymentMatch) {
-      const [, mainAmount, changeAmount, additionalText] = paymentMatch;
+    if (match) {
+      const [, payment, change, observations] = match;
+      const changeValue = parseFloat(change);
       
-      // Se o troco for zero (0.0000 ou .0000), remove a parte do troco
-      if (changeAmount === '.0000' || changeAmount === '0.0000') {
-        return `Dinheiro: ${formatCurrency(mainAmount)}${additionalText}`;
+      // Se o troco for zero, retorna apenas o pagamento formatado
+      if (changeValue === 0 || change === '.0000') {
+        return `Dinheiro: ${formatCurrency(payment)}${observations}`;
       }
       
-      // Se houver troco diferente de zero, formata ambos os valores
-      return `Dinheiro: ${formatCurrency(mainAmount)} Levar troco: ${formatCurrency(changeAmount)}${additionalText}`;
+      // Se houver troco, formata ambos os valores
+      return `Dinheiro: ${formatCurrency(payment)} Levar troco: ${formatCurrency(change)}${observations}`;
     }
     
     return line;
