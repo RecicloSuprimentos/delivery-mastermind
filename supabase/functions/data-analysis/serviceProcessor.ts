@@ -10,6 +10,36 @@ export function processPhoneNumber(phone: string): string {
   return formattedPhone;
 }
 
+export function formatCurrency(value: string): string {
+  // Remove pontos e zeros extras
+  const numericValue = parseFloat(value);
+  return `R$ ${numericValue.toFixed(2).replace('.', ',')}`;
+}
+
+export function processPaymentInfo(text: string): string {
+  if (!text) return '';
+
+  // Processa cada linha separadamente
+  return text.split('\n').map(line => {
+    // Regex para identificar o padrão de pagamento
+    const paymentMatch = line.match(/F\.PAGTO\.: Dinheiro: (\d*\.?\d{4}) Levar troco: (\d*\.?\d{4})/);
+    
+    if (paymentMatch) {
+      const [, mainAmount, changeAmount] = paymentMatch;
+      
+      // Se o troco for zero (0.0000 ou .0000), remove a parte do troco
+      if (changeAmount === '.0000' || changeAmount === '0.0000') {
+        return `Dinheiro: ${formatCurrency(mainAmount)}`;
+      }
+      
+      // Se houver troco diferente de zero, formata ambos os valores
+      return `Dinheiro: ${formatCurrency(mainAmount)} Levar troco: ${formatCurrency(changeAmount)}`;
+    }
+    
+    return line;
+  }).join('\n');
+}
+
 export function processTimeWindow(service: ServiceData): string | null {
   if (service.duration_prevision_time) {
     return `${service.duration_prevision_time} minutos`;
@@ -24,6 +54,10 @@ export function processTimeWindow(service: ServiceData): string | null {
 
 export function processObservations(service: ServiceData): string {
   let observations = service.note || service.observations || '';
+  
+  // Processa informações de pagamento
+  observations = processPaymentInfo(observations);
+  
   if (service.time_window && !processTimeWindow(service)) {
     observations = observations ? `${observations}\n${service.time_window}` : service.time_window;
   }
