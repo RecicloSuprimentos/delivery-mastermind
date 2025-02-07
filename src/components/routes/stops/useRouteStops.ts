@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { Service } from "@/types/routes";
 
 interface UseRouteStopsProps {
@@ -37,8 +36,9 @@ export const useRouteStops = ({
   };
 
   const handleInvertStops = () => {
-    if (!disabled) {
-      onStopsChange([...selectedStops].reverse());
+    if (!disabled && selectedStops.length > 1) {
+      const invertedStops = [...selectedStops].reverse();
+      onStopsChange(invertedStops);
     }
   };
 

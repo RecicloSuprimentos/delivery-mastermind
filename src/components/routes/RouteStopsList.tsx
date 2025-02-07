@@ -43,19 +43,21 @@ export const RouteStopsList = ({
     onStopsChange(items);
   };
 
+  const handleInvertAndOptimize = () => {
+    handleInvertStops();
+    // Força o recálculo da rota após inverter
+    if (onOptimize) {
+      setTimeout(onOptimize, 0);
+    }
+  };
+
   const availableServices = getAvailableServices();
 
   return (
     <div className="space-y-4">
       <RouteStopsHeader
         onOptimize={onOptimize || (() => {})}
-        onInvert={() => {
-          handleInvertStops();
-          // Força o recálculo da rota após inverter
-          if (onOptimize) {
-            setTimeout(onOptimize, 0);
-          }
-        }}
+        onInvert={handleInvertAndOptimize}
         onAddAll={handleAddAllStops}
         disabled={disabled}
         hasAvailableServices={availableServices.length > 0}
