@@ -394,6 +394,7 @@ export type Database = {
         Row: {
           address: string
           complement: string | null
+          completed_at: string | null
           created_at: string | null
           customer_name: string
           email: string | null
@@ -406,10 +407,12 @@ export type Database = {
           status: string | null
           time_window: string | null
           type: Database["public"]["Enums"]["service_type"]
+          updated_at: string | null
         }
         Insert: {
           address: string
           complement?: string | null
+          completed_at?: string | null
           created_at?: string | null
           customer_name: string
           email?: string | null
@@ -422,10 +425,12 @@ export type Database = {
           status?: string | null
           time_window?: string | null
           type: Database["public"]["Enums"]["service_type"]
+          updated_at?: string | null
         }
         Update: {
           address?: string
           complement?: string | null
+          completed_at?: string | null
           created_at?: string | null
           customer_name?: string
           email?: string | null
@@ -438,6 +443,7 @@ export type Database = {
           status?: string | null
           time_window?: string | null
           type?: Database["public"]["Enums"]["service_type"]
+          updated_at?: string | null
         }
         Relationships: []
       }
