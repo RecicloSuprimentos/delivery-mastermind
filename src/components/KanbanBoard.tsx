@@ -20,11 +20,11 @@ export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
 
   const filterCompletedServices = (services: any[]) => {
     if (searchTerm) {
-      return services.filter(s => s.status === "completed");
+      return services.filter(s => s.status === "completed" || s.status === "cancelled");
     }
     
     return services.filter(s => {
-      if (s.status !== "completed") return false;
+      if (s.status !== "completed" && s.status !== "cancelled") return false;
       const completedDate = new Date(s.completed_at || s.updated_at || s.created_at);
       return isToday(completedDate);
     });

@@ -12,7 +12,6 @@ export const useKanbanData = (searchTerm: string) => {
     const { data, error } = await supabase
       .from("services")
       .select("*, completed_at, updated_at")
-      .neq("status", "cancelled")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -36,8 +35,7 @@ export const useKanbanData = (searchTerm: string) => {
         {
           event: '*',
           schema: 'public',
-          table: 'services',
-          filter: `status=neq.cancelled`
+          table: 'services'
         },
         (payload) => {
           console.log("Mudança detectada nos serviços:", payload);
