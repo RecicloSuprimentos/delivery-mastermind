@@ -8,7 +8,8 @@ export const calculateDirectionsKey = (
   endLocationType: string,
   selectedStartService?: Service,
   selectedEndService?: Service,
-  shouldOptimize: boolean = false
+  shouldOptimize: boolean = false,
+  isInverted: boolean = false
 ): string => {
   const startLocation = startLocationType === "operational_base" && settings
     ? { lat: settings.operational_base_latitude, lng: settings.operational_base_longitude }
@@ -34,5 +35,6 @@ export const calculateDirectionsKey = (
     endLocation,
     waypoints,
     optimize: shouldOptimize,
+    inverted: isInverted,
   });
 };
