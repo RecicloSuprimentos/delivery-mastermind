@@ -14,7 +14,8 @@ export const useDirectionsCache = (
   endLocationType: string,
   selectedStartService?: Service,
   selectedEndService?: Service,
-  shouldOptimize: boolean = false
+  shouldOptimize: boolean = false,
+  isInverted: boolean = false
 ) => {
   const queryClient = useQueryClient();
   const cacheKey = calculateDirectionsKey(
@@ -24,7 +25,8 @@ export const useDirectionsCache = (
     endLocationType,
     selectedStartService,
     selectedEndService,
-    shouldOptimize
+    shouldOptimize,
+    isInverted
   );
 
   const debouncedPrefetch = debounce((key: string) => {
@@ -41,7 +43,8 @@ export const useDirectionsCache = (
           endLocationType,
           selectedStartService,
           selectedEndService,
-          shouldOptimize
+          shouldOptimize,
+          isInverted
         );
         const endTime = performance.now();
 
@@ -85,7 +88,8 @@ export const useDirectionsCache = (
         endLocationType,
         selectedStartService,
         selectedEndService,
-        shouldOptimize
+        shouldOptimize,
+        isInverted
       );
       
       const endTime = performance.now();

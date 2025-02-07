@@ -18,6 +18,7 @@ interface RouteMapProps {
   onRouteStats?: (distance: number, duration: number, estimatedTimes: Date[]) => void;
   onOptimizedStops?: (stops: Service[]) => void;
   shouldOptimize?: boolean;
+  isInverted?: boolean;
 }
 
 export const RouteMap = ({ 
@@ -30,6 +31,7 @@ export const RouteMap = ({
   onRouteStats,
   onOptimizedStops,
   shouldOptimize = false,
+  isInverted = false,
 }: RouteMapProps) => {
   const mapRef = useRef<google.maps.Map>();
   const { center, mapOptions } = useMapConfiguration(settings);
@@ -44,6 +46,7 @@ export const RouteMap = ({
     onRouteStats,
     onOptimizedStops,
     shouldOptimize,
+    isInverted,
   });
 
   const handleMapLoad = (map: google.maps.Map) => {

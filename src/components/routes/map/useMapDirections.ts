@@ -12,6 +12,7 @@ interface UseMapDirectionsProps {
   onRouteStats?: (distance: number, duration: number, estimatedTimes: Date[]) => void;
   onOptimizedStops?: (stops: Service[]) => void;
   shouldOptimize: boolean;
+  isInverted?: boolean;
 }
 
 export const useMapDirections = ({
@@ -24,6 +25,7 @@ export const useMapDirections = ({
   onRouteStats,
   onOptimizedStops,
   shouldOptimize,
+  isInverted = false,
 }: UseMapDirectionsProps) => {
   const directionsService = useRef<google.maps.DirectionsService>();
 
@@ -41,7 +43,8 @@ export const useMapDirections = ({
     endLocationType,
     selectedStartService,
     selectedEndService,
-    shouldOptimize
+    shouldOptimize,
+    isInverted
   );
 
   useEffect(() => {
@@ -64,12 +67,13 @@ export const useMapDirections = ({
         onRouteStats(totalDistance, totalDuration, estimatedTimes);
       }
       
-      if (shouldOptimize && onOptimizedStops) {
+      // Só atualiza a ordem das paradas se estiver otimizando e não estiver invertendo
+      if (shouldOptimize && !isInverted && onOptimizedStops) {
         const optimizedWaypoints = waypointOrder.map(index => selectedStops[index]);
         onOptimizedStops(optimizedWaypoints);
       }
     }
-  }, [directions, onRouteStats, onOptimizedStops, shouldOptimize, selectedStops]);
+  }, [directions, onRouteStats, onOptimizedStops, shouldOptimize, selectedStops, isInverted]);
 
   return directions as google.maps.DirectionsResult | null;
 };

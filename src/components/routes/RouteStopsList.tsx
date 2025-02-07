@@ -10,6 +10,7 @@ interface RouteStopsListProps {
   selectedStops: Service[];
   onStopsChange: (stops: Service[]) => void;
   onOptimize?: () => void;
+  onInvertRoute?: () => void;
   disabled?: boolean;
 }
 
@@ -18,6 +19,7 @@ export const RouteStopsList = ({
   selectedStops,
   onStopsChange,
   onOptimize,
+  onInvertRoute,
   disabled,
 }: RouteStopsListProps) => {
   const {
@@ -43,11 +45,11 @@ export const RouteStopsList = ({
     onStopsChange(items);
   };
 
-  const handleInvertAndOptimize = () => {
+  const handleInvertAndRecalculate = () => {
     handleInvertStops();
-    // Força o recálculo da rota após inverter
-    if (onOptimize) {
-      setTimeout(onOptimize, 0);
+    // Chama a função específica para recalcular a rota invertida
+    if (onInvertRoute) {
+      setTimeout(onInvertRoute, 0);
     }
   };
 
@@ -57,7 +59,7 @@ export const RouteStopsList = ({
     <div className="space-y-4">
       <RouteStopsHeader
         onOptimize={onOptimize || (() => {})}
-        onInvert={handleInvertAndOptimize}
+        onInvert={handleInvertAndRecalculate}
         onAddAll={handleAddAllStops}
         disabled={disabled}
         hasAvailableServices={availableServices.length > 0}

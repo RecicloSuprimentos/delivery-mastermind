@@ -9,7 +9,8 @@ export const calculateRoute = async (
   endLocationType: string,
   selectedStartService?: Service,
   selectedEndService?: Service,
-  shouldOptimize: boolean = false
+  shouldOptimize: boolean = false,
+  isInverted: boolean = false
 ) => {
   const startLocation = getLocationFromType(startLocationType, settings, selectedStartService);
   const endLocation = getLocationFromType(endLocationType, settings, selectedEndService);
@@ -31,7 +32,7 @@ export const calculateRoute = async (
           origin: startLocation,
           destination: endLocation,
           waypoints,
-          optimizeWaypoints: shouldOptimize, // Usa o parâmetro para controlar a otimização
+          optimizeWaypoints: shouldOptimize && !isInverted, // Não otimiza se estiver invertido
           travelMode: google.maps.TravelMode.DRIVING,
         },
         (result, status) => {
