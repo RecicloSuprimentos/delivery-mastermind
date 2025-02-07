@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Service } from "@/types/services";
@@ -10,7 +11,7 @@ export const useKanbanData = (searchTerm: string) => {
     console.log("Buscando serviços...");
     const { data, error } = await supabase
       .from("services")
-      .select("*")
+      .select("*, completed_at, updated_at")
       .neq("status", "cancelled")
       .order("created_at", { ascending: false });
 
