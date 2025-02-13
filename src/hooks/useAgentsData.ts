@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfDay, endOfDay } from "date-fns";
@@ -7,12 +8,13 @@ import {
   calculateOnTimePerformance,
   buildTimeline 
 } from "@/utils/agentDataUtils";
+import { useEffect } from "react";
 
 export const useAgentsData = (selectedDate: Date) => {
   const startOfSelectedDay = startOfDay(selectedDate);
   const endOfSelectedDay = endOfDay(selectedDate);
 
-  return useQuery({
+  const { data: agents, isLoading, refetch } = useQuery({
     queryKey: ["agents-data", selectedDate.toISOString()],
     queryFn: async () => {
       console.log("Buscando dados dos agentes e rotas...");
@@ -98,6 +100,59 @@ export const useAgentsData = (selectedDate: Date) => {
 
       return agentsWithRoutes;
     },
-    refetchInterval: 30000,
+    refetchInterval: 30000, // Refetch a cada 30 segundos
   });
+
+  useEffect(() => {
+    // Inscrever para atualizações em tempo real
+    const channel = supabase
+      .channel('realtime-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'services'
+        },
+        () => {
+          console.log("Mudança detectada nos serviços, atualizando dados...");
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agent_locations'
+        },
+        () => {
+          console.log("Nova localização de agente detectada, atualizando dados...");
+          refetch();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'route_stops'
+        },
+        () => {
+          console.log("Mudança detectada nas paradas, atualizando dados...");
+          refetch();
+        }
+      )
+      .subscribe();
+
+    // Cleanup na inscrição quando o componente for desmontado
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+
+  return {
+    data: agents,
+    isLoading
+  };
 };
