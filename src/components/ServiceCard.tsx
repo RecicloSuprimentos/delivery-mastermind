@@ -1,9 +1,11 @@
+
 import { useState } from "react";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ShoppingCart, Truck } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ServiceCardActions } from "./service/ServiceCardActions";
 import { ServiceCardDetails } from "./service/ServiceCardDetails";
+import { ServiceDetailsDialog } from "./service/ServiceDetailsDialog";
 import { useServices } from "@/hooks/useServices";
 
 interface Service {
@@ -18,6 +20,9 @@ interface Service {
   time_window?: string;
   observations?: string;
   status: string;
+  created_at?: string;
+  updated_at?: string;
+  completed_at?: string;
 }
 
 interface ServiceCardProps {
@@ -29,6 +34,7 @@ interface ServiceCardProps {
 
 const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const { deleteService, updateServiceStatus } = useServices();
 
   const handleDelete = async () => {
@@ -62,6 +68,10 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
     }
   };
 
+  const isCollection = service.type === "coleta";
+  const Icon = isCollection ? ShoppingCart : Truck;
+  const iconColor = isCollection ? "text-green-600" : "text-blue-600";
+
   return (
     <Card className={`mb-2 overflow-hidden ${isSelected ? 'border-primary border-2' : 'bg-white'}`}>
       <div className="p-3">
@@ -77,10 +87,22 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
             </Button>
           )}
           <div className="flex-1 ml-2">
-            <div className="font-medium text-base">
-              {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`${iconColor} p-1 h-8 w-8`}
+                onClick={() => setShowDetails(true)}
+              >
+                <Icon className="h-4 w-4" />
+              </Button>
+              <div>
+                <div className="font-medium text-base">
+                  {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
+                </div>
+                <div className="font-medium text-base">{service.customer_name}</div>
+              </div>
             </div>
-            <div className="font-medium text-base">{service.customer_name}</div>
           </div>
           
           {(service.status === "not-assigned" || service.status === "assigned") && (
@@ -114,6 +136,12 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
           </button>
         </div>
       </div>
+
+      <ServiceDetailsDialog
+        service={service}
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
+      />
     </Card>
   );
 };
