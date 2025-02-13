@@ -7,23 +7,7 @@ import { ServiceCardActions } from "./service/ServiceCardActions";
 import { ServiceCardDetails } from "./service/ServiceCardDetails";
 import { ServiceDetailsDialog } from "./service/ServiceDetailsDialog";
 import { useServices } from "@/hooks/useServices";
-
-interface Service {
-  id: string;
-  type: "coleta" | "entrega";
-  service_id: string;
-  customer_name: string;
-  address: string;
-  phone: string;
-  email?: string;
-  complement?: string;
-  time_window?: string;
-  observations?: string;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-  completed_at?: string;
-}
+import type { Service } from "@/types/services";
 
 interface ServiceCardProps {
   service: Service;
