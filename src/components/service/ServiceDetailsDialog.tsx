@@ -1,24 +1,65 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ShoppingCart, Truck, MapPin, Phone, Clock, FileEdit, Mail } from "lucide-react";
+import { ShoppingCart, Truck, MapPin, Phone, Clock, FileEdit, Mail, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import type { Service } from "@/types/services";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceDetailsDialogProps {
-  service: Service | null;
+  serviceId: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const ServiceDetailsDialog = ({ service, isOpen, onClose }: ServiceDetailsDialogProps) => {
+export const ServiceDetailsDialog = ({ serviceId, isOpen, onClose }: ServiceDetailsDialogProps) => {
+  const { data: service, isLoading } = useQuery({
+    queryKey: ["service-details", serviceId],
+    queryFn: async () => {
+      if (!serviceId) return null;
+      const { data, error } = await supabase
+        .from("services")
+        .select("*")
+        .eq("id", serviceId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as Service;
+    },
+    enabled: !!serviceId,
+  });
+
+  if (isLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent>
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   if (!service) return null;
 
   const isCollection = service.type === "coleta";
   const bgColor = isCollection ? "bg-[#F2FCE2]" : "bg-[#D3E4FD]";
   const Icon = isCollection ? ShoppingCart : Truck;
   const serviceType = isCollection ? "Coleta" : "Entrega";
+
+  const getStatusIcon = () => {
+    switch (service.status) {
+      case "completed":
+        return <CheckCircle2 className="h-5 w-5 text-green-600" aria-label="Concluído" />;
+      case "cancelled":
+        return <XCircle className="h-5 w-5 text-red-600" aria-label="Cancelado" />;
+      default:
+        return <AlertCircle className="h-5 w-5 text-yellow-600" aria-label="Em andamento" />;
+    }
+  };
 
   const formatDate = (date: string | undefined) => {
     if (!date) return "";
@@ -36,22 +77,34 @@ export const ServiceDetailsDialog = ({ service, isOpen, onClose }: ServiceDetail
         aria-labelledby="service-dialog-title"
       >
         <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div 
-              className="p-2 bg-white rounded-full transition-transform hover:scale-105"
-              aria-hidden="true"
-            >
-              <Icon className="h-6 w-6" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div 
+                className="p-2 bg-white rounded-full transition-transform hover:scale-105"
+                aria-hidden="true"
+              >
+                <Icon className="h-6 w-6" />
+              </div>
+              <DialogTitle 
+                id="service-dialog-title"
+                className="text-lg"
+              >
+                {serviceType} #{service.service_id}
+                <span className="sr-only">
+                  {`Detalhes da ${serviceType.toLowerCase()} número ${service.service_id}`}
+                </span>
+              </DialogTitle>
             </div>
-            <DialogTitle 
-              id="service-dialog-title"
-              className="text-lg"
-            >
-              {serviceType} #{service.service_id}
-              <span className="sr-only">
-                {`Detalhes da ${serviceType.toLowerCase()} número ${service.service_id}`}
+            <div className="flex items-center gap-2">
+              {getStatusIcon()}
+              <span className="text-sm font-medium capitalize">
+                {service.status === "completed" && "Concluído"}
+                {service.status === "cancelled" && "Cancelado"}
+                {service.status === "in-transit" && "Em trânsito"}
+                {service.status === "assigned" && "Atribuído"}
+                {service.status === "not-assigned" && "Não atribuído"}
               </span>
-            </DialogTitle>
+            </div>
           </div>
         </DialogHeader>
 
