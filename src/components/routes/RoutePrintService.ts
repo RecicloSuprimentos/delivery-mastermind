@@ -1,3 +1,4 @@
+
 import { Route } from "@/types/routes";
 
 const statusTranslations: Record<string, string> = {

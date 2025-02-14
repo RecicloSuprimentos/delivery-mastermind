@@ -1,11 +1,13 @@
+
 import { Button } from "@/components/ui/button";
-import { Printer, Eye, Edit, Check } from "lucide-react";
+import { Printer, Eye, Edit, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useRoutes } from "@/hooks/useRoutes";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Route {
   id: string;
@@ -37,8 +39,9 @@ interface RouteListItemProps {
 export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListItemProps) => {
   const navigate = useNavigate();
   const { updateRouteStatus } = useRoutes();
+  const { toast } = useToast();
 
-  const { data: realStats } = useQuery<RouteStats>({
+  const { data: realStats } = useQuery({
     queryKey: ["route-stats", route.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -70,7 +73,6 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
     return format(new Date(dateString), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
   };
 
-  // Atualizada para trabalhar com segundos ao invés de minutos
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -96,6 +98,37 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
     }
   };
 
+  const handleCancelRoute = async () => {
+    if (!window.confirm("Tem certeza que deseja cancelar esta rota? Todos os serviços associados também serão cancelados.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.rpc('cancel_route', {
+        route_id_param: route.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Rota cancelada com sucesso",
+      });
+
+      // Atualizar a lista de rotas
+      window.location.reload();
+    } catch (error) {
+      console.error("Error cancelling route:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao cancelar a rota",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const canBeCancelled = route.status !== 'completed' && route.status !== 'cancelled';
+
   return (
     <div className="bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm">
       <div className="flex flex-col space-y-2">
@@ -115,6 +148,16 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
                 className="h-6 w-6 p-0"
               >
                 <Check className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            {canBeCancelled && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelRoute}
+                className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                <X className="h-3.5 w-3.5" />
               </Button>
             )}
             <Button 

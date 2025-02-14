@@ -616,6 +616,12 @@ export type Database = {
           total_duration: unknown
         }[]
       }
+      cancel_route: {
+        Args: {
+          route_id_param: string
+        }
+        Returns: undefined
+      }
       extract_time_window: {
         Args: {
           observation_text: string
