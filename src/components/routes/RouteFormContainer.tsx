@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,9 +21,18 @@ export const RouteFormContainer = () => {
       let route;
       if (routeId) {
         console.log("Updating existing route...");
+        const { data: existingRoute } = await supabase
+          .from("routes")
+          .select("status")
+          .eq("id", routeId)
+          .single();
+
         const { data: updatedRoute, error: routeError } = await supabase
           .from("routes")
-          .update(routeData)
+          .update({
+            ...routeData,
+            status: existingRoute?.status || 'assigned' // Mantém o status original
+          })
           .eq("id", routeId)
           .select()
           .single();
@@ -33,6 +43,33 @@ export const RouteFormContainer = () => {
         }
         route = updatedRoute;
         console.log("Route updated successfully:", route);
+
+        // Obtém os serviços atuais da rota
+        const { data: currentStops } = await supabase
+          .from("route_stops")
+          .select("service_id")
+          .eq("route_id", routeId);
+
+        const currentServiceIds = currentStops?.map(stop => stop.service_id) || [];
+        const newServiceIds = selectedStops.map(service => service.id);
+
+        // Identifica serviços removidos
+        const removedServiceIds = currentServiceIds.filter(
+          id => !newServiceIds.includes(id)
+        );
+
+        // Atualiza status dos serviços removidos para "not-assigned"
+        if (removedServiceIds.length > 0) {
+          const { error: updateError } = await supabase
+            .from("services")
+            .update({ status: "not-assigned", assigned_to: null })
+            .in("id", removedServiceIds);
+
+          if (updateError) {
+            console.error("Error updating removed services:", updateError);
+            throw updateError;
+          }
+        }
 
         console.log("Deleting existing route stops...");
         const { error: deleteError } = await supabase

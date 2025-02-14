@@ -1,3 +1,4 @@
+
 import { RouteMap } from "./RouteMap";
 import { RouteStopsList } from "./RouteStopsList";
 import { RouteBasicFields } from "./RouteBasicFields";
@@ -65,9 +66,6 @@ export const RouteFormContent = ({
 
   // Verifica se a rota está finalizada
   const isCompleted = routeStatus === "completed";
-  
-  // Verifica se a rota está em andamento (atribuída ou aceita)
-  const isInProgress = routeStatus === "assigned" || routeStatus === "accepted";
 
   // Função para validar alterações nos serviços
   const handleStopsChange = (newStops: Service[]) => {
@@ -78,27 +76,6 @@ export const RouteFormContent = ({
         variant: "destructive",
       });
       return;
-    }
-
-    if (isInProgress) {
-      // Verifica se algum serviço existente foi alterado (exceto remoção)
-      const hasInvalidChanges = originalStops.some(originalStop => {
-        const stillExists = newStops.find(s => s.id === originalStop.id);
-        // Se o serviço ainda existe na rota, não permitimos alteração
-        if (stillExists && originalStop.status !== stillExists.status) {
-          return true;
-        }
-        return false;
-      });
-
-      if (hasInvalidChanges) {
-        toast({
-          title: "Operação não permitida",
-          description: "Não é possível alterar o status de serviços em uma rota em andamento.",
-          variant: "destructive",
-        });
-        return;
-      }
     }
 
     setSelectedStops(newStops);
