@@ -423,6 +423,8 @@ export type Database = {
       services: {
         Row: {
           address: string
+          agent_id: string | null
+          assigned_to: Json | null
           complement: string | null
           completed_at: string | null
           created_at: string | null
@@ -441,6 +443,8 @@ export type Database = {
         }
         Insert: {
           address: string
+          agent_id?: string | null
+          assigned_to?: Json | null
           complement?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -459,6 +463,8 @@ export type Database = {
         }
         Update: {
           address?: string
+          agent_id?: string | null
+          assigned_to?: Json | null
           complement?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -475,7 +481,15 @@ export type Database = {
           type?: Database["public"]["Enums"]["service_type"]
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_queue: {
         Row: {
