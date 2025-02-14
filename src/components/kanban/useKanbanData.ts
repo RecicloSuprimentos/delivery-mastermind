@@ -2,6 +2,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Service } from "@/types/services";
+import type { Database } from "@/integrations/supabase/types";
+
+type ServiceResponse = Database['public']['Tables']['services']['Row'];
 
 export const useKanbanData = (searchTerm: string) => {
   const [services, setServices] = useState<Service[]>([]);
@@ -21,7 +24,32 @@ export const useKanbanData = (searchTerm: string) => {
 
     if (data) {
       console.log("Serviços encontrados:", data);
-      setServices(data as Service[]);
+      // Convertendo os dados para o tipo Service
+      const formattedServices: Service[] = data.map((service: ServiceResponse) => ({
+        ...service,
+        id: service.id,
+        type: service.type,
+        service_id: service.service_id,
+        customer_name: service.customer_name,
+        address: service.address,
+        phone: service.phone,
+        email: service.email || undefined,
+        complement: service.complement || undefined,
+        time_window: service.time_window || undefined,
+        observations: service.observations || undefined,
+        status: service.status as Service['status'],
+        latitude: service.latitude || undefined,
+        longitude: service.longitude || undefined,
+        created_at: service.created_at || undefined,
+        updated_at: service.updated_at || undefined,
+        completed_at: service.completed_at || undefined,
+        assigned_to: service.assigned_to ? {
+          id: (service.assigned_to as any).id,
+          name: (service.assigned_to as any).name
+        } : undefined
+      }));
+      
+      setServices(formattedServices);
     }
   };
 
@@ -41,13 +69,47 @@ export const useKanbanData = (searchTerm: string) => {
           console.log("Mudança detectada nos serviços:", payload);
           
           if (payload.eventType === 'INSERT') {
-            setServices(prev => [payload.new as Service, ...prev]);
+            const newService = payload.new as ServiceResponse;
+            const formattedService: Service = {
+              ...newService,
+              email: newService.email || undefined,
+              complement: newService.complement || undefined,
+              time_window: newService.time_window || undefined,
+              observations: newService.observations || undefined,
+              latitude: newService.latitude || undefined,
+              longitude: newService.longitude || undefined,
+              created_at: newService.created_at || undefined,
+              updated_at: newService.updated_at || undefined,
+              completed_at: newService.completed_at || undefined,
+              assigned_to: newService.assigned_to ? {
+                id: (newService.assigned_to as any).id,
+                name: (newService.assigned_to as any).name
+              } : undefined
+            };
+            setServices(prev => [formattedService, ...prev]);
           } else if (payload.eventType === 'DELETE') {
             setServices(prev => prev.filter(service => service.id !== payload.old.id));
           } else if (payload.eventType === 'UPDATE') {
+            const updatedService = payload.new as ServiceResponse;
+            const formattedService: Service = {
+              ...updatedService,
+              email: updatedService.email || undefined,
+              complement: updatedService.complement || undefined,
+              time_window: updatedService.time_window || undefined,
+              observations: updatedService.observations || undefined,
+              latitude: updatedService.latitude || undefined,
+              longitude: updatedService.longitude || undefined,
+              created_at: updatedService.created_at || undefined,
+              updated_at: updatedService.updated_at || undefined,
+              completed_at: updatedService.completed_at || undefined,
+              assigned_to: updatedService.assigned_to ? {
+                id: (updatedService.assigned_to as any).id,
+                name: (updatedService.assigned_to as any).name
+              } : undefined
+            };
             setServices(prev => 
               prev.map(service => 
-                service.id === payload.new.id ? payload.new as Service : service
+                service.id === payload.new.id ? formattedService : service
               )
             );
           }
