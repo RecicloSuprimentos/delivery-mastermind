@@ -55,23 +55,24 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
   const isCollection = service.type === "coleta";
   const Icon = isCollection ? SendToBack : PackageCheck;
   const iconColor = isCollection ? "text-green-600" : "text-blue-600";
+  const showSelectButton = service.status === "not-assigned";
 
   return (
     <Card className={`mb-2 overflow-hidden ${isSelected ? 'border-primary border-2' : 'bg-white'}`}>
       <div className="p-3">
         <div className="flex justify-between items-start mb-1">
-          {service.status === "not-assigned" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSelect}
-              className={`${isSelected ? "text-primary" : "text-gray-500"} -ml-2`}
-            >
-              <Check className="h-4 w-4" />
-            </Button>
-          )}
-          <div className="flex-1 ml-2">
+          <div className={`flex-1 ${showSelectButton ? 'ml-2' : ''}`}>
             <div className="flex items-center gap-2">
+              {showSelectButton && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSelect}
+                  className={`${isSelected ? "text-primary" : "text-gray-500"} -ml-2`}
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
