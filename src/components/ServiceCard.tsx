@@ -56,28 +56,28 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
   const showSelectButton = service.status === "not-assigned";
 
   return (
-    <Card className={`mb-2 overflow-hidden ${isSelected ? 'border-primary border-2' : 'bg-white'}`}>
-      <div className="p-3">
-        <div className="flex justify-between items-start mb-1">
-          <div className="flex items-center gap-2">
+    <Card className={`overflow-hidden ${isSelected ? 'border-primary border-2' : 'bg-white'}`}>
+      <div className="p-2">
+        <div className="flex justify-between items-start">
+          <div className="flex items-center gap-1">
             {showSelectButton && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleSelect}
-                className={`${isSelected ? "text-primary" : "text-gray-500"}`}
+                className={`${isSelected ? "text-primary" : "text-gray-500"} p-1`}
               >
                 <Check className="h-4 w-4" />
               </Button>
             )}
             <div className={`${iconColor} flex items-center justify-center`}>
-              <Icon className="h-5 w-5" />
+              <Icon className="h-4 w-4" />
             </div>
             <div>
-              <div className="font-medium text-base">
+              <div className="font-medium text-sm">
                 {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
               </div>
-              <div className="font-medium text-base">{service.customer_name}</div>
+              <div className="font-medium text-sm">{service.customer_name}</div>
             </div>
           </div>
           
@@ -101,15 +101,15 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
           agentName={service.assigned_to?.name}
         />
 
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end mt-1">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-gray-500 hover:text-gray-700"
           >
             {isExpanded ? (
-              <ChevronUp className="h-5 w-5" />
+              <ChevronUp className="h-4 w-4" />
             ) : (
-              <ChevronDown className="h-5 w-5" />
+              <ChevronDown className="h-4 w-4" />
             )}
           </button>
         </div>

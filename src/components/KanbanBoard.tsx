@@ -32,7 +32,7 @@ export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
-      <div className="flex h-full p-4 space-x-4 overflow-x-auto min-w-full">
+      <div className="flex h-full px-2 space-x-2 overflow-x-auto min-w-full">
         {columns.map((column) => (
           <KanbanColumn
             key={column.id}
