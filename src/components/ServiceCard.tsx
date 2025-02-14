@@ -5,7 +5,6 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ServiceCardActions } from "./service/ServiceCardActions";
 import { ServiceCardDetails } from "./service/ServiceCardDetails";
-import { ServiceDetailsDialog } from "./service/ServiceDetailsDialog";
 import { useServices } from "@/hooks/useServices";
 import type { Service } from "@/types/services";
 
@@ -18,7 +17,6 @@ interface ServiceCardProps {
 
 const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const { deleteService, updateServiceStatus } = useServices();
 
   const handleDelete = async () => {
@@ -73,14 +71,9 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
                   <Check className="h-4 w-4" />
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`${iconColor} p-1 h-8 w-8`}
-                onClick={() => setShowDetails(true)}
-              >
+              <div className={`${iconColor} p-1 h-8 w-8 flex items-center justify-center`}>
                 <Icon className="h-4 w-4" />
-              </Button>
+              </div>
               <div>
                 <div className="font-medium text-base">
                   {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
@@ -123,12 +116,6 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
           </button>
         </div>
       </div>
-
-      <ServiceDetailsDialog
-        service={service}
-        isOpen={showDetails}
-        onClose={() => setShowDetails(false)}
-      />
     </Card>
   );
 };
