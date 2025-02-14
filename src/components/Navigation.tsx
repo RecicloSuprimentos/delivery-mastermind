@@ -41,7 +41,7 @@ export const Navigation = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary hover:opacity-90 transition-opacity">
               <img 
-                src="/lovable-uploads/f898aedd-9ace-4deb-9dbd-9472ed5ad258.png" 
+                src="/lovable-uploads/4b08d12d-dae7-4177-8913-fdc8cabeac02.png" 
                 alt="Logo" 
                 className="h-8 w-auto"
               />
