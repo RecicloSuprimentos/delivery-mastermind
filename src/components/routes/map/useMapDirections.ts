@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useDirectionsCache } from "@/hooks/useDirectionsCache";
 import type { Service, SystemSettings } from "@/types/routes";
@@ -35,13 +36,22 @@ export const useMapDirections = ({
     }
   }, []);
 
+  // Separa os serviços completados dos pendentes
+  const completedStops = selectedStops.filter(stop => stop.status === "completed");
+  const pendingStops = selectedStops.filter(stop => stop.status !== "completed");
+  const lastCompletedStop = completedStops[completedStops.length - 1];
+
+  // Se houver serviços completados, usa o último como ponto de partida para otimização
+  const effectiveStartLocationType = lastCompletedStop ? "service" : startLocationType;
+  const effectiveStartService = lastCompletedStop || selectedStartService;
+
   const { directions } = useDirectionsCache(
     directionsService.current!,
     settings,
-    selectedStops,
-    startLocationType,
+    pendingStops, // Usa apenas os serviços pendentes para otimização
+    effectiveStartLocationType,
     endLocationType,
-    selectedStartService,
+    effectiveStartService,
     selectedEndService,
     shouldOptimize,
     isInverted
@@ -67,13 +77,14 @@ export const useMapDirections = ({
         onRouteStats(totalDistance, totalDuration, estimatedTimes);
       }
       
-      // Só atualiza a ordem das paradas se estiver otimizando e não estiver invertendo
+      // Atualiza a ordem das paradas mantendo os serviços completados no início
       if (shouldOptimize && !isInverted && onOptimizedStops) {
-        const optimizedWaypoints = waypointOrder.map(index => selectedStops[index]);
-        onOptimizedStops(optimizedWaypoints);
+        const optimizedPendingStops = waypointOrder.map(index => pendingStops[index]);
+        const allOptimizedStops = [...completedStops, ...optimizedPendingStops];
+        onOptimizedStops(allOptimizedStops);
       }
     }
-  }, [directions, onRouteStats, onOptimizedStops, shouldOptimize, selectedStops, isInverted]);
+  }, [directions, onRouteStats, onOptimizedStops, shouldOptimize, completedStops, pendingStops, isInverted]);
 
   return directions as google.maps.DirectionsResult | null;
 };
