@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Check, ChevronDown, ChevronUp, ShoppingCart, Truck } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, SendToBack, PackageCheck } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ServiceCardActions } from "./service/ServiceCardActions";
@@ -53,7 +53,7 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
   };
 
   const isCollection = service.type === "coleta";
-  const Icon = isCollection ? ShoppingCart : Truck;
+  const Icon = isCollection ? SendToBack : PackageCheck;
   const iconColor = isCollection ? "text-green-600" : "text-blue-600";
 
   return (
@@ -105,6 +105,8 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
           timeWindow={service.time_window}
           observations={service.observations}
           isExpanded={isExpanded}
+          status={service.status}
+          agentName={service.assigned_to?.name}
         />
 
         <div className="flex justify-end mt-2">

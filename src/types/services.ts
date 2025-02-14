@@ -18,4 +18,8 @@ export interface Service {
   created_at?: string;
   updated_at?: string;
   completed_at?: string;
+  assigned_to?: {
+    id: string;
+    name: string;
+  };
 }

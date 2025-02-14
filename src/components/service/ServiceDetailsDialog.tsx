@@ -1,6 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ShoppingCart, Truck, MapPin, Phone, Clock, FileEdit, Mail } from "lucide-react";
+import { SendToBack, PackageCheck, MapPin, Phone, Clock, FileEdit, Mail } from "lucide-react";
 import type { Service } from "@/types/services";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,7 +16,7 @@ export const ServiceDetailsDialog = ({ service, isOpen, onClose }: ServiceDetail
 
   const isCollection = service.type === "coleta";
   const bgColor = isCollection ? "bg-[#F2FCE2]" : "bg-[#D3E4FD]";
-  const Icon = isCollection ? ShoppingCart : Truck;
+  const Icon = isCollection ? SendToBack : PackageCheck;
 
   const formatDate = (date: string | undefined) => {
     if (!date) return "";

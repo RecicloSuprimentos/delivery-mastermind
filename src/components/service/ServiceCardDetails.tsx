@@ -1,4 +1,5 @@
-import { MapPin, Phone, Clock, FileEdit } from "lucide-react";
+
+import { MapPin, Phone, Clock, FileEdit, User } from "lucide-react";
 
 interface ServiceCardDetailsProps {
   address: string;
@@ -6,6 +7,8 @@ interface ServiceCardDetailsProps {
   timeWindow?: string;
   observations?: string;
   isExpanded: boolean;
+  status?: string;
+  agentName?: string;
 }
 
 export const ServiceCardDetails = ({
@@ -14,6 +17,8 @@ export const ServiceCardDetails = ({
   timeWindow,
   observations,
   isExpanded,
+  status,
+  agentName
 }: ServiceCardDetailsProps) => {
   return (
     <>
@@ -29,6 +34,13 @@ export const ServiceCardDetails = ({
 
       {isExpanded && (
         <div className="mt-2 space-y-2 border-t pt-2">
+          {status !== "not-assigned" && agentName && (
+            <div className="flex items-center gap-2 text-gray-600">
+              <User className="h-4 w-4 shrink-0" />
+              <span className="text-sm">Agente: {agentName}</span>
+            </div>
+          )}
+          
           {timeWindow && (
             <div className="flex items-center gap-2 text-gray-600">
               <Clock className="h-4 w-4 shrink-0" />
