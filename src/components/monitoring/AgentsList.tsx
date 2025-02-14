@@ -1,137 +1,148 @@
-
-import { useState } from "react";
-import { Card } from "../ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Check, MapPin, Navigation, X } from "lucide-react";
 import type { AgentData } from "@/types/monitoring";
-import { ShoppingCart, Truck, Check, LocateFixed, MapPin } from "lucide-react";
-import { ServiceDetailsDialog } from "../service/ServiceDetailsDialog";
-import { cn } from "@/lib/utils";
 
 interface AgentsListProps {
   agents: AgentData[];
 }
 
-export const AgentsList = ({ agents }: AgentsListProps) => {
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+export function AgentsList({ agents }: AgentsListProps) {
+  const getStatusBadge = (status: AgentData["status"]) => {
+    switch (status) {
+      case "in-transit":
+        return (
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <Navigation className="w-3 h-3 mr-1" />
+            Em deslocamento
+          </Badge>
+        );
+      case "arrived":
+        return (
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <MapPin className="w-3 h-3 mr-1" />
+            Chegou ao local
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            Desconectado
+          </Badge>
+        );
+    }
+  };
+
+  const getStopIcon = (status: string, completionOrder?: number) => {
+    if (status === "completed") {
+      return (
+        <div className="relative">
+          <Check className="w-4 h-4" />
+          {completionOrder && (
+            <span className="absolute -top-2 -right-2 bg-green-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+              {completionOrder}
+            </span>
+          )}
+        </div>
+      );
+    }
+    if (status === "cancelled") {
+      return (
+        <div className="relative">
+          <X className="w-4 h-4" />
+          {completionOrder && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+              {completionOrder}
+            </span>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-4">
       {agents.map((agent) => (
-        <Card key={agent.id} className="p-4 bg-white shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div 
-                className={cn(
-                  "w-3 h-3 rounded-full",
-                  agent.status === "online" && "bg-green-500",
-                  agent.status === "offline" && "bg-gray-400",
-                  agent.status === "in-transit" && "bg-blue-500",
-                  agent.status === "arrived" && "bg-purple-500"
-                )}
-                aria-label={`Status: ${agent.status}`}
-              />
-              <h3 className="font-medium">{agent.name}</h3>
+        <div
+          key={agent.id}
+          className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+        >
+          {/* Agent Header */}
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="font-medium text-gray-900">{agent.name}</h3>
+              {getStatusBadge(agent.status)}
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <span>{agent.completedServices}/{agent.totalServices} serviços</span>
-              <span className="text-green-600">{agent.onTimePerformance.toFixed(0)}% no prazo</span>
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Progresso</div>
+              <div className="text-lg font-semibold">
+                {agent.completedServices}/{agent.totalServices}
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          {/* Progress Bar */}
+          <Progress 
+            value={agent.totalServices > 0 
+              ? (agent.completedServices / agent.totalServices) * 100 
+              : 0
+            } 
+            className="mb-4" 
+          />
+
+          {/* Timeline */}
+          <div className="flex space-x-2 overflow-x-auto pb-2">
             {agent.timeline.map((stop) => (
               <div
                 key={stop.id}
-                className={cn(
-                  "p-3 rounded-lg border transition-all cursor-pointer",
-                  "hover:border-primary focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                  "outline-none",
-                  stop.status === "completed" && "bg-green-50 border-green-200",
-                  stop.status === "cancelled" && "bg-red-50 border-red-200",
-                  stop.status === "current" && "bg-blue-50 border-blue-200",
-                  stop.status === "pending" && "bg-gray-50 border-gray-200"
-                )}
-                onClick={() => setSelectedServiceId(stop.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setSelectedServiceId(stop.id);
-                  }
-                }}
-                aria-label={`Serviço ${stop.serviceNumber} - ${stop.status}`}
+                className="flex flex-col items-center min-w-[40px]"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    {stop.type === "coleta" ? (
-                      <ShoppingCart 
-                        className="h-4 w-4 text-green-600"
-                        aria-label="Coleta"
-                      />
-                    ) : (
-                      <Truck 
-                        className="h-4 w-4 text-blue-600"
-                        aria-label="Entrega"
-                      />
-                    )}
-                    <span className="font-medium">
-                      #{stop.serviceNumber}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    {stop.status === "completed" && (
-                      <>
-                        <Check className="h-4 w-4 text-green-600" />
-                        <span className="text-green-600">Concluído</span>
-                      </>
-                    )}
-                    {stop.status === "current" && (
-                      <>
-                        <LocateFixed className="h-4 w-4 text-blue-600" />
-                        <span className="text-blue-600">Atual</span>
-                      </>
-                    )}
-                    {stop.status === "pending" && (
-                      <span className="text-gray-500">Pendente</span>
-                    )}
-                  </div>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                    stop.status === "completed"
+                      ? "bg-green-100 text-green-800"
+                      : stop.status === "cancelled"
+                      ? "bg-red-100 text-red-800"
+                      : stop.status === "current"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {stop.status === "completed" || stop.status === "cancelled"
+                    ? getStopIcon(stop.status, stop.completionOrder)
+                    : stop.serviceNumber}
                 </div>
-
-                <div className="flex items-start space-x-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span className="line-clamp-2">{stop.address}</span>
+                <div className="text-xs text-gray-500 mt-1">
+                  {stop.actualTime || stop.estimatedTime}
                 </div>
-
-                {stop.timeWindow && (
-                  <div className="mt-1 text-sm text-gray-500">
-                    {stop.timeWindow}
-                  </div>
-                )}
-
-                {stop.estimatedTime && (
-                  <div className="mt-1 text-sm">
-                    <span className="text-gray-500">Previsto: </span>
-                    {stop.estimatedTime}
-                    {stop.actualTime && (
-                      <>
-                        <span className="text-gray-500 mx-1">•</span>
-                        <span className="text-gray-500">Realizado: </span>
-                        {stop.actualTime}
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             ))}
           </div>
-        </Card>
-      ))}
 
-      <ServiceDetailsDialog
-        isOpen={!!selectedServiceId}
-        onClose={() => setSelectedServiceId(null)}
-        serviceId={selectedServiceId}
-      />
+          {/* Metrics */}
+          <div className="grid grid-cols-4 gap-4 mt-4 text-sm">
+            <div>
+              <div className="text-gray-500">Coletas</div>
+              <div className="font-semibold">{agent.collections}</div>
+            </div>
+            <div>
+              <div className="text-gray-500">Entregas</div>
+              <div className="font-semibold">{agent.deliveries}</div>
+            </div>
+            <div>
+              <div className="text-gray-500">Pendentes</div>
+              <div className="font-semibold">{agent.pendingServices}</div>
+            </div>
+            <div>
+              <div className="text-gray-500">No prazo</div>
+              <div className="font-semibold text-green-600">
+                {Math.round(agent.onTimePerformance)}%
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
-};
+}
