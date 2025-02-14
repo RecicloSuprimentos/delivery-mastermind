@@ -52,34 +52,32 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
 
   const isCollection = service.type === "coleta";
   const Icon = isCollection ? SendToBack : PackageCheck;
-  const iconColor = isCollection ? "text-green-600" : "text-blue-600";
+  const iconColor = isCollection ? "text-blue-600" : "text-green-600"; // Cores invertidas
   const showSelectButton = service.status === "not-assigned";
 
   return (
     <Card className={`mb-2 overflow-hidden ${isSelected ? 'border-primary border-2' : 'bg-white'}`}>
       <div className="p-3">
         <div className="flex justify-between items-start mb-1">
-          <div className={`flex-1 ${showSelectButton ? 'ml-2' : ''}`}>
-            <div className="flex items-center gap-2">
-              {showSelectButton && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSelect}
-                  className={`${isSelected ? "text-primary" : "text-gray-500"} -ml-2`}
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-              )}
-              <div className={`${iconColor} p-1 h-8 w-8 flex items-center justify-center`}>
-                <Icon className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            {showSelectButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSelect}
+                className={`${isSelected ? "text-primary" : "text-gray-500"}`}
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            )}
+            <div className={`${iconColor} flex items-center justify-center`}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="font-medium text-base">
+                {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
               </div>
-              <div>
-                <div className="font-medium text-base">
-                  {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
-                </div>
-                <div className="font-medium text-base">{service.customer_name}</div>
-              </div>
+              <div className="font-medium text-base">{service.customer_name}</div>
             </div>
           </div>
           
