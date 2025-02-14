@@ -1,3 +1,4 @@
+
 import { MapPin, Settings, User, PlusCircle, LogOut, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,12 @@ export const Navigation = () => {
       <div className="px-4 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-primary hover:opacity-90 transition-opacity">
+            <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary hover:opacity-90 transition-opacity">
+              <img 
+                src="/lovable-uploads/f898aedd-9ace-4deb-9dbd-9472ed5ad258.png" 
+                alt="Logo" 
+                className="h-8 w-auto"
+              />
               ROTERIZADOR
             </Link>
             <div className="ml-8 flex space-x-4">
