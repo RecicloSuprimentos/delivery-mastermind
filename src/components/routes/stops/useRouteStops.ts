@@ -35,39 +35,44 @@ export const useRouteStops = ({
   };
 
   const handleRemoveStop = async (serviceId: string) => {
-    if (!disabled) {
-      try {
-        // Atualiza o status do serviço para not-assigned
-        const { error } = await supabase
-          .from('services')
-          .update({ status: 'not-assigned', assigned_to: null })
-          .eq('id', serviceId);
+    if (disabled) return;
 
-        if (error) {
-          console.error("Erro ao atualizar status do serviço:", error);
-          toast({
-            title: "Erro",
-            description: "Não foi possível remover o serviço da rota.",
-            variant: "destructive",
-          });
-          return;
-        }
+    try {
+      // Primeiro remove o serviço da lista de paradas
+      const updatedStops = selectedStops.filter(s => s.id !== serviceId);
+      onStopsChange(updatedStops);
 
-        // Remove o serviço da lista de paradas
-        onStopsChange(selectedStops.filter(s => s.id !== serviceId));
+      // Depois atualiza o status do serviço para not-assigned
+      const { error } = await supabase
+        .from('services')
+        .update({ status: 'not-assigned', assigned_to: null })
+        .eq('id', serviceId);
 
-        toast({
-          title: "Sucesso",
-          description: "Serviço removido da rota com sucesso.",
-        });
-      } catch (error) {
-        console.error("Erro ao remover serviço:", error);
+      if (error) {
+        console.error("Erro ao atualizar status do serviço:", error);
+        // Reverte a remoção em caso de erro
+        onStopsChange(selectedStops);
         toast({
           title: "Erro",
-          description: "Ocorreu um erro ao remover o serviço da rota.",
+          description: "Não foi possível remover o serviço da rota.",
           variant: "destructive",
         });
+        return;
       }
+
+      toast({
+        title: "Sucesso",
+        description: "Serviço removido da rota com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao remover serviço:", error);
+      // Reverte a remoção em caso de erro
+      onStopsChange(selectedStops);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao remover o serviço da rota.",
+        variant: "destructive",
+      });
     }
   };
 

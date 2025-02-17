@@ -78,7 +78,9 @@ export const RouteFormContent = ({
       return;
     }
 
+    // Atualiza os serviços selecionados
     setSelectedStops(newStops);
+    // Reseta o estado de otimização quando a lista de serviços muda
     resetOptimization();
   };
 
