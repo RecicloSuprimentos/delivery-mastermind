@@ -15,8 +15,10 @@ export const useRouteMutations = (routeId?: string) => {
       console.log("Iniciando salvamento da rota:", { routeData, routeId });
       
       let savedRoute;
+      
       if (routeId) {
         // Atualizar rota existente
+        console.log("Atualizando rota existente:", routeId);
         const { data, error } = await supabase
           .from("routes")
           .update({ ...routeData, status: 'assigned' })
@@ -31,39 +33,43 @@ export const useRouteMutations = (routeId?: string) => {
         
         savedRoute = data;
         console.log("Rota atualizada com sucesso:", savedRoute);
-      } else {
-        // Criar nova rota
-        const { data, error } = await supabase
-          .from("routes")
-          .insert({ ...routeData, status: 'draft' })
-          .select()
-          .single();
-
-        if (error) {
-          console.error("Erro ao criar rota:", error);
-          throw error;
-        }
         
-        savedRoute = data;
-        console.log("Rota criada com sucesso:", savedRoute);
+        // Retorna imediatamente após atualizar
+        return savedRoute;
+      }
+      
+      // Criar nova rota
+      console.log("Criando nova rota");
+      const { data, error } = await supabase
+        .from("routes")
+        .insert({ ...routeData, status: 'draft' })
+        .select()
+        .single();
 
-        // Atualizar status para assigned apenas para novas rotas
-        const { data: updatedRoute, error: updateError } = await supabase
-          .from("routes")
-          .update({ status: 'assigned' })
-          .eq("id", savedRoute.id)
-          .select()
-          .single();
+      if (error) {
+        console.error("Erro ao criar rota:", error);
+        throw error;
+      }
+      
+      savedRoute = data;
+      console.log("Rota criada com sucesso:", savedRoute);
 
-        if (updateError) {
-          console.error("Erro ao atualizar status da rota:", updateError);
-          throw updateError;
-        }
+      // Atualizar status para assigned apenas para novas rotas
+      const { data: updatedRoute, error: updateError } = await supabase
+        .from("routes")
+        .update({ status: 'assigned' })
+        .eq("id", savedRoute.id)
+        .select()
+        .single();
 
-        savedRoute = updatedRoute;
-        console.log("Status da rota atualizado para assigned:", updatedRoute);
+      if (updateError) {
+        console.error("Erro ao atualizar status da rota:", updateError);
+        throw updateError;
       }
 
+      savedRoute = updatedRoute;
+      console.log("Status da rota atualizado para assigned:", updatedRoute);
+      
       return savedRoute;
     },
     onSuccess: () => {
