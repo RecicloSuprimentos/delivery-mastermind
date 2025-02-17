@@ -1,6 +1,7 @@
 
 import type { Service } from "@/types/routes";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseRouteStopsProps {
   services: Service[];
@@ -35,7 +36,38 @@ export const useRouteStops = ({
 
   const handleRemoveStop = async (serviceId: string) => {
     if (!disabled) {
-      onStopsChange(selectedStops.filter(s => s.id !== serviceId));
+      try {
+        // Atualiza o status do serviço para not-assigned
+        const { error } = await supabase
+          .from('services')
+          .update({ status: 'not-assigned', assigned_to: null })
+          .eq('id', serviceId);
+
+        if (error) {
+          console.error("Erro ao atualizar status do serviço:", error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível remover o serviço da rota.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Remove o serviço da lista de paradas
+        onStopsChange(selectedStops.filter(s => s.id !== serviceId));
+
+        toast({
+          title: "Sucesso",
+          description: "Serviço removido da rota com sucesso.",
+        });
+      } catch (error) {
+        console.error("Erro ao remover serviço:", error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao remover o serviço da rota.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
