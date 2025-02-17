@@ -1,15 +1,20 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { RouteListItem } from "./RouteListItem";
 import { printRoute, statusTranslations } from "./RoutePrintService";
 import type { Route } from "@/types/routes";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
 
 export const RoutesList = () => {
+  const [showCancelled, setShowCancelled] = useState(false);
+
   const { data: routes, error, isLoading } = useQuery({
-    queryKey: ["routes"],
+    queryKey: ["routes", showCancelled],
     queryFn: async () => {
-      console.log("Iniciando busca de rotas...");
-      const { data, error } = await supabase
+      console.log("Iniciando busca de rotas...", { showCancelled });
+      let query = supabase
         .from("routes")
         .select(`
           id,
@@ -23,6 +28,12 @@ export const RoutesList = () => {
           route_stops(service_id)
         `)
         .order("created_at", { ascending: false });
+
+      if (!showCancelled) {
+        query = query.neq("status", "cancelled");
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Erro ao buscar rotas:", error);
@@ -51,6 +62,19 @@ export const RoutesList = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Rotas</h1>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="show-cancelled"
+            checked={showCancelled}
+            onCheckedChange={(checked) => setShowCancelled(checked as boolean)}
+          />
+          <label
+            htmlFor="show-cancelled"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Exibir rotas canceladas
+          </label>
+        </div>
       </div>
 
       {routes && routes.length > 0 ? (
