@@ -12,12 +12,18 @@ export const useRouteMutations = (routeId?: string) => {
 
   const saveRoute = useMutation({
     mutationFn: async (routeData: RouteInsert) => {
-      console.log("Iniciando salvamento da rota:", { routeData, routeId });
+      // Garantir que o status seja 'draft' ao criar uma nova rota
+      const dataWithStatus = {
+        ...routeData,
+        status: routeId ? routeData.status : 'draft'
+      };
+      
+      console.log("Iniciando salvamento da rota:", { dataWithStatus, routeId });
       
       if (routeId) {
         const { data, error } = await supabase
           .from("routes")
-          .update(routeData)
+          .update(dataWithStatus)
           .eq("id", routeId)
           .select()
           .single();
@@ -32,7 +38,7 @@ export const useRouteMutations = (routeId?: string) => {
       } else {
         const { data, error } = await supabase
           .from("routes")
-          .insert(routeData)
+          .insert(dataWithStatus)
           .select()
           .single();
 
