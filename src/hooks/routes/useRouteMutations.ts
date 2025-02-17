@@ -12,14 +12,15 @@ export const useRouteMutations = (routeId?: string) => {
 
   const saveRoute = useMutation({
     mutationFn: async (routeData: RouteInsert) => {
-      // Garantir que o status seja 'draft' ao criar uma nova rota
+      // Garantir que o status seja 'draft' durante o salvamento inicial
       const dataWithStatus = {
         ...routeData,
-        status: routeId ? routeData.status : 'draft'
+        status: 'draft'
       };
       
       console.log("Iniciando salvamento da rota:", { dataWithStatus, routeId });
       
+      let savedRoute;
       if (routeId) {
         const { data, error } = await supabase
           .from("routes")
@@ -33,8 +34,8 @@ export const useRouteMutations = (routeId?: string) => {
           throw error;
         }
         
-        console.log("Rota atualizada com sucesso:", data);
-        return data;
+        savedRoute = data;
+        console.log("Rota atualizada com sucesso:", savedRoute);
       } else {
         const { data, error } = await supabase
           .from("routes")
@@ -47,9 +48,25 @@ export const useRouteMutations = (routeId?: string) => {
           throw error;
         }
         
-        console.log("Rota criada com sucesso:", data);
-        return data;
+        savedRoute = data;
+        console.log("Rota criada com sucesso:", savedRoute);
       }
+
+      // Após salvar, atualizar o status para 'assigned'
+      const { data: updatedRoute, error: updateError } = await supabase
+        .from("routes")
+        .update({ status: 'assigned' })
+        .eq("id", savedRoute.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Erro ao atualizar status da rota:", updateError);
+        throw updateError;
+      }
+
+      console.log("Status da rota atualizado para assigned:", updatedRoute);
+      return updatedRoute;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routes"] });
