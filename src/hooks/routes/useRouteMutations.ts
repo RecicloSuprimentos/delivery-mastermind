@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,6 +12,8 @@ export const useRouteMutations = (routeId?: string) => {
 
   const saveRoute = useMutation({
     mutationFn: async (routeData: RouteInsert) => {
+      console.log("Iniciando salvamento da rota:", { routeData, routeId });
+      
       if (routeId) {
         const { data, error } = await supabase
           .from("routes")
@@ -19,7 +22,12 @@ export const useRouteMutations = (routeId?: string) => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar rota:", error);
+          throw error;
+        }
+        
+        console.log("Rota atualizada com sucesso:", data);
         return data;
       } else {
         const { data, error } = await supabase
@@ -28,7 +36,12 @@ export const useRouteMutations = (routeId?: string) => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao criar rota:", error);
+          throw error;
+        }
+        
+        console.log("Rota criada com sucesso:", data);
         return data;
       }
     },
@@ -39,7 +52,8 @@ export const useRouteMutations = (routeId?: string) => {
         description: routeId ? "Rota atualizada com sucesso!" : "Rota criada com sucesso!",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Erro detalhado ao salvar rota:", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao salvar a rota.",
@@ -50,6 +64,8 @@ export const useRouteMutations = (routeId?: string) => {
 
   const updateRouteStatus = useMutation({
     mutationFn: async ({ routeId, status }: { routeId: string; status: string }) => {
+      console.log("Atualizando status da rota:", { routeId, status });
+      
       const { data: route, error } = await supabase
         .from("routes")
         .update({ status })
@@ -57,7 +73,12 @@ export const useRouteMutations = (routeId?: string) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao atualizar status da rota:", error);
+        throw error;
+      }
+      
+      console.log("Status da rota atualizado com sucesso:", route);
       return route;
     },
     onSuccess: () => {
