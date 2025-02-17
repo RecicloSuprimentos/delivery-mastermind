@@ -628,13 +628,22 @@ export type Database = {
         }
         Returns: string
       }
-      update_route_services_status: {
-        Args: {
-          route_id_param: string
-          new_status: string
-        }
-        Returns: undefined
-      }
+      update_route_services_status:
+        | {
+            Args: {
+              route_id_param: string
+              new_status: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              route_id_param: string
+              new_status: string
+              agent_id_param?: string
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       location_type: "operational_base" | "service"
