@@ -12,19 +12,14 @@ export const useRouteMutations = (routeId?: string) => {
 
   const saveRoute = useMutation({
     mutationFn: async (routeData: RouteInsert) => {
-      // Garantir que o status seja 'draft' durante o salvamento inicial
-      const dataWithStatus = {
-        ...routeData,
-        status: 'draft'
-      };
-      
-      console.log("Iniciando salvamento da rota:", { dataWithStatus, routeId });
+      console.log("Iniciando salvamento da rota:", { routeData, routeId });
       
       let savedRoute;
       if (routeId) {
+        // Atualizar rota existente
         const { data, error } = await supabase
           .from("routes")
-          .update(dataWithStatus)
+          .update({ ...routeData, status: 'assigned' })
           .eq("id", routeId)
           .select()
           .single();
@@ -37,9 +32,10 @@ export const useRouteMutations = (routeId?: string) => {
         savedRoute = data;
         console.log("Rota atualizada com sucesso:", savedRoute);
       } else {
+        // Criar nova rota
         const { data, error } = await supabase
           .from("routes")
-          .insert(dataWithStatus)
+          .insert({ ...routeData, status: 'draft' })
           .select()
           .single();
 
@@ -50,23 +46,25 @@ export const useRouteMutations = (routeId?: string) => {
         
         savedRoute = data;
         console.log("Rota criada com sucesso:", savedRoute);
+
+        // Atualizar status para assigned apenas para novas rotas
+        const { data: updatedRoute, error: updateError } = await supabase
+          .from("routes")
+          .update({ status: 'assigned' })
+          .eq("id", savedRoute.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error("Erro ao atualizar status da rota:", updateError);
+          throw updateError;
+        }
+
+        savedRoute = updatedRoute;
+        console.log("Status da rota atualizado para assigned:", updatedRoute);
       }
 
-      // Após salvar, atualizar o status para 'assigned'
-      const { data: updatedRoute, error: updateError } = await supabase
-        .from("routes")
-        .update({ status: 'assigned' })
-        .eq("id", savedRoute.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error("Erro ao atualizar status da rota:", updateError);
-        throw updateError;
-      }
-
-      console.log("Status da rota atualizado para assigned:", updatedRoute);
-      return updatedRoute;
+      return savedRoute;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routes"] });
