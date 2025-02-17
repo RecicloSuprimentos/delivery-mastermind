@@ -1,3 +1,4 @@
+
 import { Navigation } from "@/components/Navigation";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { Button } from "@/components/ui/button";
