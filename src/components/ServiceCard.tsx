@@ -52,7 +52,7 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
 
   const isCollection = service.type === "coleta";
   const Icon = isCollection ? SendToBack : PackageCheck;
-  const iconColor = isCollection ? "text-blue-600" : "text-green-600"; // Cores invertidas
+  const iconColor = isCollection ? "text-blue-600" : "text-green-600";
   const showSelectButton = service.status === "not-assigned";
 
   return (
@@ -99,6 +99,8 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
           isExpanded={isExpanded}
           status={service.status}
           agentName={service.assigned_to?.name}
+          completionDetails={service.completion_details}
+          failureDetails={service.failure_details}
         />
 
         <div className="flex justify-end mt-1">
