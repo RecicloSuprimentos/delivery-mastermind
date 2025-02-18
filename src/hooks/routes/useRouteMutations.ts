@@ -11,88 +11,83 @@ export const useRouteMutations = (routeId?: string) => {
   const queryClient = useQueryClient();
 
   const saveRoute = useMutation({
-    mutationFn: async (routeData: RouteInsert) => {
-      console.log("Iniciando salvamento da rota:", { routeData, routeId });
+    mutationFn: async ({ routeData, stops }: { routeData: RouteInsert, stops: { service_id: string }[] }) => {
+      console.log("Iniciando salvamento da rota:", { routeData, routeId, stops });
       
       let savedRoute;
       
       if (routeId) {
-        // Atualizar rota existente
-        console.log("Atualizando rota existente:", routeId);
+        // Atualização: manter status existente
+        const { data: existingRoute } = await supabase
+          .from("routes")
+          .select("status")
+          .eq("id", routeId)
+          .single();
+          
         const { data, error } = await supabase
           .from("routes")
-          .update({ ...routeData, status: 'assigned' })
+          .update({ ...routeData, status: existingRoute?.status })
           .eq("id", routeId)
           .select()
           .single();
 
-        if (error) {
-          console.error("Erro ao atualizar rota:", error);
-          throw error;
-        }
-        
+        if (error) throw error;
         savedRoute = data;
-        console.log("Rota atualizada com sucesso:", savedRoute);
         
-        // Retorna imediatamente após atualizar
-        return savedRoute;
+        // Atualizar paradas em uma única operação
+        const { error: deleteError } = await supabase
+          .from("route_stops")
+          .delete()
+          .eq("route_id", routeId);
+
+        if (deleteError) throw deleteError;
+      } else {
+        // Criar nova rota
+        const { data, error } = await supabase
+          .from("routes")
+          .insert({ ...routeData, status: 'assigned' })
+          .select()
+          .single();
+
+        if (error) throw error;
+        savedRoute = data;
       }
       
-      // Criar nova rota
-      console.log("Criando nova rota");
-      const { data, error } = await supabase
-        .from("routes")
-        .insert({ ...routeData, status: 'draft' })
-        .select()
-        .single();
+      // Inserir paradas
+      if (stops.length > 0) {
+        const routeStops = stops.map((service, index) => ({
+          route_id: savedRoute.id,
+          service_id: service.service_id,
+          sequence_number: index + 1,
+        }));
 
-      if (error) {
-        console.error("Erro ao criar rota:", error);
-        throw error;
+        const { error: stopsError } = await supabase
+          .from("route_stops")
+          .insert(routeStops);
+
+        if (stopsError) throw stopsError;
+
+        // Atualizar status dos serviços
+        const { error: servicesError } = await supabase
+          .from("services")
+          .update({ status: "assigned" })
+          .in("id", stops.map(s => s.service_id));
+
+        if (servicesError) throw servicesError;
       }
-      
-      savedRoute = data;
-      console.log("Rota criada com sucesso:", savedRoute);
-
-      // Atualizar status para assigned apenas para novas rotas
-      const { data: updatedRoute, error: updateError } = await supabase
-        .from("routes")
-        .update({ status: 'assigned' })
-        .eq("id", savedRoute.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error("Erro ao atualizar status da rota:", updateError);
-        throw updateError;
-      }
-
-      savedRoute = updatedRoute;
-      console.log("Status da rota atualizado para assigned:", updatedRoute);
       
       return savedRoute;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routes"] });
-      toast({
-        title: "Sucesso",
-        description: routeId ? "Rota atualizada com sucesso!" : "Rota criada com sucesso!",
-      });
     },
     onError: (error) => {
       console.error("Erro detalhado ao salvar rota:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao salvar a rota.",
-        variant: "destructive",
-      });
     },
   });
 
   const updateRouteStatus = useMutation({
     mutationFn: async ({ routeId, status }: { routeId: string; status: string }) => {
-      console.log("Atualizando status da rota:", { routeId, status });
-      
       const { data: route, error } = await supabase
         .from("routes")
         .update({ status })
@@ -100,28 +95,11 @@ export const useRouteMutations = (routeId?: string) => {
         .select()
         .single();
 
-      if (error) {
-        console.error("Erro ao atualizar status da rota:", error);
-        throw error;
-      }
-      
-      console.log("Status da rota atualizado com sucesso:", route);
+      if (error) throw error;
       return route;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["routes"] });
-      toast({
-        title: "Sucesso",
-        description: "Status da rota atualizado com sucesso!",
-      });
-    },
-    onError: (error) => {
-      console.error("Erro ao atualizar status da rota:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao atualizar o status da rota.",
-        variant: "destructive",
-      });
     },
   });
 
