@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteFormContent } from "./RouteFormContent";
 import { useRouteFormState } from "@/hooks/useRouteFormState";
+import { useRouteData } from "./form/useRouteData";
 import { useToast } from "@/components/ui/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 import type { Service } from "@/types/routes";
@@ -25,9 +24,7 @@ export const RouteForm = ({ onSave, isLoading, initialData }: RouteFormProps) =>
   const isViewMode = mode === "view";
   const { toast } = useToast();
 
-  // Estado para armazenar os serviços originais da rota
   const [originalStops, setOriginalStops] = useState<Service[]>([]);
-  // Estado para armazenar o status da rota
   const [routeStatus, setRouteStatus] = useState<string>();
 
   const {
@@ -54,101 +51,38 @@ export const RouteForm = ({ onSave, isLoading, initialData }: RouteFormProps) =>
     validateForm,
   } = useRouteFormState();
 
-  const { data: agents } = useQuery({
-    queryKey: ["agents"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("user_type", "agent");
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: services } = useQuery({
-    queryKey: ["available_services"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .eq("status", "not-assigned");
-
-      if (error) throw error;
-      return data as Service[];
-    },
-  });
-
-  const { data: settings } = useQuery({
-    queryKey: ["system_settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("system_settings")
-        .select("*")
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  useEffect(() => {
-    if (routeId) {
-      const fetchRoute = async () => {
-        const { data: routeData, error: routeError } = await supabase
-          .from("routes")
-          .select("*")
-          .eq("id", routeId)
-          .single();
-
-        if (routeError) {
-          console.error("Error fetching route:", routeError);
-          return;
-        }
-
-        if (routeData) {
-          setRouteName(routeData.name);
-          setSelectedAgent(routeData.agent_id);
-          setDate(new Date(routeData.start_time));
-          setStartLocationType(routeData.start_location_type);
-          setEndLocationType(routeData.end_location_type);
-          setSelectedStartService(routeData.start_location_reference);
-          setSelectedEndService(routeData.end_location_reference);
-          setRouteStatus(routeData.status);
-          
-          const { data: stopsData } = await supabase
-            .from("route_stops")
-            .select("*, service:services(*)")
-            .eq("route_id", routeId)
-            .order("sequence_number");
-
-          if (stopsData) {
-            const stops = stopsData.map((stop: any) => stop.service);
-            setSelectedStops(stops);
-            setOriginalStops(stops);
-          }
-        }
-      };
-
-      fetchRoute();
+  const handleDataLoaded = useCallback(({ routeData, stops, status }) => {
+    if (routeData) {
+      setRouteName(routeData.name);
+      setSelectedAgent(routeData.agent_id);
+      setDate(new Date(routeData.start_time));
+      setStartLocationType(routeData.start_location_type);
+      setEndLocationType(routeData.end_location_type);
+      setSelectedStartService(routeData.start_location_reference);
+      setSelectedEndService(routeData.end_location_reference);
+      setRouteStatus(status);
     }
-  }, [routeId]);
-
-  // Novo useEffect para carregar dados iniciais quando disponíveis
-  useEffect(() => {
-    if (initialData) {
-      console.log("Carregando dados iniciais:", initialData);
-      setRouteName(initialData.name);
-      setSelectedAgent(initialData.agent_id || undefined);
-      setDate(new Date(initialData.start_time));
-      setStartLocationType(initialData.start_location_type);
-      setEndLocationType(initialData.end_location_type);
-      setSelectedStartService(initialData.start_location_reference);
-      setSelectedEndService(initialData.end_location_reference);
-      setRouteStatus(initialData.status || undefined);
+    
+    if (stops) {
+      setSelectedStops(stops);
+      setOriginalStops(stops);
     }
-  }, [initialData]);
+  }, [
+    setRouteName,
+    setSelectedAgent,
+    setDate,
+    setStartLocationType,
+    setEndLocationType,
+    setSelectedStartService,
+    setSelectedEndService,
+    setSelectedStops
+  ]);
+
+  const { agents, services, settings } = useRouteData({
+    routeId,
+    initialData,
+    onDataLoaded: handleDataLoaded
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
