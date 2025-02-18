@@ -22,13 +22,9 @@ export const RouteFormContainer = () => {
     
     try {
       let route;
-      // Primeiro, salvar ou atualizar a rota
-      const routeResult = await saveRoute.mutateAsync(routeData);
-      route = routeResult;
-      console.log("Rota salva com sucesso:", route);
-
-      // Se for uma atualização, deletar as paradas existentes
+      
       if (routeId) {
+        // Atualização: primeiro deletar as paradas existentes
         console.log("Deletando paradas existentes...");
         const { error: deleteError } = await supabase
           .from("route_stops")
@@ -39,6 +35,16 @@ export const RouteFormContainer = () => {
           console.error("Erro ao deletar paradas:", deleteError);
           throw deleteError;
         }
+
+        // Depois atualizar a rota
+        const routeResult = await saveRoute.mutateAsync(routeData);
+        route = routeResult;
+        console.log("Rota atualizada com sucesso:", route);
+      } else {
+        // Criação: salvar nova rota
+        const routeResult = await saveRoute.mutateAsync(routeData);
+        route = routeResult;
+        console.log("Nova rota criada com sucesso:", route);
       }
 
       // Inserir as novas paradas
