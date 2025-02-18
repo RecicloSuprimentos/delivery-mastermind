@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Printer, Eye, Edit, Check, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -179,7 +178,7 @@ export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListI
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate(`/routes/new?id=${route.id}&mode=edit`)}
+              onClick={() => navigate(`/routes/edit/${route.id}`)}
               className="h-6 w-6 p-0"
             >
               <Edit className="h-3.5 w-3.5" />
