@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,9 +15,10 @@ type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 interface RouteFormProps {
   onSave: (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => Promise<void>;
   isLoading: boolean;
+  initialData?: RouteInsert | null;
 }
 
-export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
+export const RouteForm = ({ onSave, isLoading, initialData }: RouteFormProps) => {
   const [searchParams] = useSearchParams();
   const routeId = searchParams.get("id");
   const mode = searchParams.get("mode");
@@ -132,6 +134,21 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
       fetchRoute();
     }
   }, [routeId]);
+
+  // Novo useEffect para carregar dados iniciais quando disponíveis
+  useEffect(() => {
+    if (initialData) {
+      console.log("Carregando dados iniciais:", initialData);
+      setRouteName(initialData.name);
+      setSelectedAgent(initialData.agent_id || undefined);
+      setDate(new Date(initialData.start_time));
+      setStartLocationType(initialData.start_location_type);
+      setEndLocationType(initialData.end_location_type);
+      setSelectedStartService(initialData.start_location_reference);
+      setSelectedEndService(initialData.end_location_reference);
+      setRouteStatus(initialData.status || undefined);
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
