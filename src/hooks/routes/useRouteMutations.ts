@@ -44,8 +44,9 @@ export const useRouteMutations = (routeId?: string) => {
         // 2. Buscar paradas existentes
         const { data: existingStops, error: fetchError } = await supabase
           .from("route_stops")
-          .select("service_id")
-          .eq("route_id", routeId);
+          .select("service_id, sequence_number")
+          .eq("route_id", routeId)
+          .order('sequence_number', { ascending: true });
           
         if (fetchError) {
           console.error("[DEBUG] Erro ao buscar paradas existentes:", fetchError);
@@ -93,15 +94,19 @@ export const useRouteMutations = (routeId?: string) => {
           }
         }
 
-        // 6. Inserir novas paradas
+        // 6. Calcular o maior sequence_number existente
+        const maxSequence = existingStops.reduce((max, stop) => 
+          Math.max(max, stop.sequence_number), 0);
+
+        // 7. Inserir novas paradas com sequence_number correto
         if (addedStops.length > 0) {
-          console.log("[DEBUG] Inserindo novas paradas");
+          console.log("[DEBUG] Inserindo novas paradas a partir do sequence_number:", maxSequence + 1);
           const newRouteStops = stops
             .filter(stop => addedStops.includes(stop.service_id))
             .map((service, index) => ({
               route_id: routeId,
               service_id: service.service_id,
-              sequence_number: currentStops.length + index + 1,
+              sequence_number: maxSequence + index + 1,
             }));
 
           const { error: insertError } = await supabase
