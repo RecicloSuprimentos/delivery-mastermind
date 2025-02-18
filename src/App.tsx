@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +13,8 @@ import Login from "./pages/Login";
 import NewServicePage from "./pages/NewServicePage";
 import SettingsPage from "./pages/Settings";
 import RoutesPage from "./pages/RoutesPage";
-import CreateRoutePage from "./pages/CreateRoutePage";
+import CreateRoutePage from "./pages/routes/CreateRoutePage";
+import EditRoutePage from "./pages/routes/EditRoutePage";
 import AgentPage from "./pages/AgentPage";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
 
@@ -103,6 +105,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <CreateRoutePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/routes/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditRoutePage />
               </ProtectedRoute>
             }
           />
