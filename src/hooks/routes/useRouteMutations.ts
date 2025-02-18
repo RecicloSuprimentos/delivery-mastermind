@@ -16,28 +16,21 @@ export const useRouteMutations = (routeId?: string) => {
         // Modo Edição
         console.log("[DEBUG] Iniciando edição de rota", { routeId, routeData, stops });
         
-        // 1. Buscar rota e paradas existentes
-        const { data: existingRoute, error: fetchError } = await supabase
-          .from("routes")
-          .select(`
-            id,
-            status,
-            route_stops (
-              service_id
-            )
-          `)
-          .eq("id", routeId)
-          .single();
+        // 1. Buscar as paradas existentes
+        const { data: existingStops, error: fetchError } = await supabase
+          .from("route_stops")
+          .select("service_id")
+          .eq("route_id", routeId);
           
         if (fetchError) {
-          console.error("[DEBUG] Erro ao buscar rota existente:", fetchError);
+          console.error("[DEBUG] Erro ao buscar paradas existentes:", fetchError);
           throw fetchError;
         }
 
-        console.log("[DEBUG] Dados atuais da rota:", existingRoute);
+        console.log("[DEBUG] Paradas atuais:", existingStops);
 
         // 2. Identificar mudanças nos serviços
-        const currentStops = existingRoute.route_stops.map(stop => stop.service_id);
+        const currentStops = existingStops.map(stop => stop.service_id);
         const newStops = stops.map(stop => stop.service_id);
         
         const removedStops = currentStops.filter(id => !newStops.includes(id));
@@ -60,11 +53,9 @@ export const useRouteMutations = (routeId?: string) => {
             console.error("[DEBUG] Erro ao resetar status dos serviços removidos:", resetError);
             throw resetError;
           }
-        }
 
-        // 4. Remover paradas antigas e adicionar novas
-        if (removedStops.length > 0) {
-          console.log("[DEBUG] Removendo paradas antigas");
+          // 4. Remover paradas dos serviços removidos
+          console.log("[DEBUG] Removendo paradas dos serviços removidos");
           const { error: deleteError } = await supabase
             .from("route_stops")
             .delete()
@@ -72,12 +63,12 @@ export const useRouteMutations = (routeId?: string) => {
             .in("service_id", removedStops);
 
           if (deleteError) {
-            console.error("[DEBUG] Erro ao deletar paradas antigas:", deleteError);
+            console.error("[DEBUG] Erro ao deletar paradas removidas:", deleteError);
             throw deleteError;
           }
         }
 
-        // 5. Inserir novas paradas e atualizar status
+        // 5. Inserir apenas as novas paradas e atualizar status
         if (addedStops.length > 0) {
           console.log("[DEBUG] Inserindo novas paradas");
           const newRouteStops = stops
@@ -109,9 +100,18 @@ export const useRouteMutations = (routeId?: string) => {
           }
         }
 
-        return existingRoute;
+        // 6. Retorna a rota atualizada
+        const { data: updatedRoute, error: routeError } = await supabase
+          .from("routes")
+          .select("*")
+          .eq("id", routeId)
+          .single();
+
+        if (routeError) throw routeError;
+        return updatedRoute;
+
       } else {
-        // Modo Criação - mantém a lógica existente
+        // Modo Criação
         console.log("[DEBUG] Modo criação - Inserindo nova rota");
         const { data, error } = await supabase
           .from("routes")
