@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteFormContent } from "./RouteFormContent";
 import { useRouteFormState } from "@/hooks/useRouteFormState";
@@ -11,9 +12,11 @@ type RouteInsert = Database["public"]["Tables"]["routes"]["Insert"];
 interface RouteFormProps {
   onSave: (routeData: RouteInsert, selectedStops: Service[]) => Promise<void>;
   isLoading: boolean;
+  routeId?: string;
+  initialData?: any;
 }
 
-export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
+export const RouteForm = ({ onSave, isLoading, routeId, initialData }: RouteFormProps) => {
   const {
     date,
     setDate,
@@ -39,6 +42,31 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
   } = useRouteFormState();
 
   const { agents, services, settings } = useRouteData();
+
+  // Carregar dados iniciais quando estiver em modo de edição
+  useEffect(() => {
+    if (initialData) {
+      setRouteName(initialData.name);
+      setSelectedAgent(initialData.agent_id);
+      setDate(new Date(initialData.start_time));
+      setStartLocationType(initialData.start_location_type);
+      setEndLocationType(initialData.end_location_type);
+      
+      if (initialData.start_location_type === "service") {
+        setSelectedStartService(initialData.start_location_reference);
+      }
+      
+      if (initialData.end_location_type === "service") {
+        setSelectedEndService(initialData.end_location_reference);
+      }
+
+      // Carregar paradas se disponíveis
+      if (initialData.route_stops?.length > 0) {
+        const stops = initialData.route_stops.map((stop: any) => stop.service);
+        setSelectedStops(stops);
+      }
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +96,7 @@ export const RouteForm = ({ onSave, isLoading }: RouteFormProps) => {
       <RouteFormHeader
         onSave={handleSubmit}
         isLoading={isLoading}
+        routeId={routeId}
       />
       
       <RouteFormContent
