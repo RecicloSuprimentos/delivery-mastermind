@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouteMutations } from "./useRouteMutations";
+import { useRoutes } from "@/hooks/useRoutes";
 import type { Database } from "@/integrations/supabase/types";
 import type { Service } from "@/types/routes";
 
@@ -14,8 +15,9 @@ export const useEditRoute = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { saveRoute } = useRouteMutations(id);
+  const { route } = useRoutes(id);
 
-  const handleSave = async (routeData: RouteInsert, selectedStops: Service[]) => {
+  const handleSave = async (routeData: RouteInsert, selectedStops: Service[], routeId?: string) => {
     console.log("Iniciando processo de edição da rota...", { routeData, selectedStops, id });
     setIsLoading(true);
     
@@ -42,6 +44,7 @@ export const useEditRoute = () => {
 
   return {
     handleSave,
-    isLoading
+    isLoading,
+    route
   };
 };
