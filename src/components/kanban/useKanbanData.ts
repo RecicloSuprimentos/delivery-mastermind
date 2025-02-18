@@ -10,7 +10,14 @@ export const useKanbanData = (searchTerm: string) => {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
-  const formatService = (service: ServiceResponse & { agent_name?: string, agent_id?: string }): Service => ({
+  const formatService = (service: ServiceResponse & { 
+    agent_name?: string, 
+    agent_id?: string,
+    checklist?: any,
+    failure?: any,
+    failure_reason?: any,
+    payment_method?: any
+  }): Service => ({
     ...service,
     id: service.id,
     type: service.type,
@@ -31,6 +38,18 @@ export const useKanbanData = (searchTerm: string) => {
     assigned_to: service.agent_name ? {
       id: service.agent_id!,
       name: service.agent_name
+    } : undefined,
+    completion_details: service.checklist ? {
+      responsibleName: service.checklist.responsible_name,
+      collectedItems: service.checklist.collected_items,
+      observations: service.checklist.observations,
+      completedAt: service.checklist.completed_at,
+      paymentMethod: service.payment_method?.name
+    } : undefined,
+    failure_details: service.failure ? {
+      reason: service.failure_reason?.reason || "Outro",
+      observations: service.failure.observations,
+      completedAt: service.failure.completed_at
     } : undefined
   });
 
@@ -47,6 +66,18 @@ export const useKanbanData = (searchTerm: string) => {
               name
             )
           )
+        ),
+        checklist:service_checklists(
+          *,
+          payment_method:payment_methods(
+            name
+          )
+        ),
+        failure:service_failures(
+          *,
+          failure_reason:service_failure_reasons(
+            reason
+          )
         )
       `)
       .order("created_at", { ascending: false });
@@ -61,11 +92,19 @@ export const useKanbanData = (searchTerm: string) => {
       const formattedServices: Service[] = data.map(service => {
         const route = (service.route as any)?.[0]?.routes;
         const agent = route?.agent;
+        const checklist = (service.checklist as any)?.[0];
+        const failure = (service.failure as any)?.[0];
+        const payment_method = checklist?.payment_method;
+        const failure_reason = failure?.failure_reason;
         
         return formatService({
           ...service,
           agent_id: agent?.id,
-          agent_name: agent?.name
+          agent_name: agent?.name,
+          checklist,
+          failure,
+          payment_method,
+          failure_reason
         });
       });
       setServices(formattedServices);

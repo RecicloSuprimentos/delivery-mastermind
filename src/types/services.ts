@@ -22,4 +22,16 @@ export interface Service {
     id: string;
     name: string;
   };
+  completion_details?: {
+    responsibleName: string;
+    collectedItems?: string;
+    observations?: string;
+    completedAt: string;
+    paymentMethod?: string;
+  };
+  failure_details?: {
+    reason: string;
+    observations?: string;
+    completedAt: string;
+  };
 }
