@@ -1,15 +1,23 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useRouteQuery = (routeId?: string) => {
-  const { data: route, isLoading: isLoadingRoute } = useQuery({
+  const { data: route } = useQuery({
     queryKey: ["route", routeId],
     queryFn: async () => {
       if (!routeId) return null;
       
+      // Buscar rota com seus serviços relacionados
       const { data, error } = await supabase
         .from("routes")
-        .select("*")
+        .select(`
+          *,
+          route_stops (
+            *,
+            service:services(*)
+          )
+        `)
         .eq("id", routeId)
         .single();
 
@@ -19,26 +27,7 @@ export const useRouteQuery = (routeId?: string) => {
     enabled: !!routeId,
   });
 
-  const { data: routeStops } = useQuery({
-    queryKey: ["route_stops", routeId],
-    queryFn: async () => {
-      if (!routeId) return null;
-
-      const { data, error } = await supabase
-        .from("route_stops")
-        .select("*, service:services(*)")
-        .eq("route_id", routeId)
-        .order("sequence_number");
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!routeId,
-  });
-
   return {
     route,
-    routeStops,
-    isLoadingRoute,
   };
 };
