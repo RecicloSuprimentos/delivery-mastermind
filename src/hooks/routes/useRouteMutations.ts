@@ -12,12 +12,12 @@ export const useRouteMutations = (routeId?: string) => {
 
   const saveRoute = useMutation({
     mutationFn: async ({ routeData, stops }: { routeData: RouteInsert, stops: { service_id: string }[] }) => {
-      console.log("Iniciando salvamento da rota:", { routeData, routeId, stops });
+      console.log("Iniciando salvamento da rota com otimização:", { routeData, routeId, stops });
       
       let savedRoute;
       
+      // Se for edição, mantenha o status existente
       if (routeId) {
-        // Atualização: manter status existente
         const { data: existingRoute } = await supabase
           .from("routes")
           .select("status")
@@ -26,7 +26,10 @@ export const useRouteMutations = (routeId?: string) => {
           
         const { data, error } = await supabase
           .from("routes")
-          .update({ ...routeData, status: existingRoute?.status })
+          .update({ 
+            ...routeData, 
+            status: existingRoute?.status || 'assigned' // Garantir um status padrão
+          })
           .eq("id", routeId)
           .select()
           .single();
@@ -34,7 +37,7 @@ export const useRouteMutations = (routeId?: string) => {
         if (error) throw error;
         savedRoute = data;
         
-        // Atualizar paradas em uma única operação
+        // Atualização otimizada das paradas
         const { error: deleteError } = await supabase
           .from("route_stops")
           .delete()
@@ -42,7 +45,7 @@ export const useRouteMutations = (routeId?: string) => {
 
         if (deleteError) throw deleteError;
       } else {
-        // Criar nova rota
+        // Nova rota sempre como 'assigned'
         const { data, error } = await supabase
           .from("routes")
           .insert({ ...routeData, status: 'assigned' })
@@ -53,7 +56,7 @@ export const useRouteMutations = (routeId?: string) => {
         savedRoute = data;
       }
       
-      // Inserir paradas
+      // Inserir paradas em lote
       if (stops.length > 0) {
         const routeStops = stops.map((service, index) => ({
           route_id: savedRoute.id,
@@ -67,7 +70,7 @@ export const useRouteMutations = (routeId?: string) => {
 
         if (stopsError) throw stopsError;
 
-        // Atualizar status dos serviços
+        // Atualizar status dos serviços em lote
         const { error: servicesError } = await supabase
           .from("services")
           .update({ status: "assigned" })
@@ -83,6 +86,11 @@ export const useRouteMutations = (routeId?: string) => {
     },
     onError: (error) => {
       console.error("Erro detalhado ao salvar rota:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar a rota. Verifique o console para mais detalhes.",
+        variant: "destructive",
+      });
     },
   });
 
