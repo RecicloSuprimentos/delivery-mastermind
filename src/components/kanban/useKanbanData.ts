@@ -10,7 +10,7 @@ export const useKanbanData = (searchTerm: string) => {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
-  const formatService = (service: ServiceResponse): Service => ({
+  const formatService = (service: ServiceResponse & { agent_name?: string, agent_id?: string }): Service => ({
     ...service,
     id: service.id,
     type: service.type,
@@ -28,9 +28,9 @@ export const useKanbanData = (searchTerm: string) => {
     created_at: service.created_at || undefined,
     updated_at: service.updated_at || undefined,
     completed_at: service.completed_at || undefined,
-    assigned_to: service.assigned_to ? {
-      id: (service.assigned_to as any).id,
-      name: (service.assigned_to as any).name
+    assigned_to: service.agent_name ? {
+      id: service.agent_id!,
+      name: service.agent_name
     } : undefined
   });
 
@@ -38,7 +38,17 @@ export const useKanbanData = (searchTerm: string) => {
     console.log("Buscando serviços...");
     const { data, error } = await supabase
       .from("services")
-      .select("*, completed_at, updated_at")
+      .select(`
+        *,
+        route:route_stops(
+          routes(
+            agent:system_users(
+              id,
+              name
+            )
+          )
+        )
+      `)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -48,7 +58,16 @@ export const useKanbanData = (searchTerm: string) => {
 
     if (data) {
       console.log("Serviços encontrados:", data);
-      const formattedServices: Service[] = data.map(formatService);
+      const formattedServices: Service[] = data.map(service => {
+        const route = (service.route as any)?.[0]?.routes;
+        const agent = route?.agent;
+        
+        return formatService({
+          ...service,
+          agent_id: agent?.id,
+          agent_name: agent?.name
+        });
+      });
       setServices(formattedServices);
     }
   };
