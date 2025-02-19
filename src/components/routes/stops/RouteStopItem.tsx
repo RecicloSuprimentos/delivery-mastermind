@@ -1,3 +1,4 @@
+
 import { Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Service } from "@/types/routes";
@@ -18,6 +19,9 @@ export const RouteStopItem = ({
   disabled,
   provided 
 }: RouteStopItemProps) => {
+  // Verifica se o serviço está em andamento ou concluído
+  const isInProgressOrCompleted = stop.status === 'in-transit' || stop.status === 'completed';
+  
   return (
     <div
       ref={provided.innerRef}
@@ -54,7 +58,7 @@ export const RouteStopItem = ({
           variant="ghost"
           size="sm"
           onClick={() => onRemove(stop.id)}
-          disabled={disabled}
+          disabled={disabled || isInProgressOrCompleted}
         >
           Remover
         </Button>

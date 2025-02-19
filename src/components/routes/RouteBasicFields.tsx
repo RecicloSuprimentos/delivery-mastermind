@@ -1,3 +1,4 @@
+
 import { RouteNameField } from "./RouteNameField";
 import { AgentSelect } from "./AgentSelect";
 import { DateTimePicker } from "./DateTimePicker";
@@ -34,6 +35,7 @@ interface RouteBasicFieldsProps {
   agents?: Agent[];
   services?: Service[];
   disabled?: boolean;
+  disableOnlyStart?: boolean;
 }
 
 export const RouteBasicFields = ({
@@ -54,20 +56,21 @@ export const RouteBasicFields = ({
   agents,
   services,
   disabled,
+  disableOnlyStart,
 }: RouteBasicFieldsProps) => {
   return (
-    <div className="space-y-4 pt-16"> {/* Added pt-16 to account for fixed header */}
+    <div className="space-y-4 pt-16">
       <div className="grid grid-cols-2 gap-4">
         <RouteNameField 
           value={routeName} 
           onChange={setRouteName}
-          disabled={disabled}
+          disabled={disabled || disableOnlyStart}
         />
         <AgentSelect 
           agents={agents} 
           value={selectedAgent} 
           onChange={setSelectedAgent}
-          disabled={disabled}
+          disabled={disabled || disableOnlyStart}
         />
       </div>
       <DateTimePicker 
@@ -84,7 +87,7 @@ export const RouteBasicFields = ({
           selectedService={selectedStartService}
           onServiceChange={setSelectedStartService}
           services={services}
-          disabled={disabled}
+          disabled={disabled || disableOnlyStart}
         />
         <LocationFields
           label="Local de Término"

@@ -66,6 +66,9 @@ export const RouteFormContent = ({
 
   // Verifica se a rota está finalizada
   const isCompleted = routeStatus === "completed";
+  
+  // Verifica se há algum serviço concluído
+  const hasCompletedServices = selectedStops.some(stop => stop.status === "completed");
 
   // Função para validar alterações nos serviços
   const handleStopsChange = (newStops: Service[]) => {
@@ -104,7 +107,8 @@ export const RouteFormContent = ({
           setSelectedEndService={setSelectedEndService}
           agents={agents}
           services={services}
-          disabled={isViewMode || isCompleted}
+          disabled={isViewMode || isCompleted || hasCompletedServices}
+          disableOnlyStart={hasCompletedServices} // Nova prop para controlar campos iniciais
         />
 
         <RouteStopsList 
