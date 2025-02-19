@@ -41,10 +41,16 @@ export const useRouteMutations = (routeId?: string) => {
 
         console.log("[DEBUG] Rota atualizada:", updatedRoute);
 
-        // 2. Buscar paradas existentes
+        // 2. Buscar paradas existentes e seus status
         const { data: existingStops, error: fetchError } = await supabase
           .from("route_stops")
-          .select("service_id, sequence_number")
+          .select(`
+            service_id,
+            sequence_number,
+            services (
+              status
+            )
+          `)
           .eq("route_id", routeId)
           .order('sequence_number', { ascending: true });
           
@@ -55,7 +61,14 @@ export const useRouteMutations = (routeId?: string) => {
 
         console.log("[DEBUG] Paradas atuais:", existingStops);
 
-        // 3. Identificar mudanças nos serviços
+        // 3. Verificar se a rota está em andamento
+        const isRouteInProgress = existingStops.some(stop => 
+          stop.services?.status === "in-transit" || stop.services?.status === "completed"
+        );
+
+        console.log("[DEBUG] Rota em andamento:", isRouteInProgress);
+
+        // 4. Identificar mudanças nos serviços
         const currentStops = existingStops.map(stop => stop.service_id);
         const newStops = stops.map(stop => stop.service_id);
         
@@ -64,10 +77,11 @@ export const useRouteMutations = (routeId?: string) => {
         
         console.log("[DEBUG] Análise de mudanças:", {
           removedStops,
-          addedStops
+          addedStops,
+          isRouteInProgress
         });
 
-        // 4. Atualizar status dos serviços removidos
+        // 5. Atualizar status dos serviços removidos
         if (removedStops.length > 0) {
           console.log("[DEBUG] Atualizando status dos serviços removidos");
           const { error: resetError } = await supabase
@@ -80,7 +94,7 @@ export const useRouteMutations = (routeId?: string) => {
             throw resetError;
           }
 
-          // 5. Remover paradas dos serviços removidos
+          // 6. Remover paradas dos serviços removidos
           console.log("[DEBUG] Removendo paradas dos serviços removidos");
           const { error: deleteError } = await supabase
             .from("route_stops")
@@ -94,11 +108,11 @@ export const useRouteMutations = (routeId?: string) => {
           }
         }
 
-        // 6. Calcular o maior sequence_number existente
+        // 7. Calcular o maior sequence_number existente
         const maxSequence = existingStops.reduce((max, stop) => 
           Math.max(max, stop.sequence_number), 0);
 
-        // 7. Inserir novas paradas com sequence_number correto
+        // 8. Inserir novas paradas com sequence_number correto
         if (addedStops.length > 0) {
           console.log("[DEBUG] Inserindo novas paradas a partir do sequence_number:", maxSequence + 1);
           const newRouteStops = stops
@@ -118,10 +132,13 @@ export const useRouteMutations = (routeId?: string) => {
             throw insertError;
           }
 
-          console.log("[DEBUG] Atualizando status dos novos serviços");
+          // Definir o status correto baseado no estado da rota
+          const newStatus = isRouteInProgress ? "accepted" : "assigned";
+          console.log("[DEBUG] Atualizando status dos novos serviços para:", newStatus);
+
           const { error: servicesError } = await supabase
             .from("services")
-            .update({ status: "assigned" })
+            .update({ status: newStatus })
             .in("id", addedStops);
 
           if (servicesError) {
