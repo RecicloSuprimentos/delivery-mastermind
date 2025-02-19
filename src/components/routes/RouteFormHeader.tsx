@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -5,17 +6,15 @@ import { useNavigate } from "react-router-dom";
 interface RouteFormHeaderProps {
   onSave: (e: React.FormEvent) => void;
   isLoading: boolean;
-  routeId?: string | null;
+  routeId?: string;
   isViewMode?: boolean;
-  isCompleted?: boolean;
 }
 
 export const RouteFormHeader = ({ 
   onSave, 
   isLoading, 
-  routeId, 
-  isViewMode,
-  isCompleted 
+  routeId,
+  isViewMode 
 }: RouteFormHeaderProps) => {
   const navigate = useNavigate();
 
@@ -34,7 +33,7 @@ export const RouteFormHeader = ({
             {routeId ? (isViewMode ? "Visualizar Rota" : "Editar Rota") : "Nova Rota"}
           </h1>
         </div>
-        {!isViewMode && !isCompleted && (
+        {!isViewMode && (
           <Button 
             onClick={onSave}
             disabled={isLoading}

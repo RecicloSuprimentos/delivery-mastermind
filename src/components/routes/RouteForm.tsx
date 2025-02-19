@@ -14,9 +14,10 @@ interface RouteFormProps {
   isLoading: boolean;
   routeId?: string;
   initialData?: any;
+  isViewMode?: boolean;
 }
 
-export const RouteForm = ({ onSave, isLoading, routeId, initialData }: RouteFormProps) => {
+export const RouteForm = ({ onSave, isLoading, routeId, initialData, isViewMode }: RouteFormProps) => {
   const {
     date,
     setDate,
@@ -97,6 +98,7 @@ export const RouteForm = ({ onSave, isLoading, routeId, initialData }: RouteForm
         onSave={handleSubmit}
         isLoading={isLoading}
         routeId={routeId}
+        isViewMode={isViewMode}
       />
       
       <RouteFormContent
@@ -122,7 +124,9 @@ export const RouteForm = ({ onSave, isLoading, routeId, initialData }: RouteForm
         agents={agents}
         services={services}
         settings={settings}
+        isViewMode={isViewMode}
       />
     </form>
   );
 };
+
