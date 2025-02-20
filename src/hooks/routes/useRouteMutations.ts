@@ -13,7 +13,7 @@ export const useRouteMutations = (routeId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { updateRouteData, createNewRoute } = useRouteBasicMutations(routeId);
-  const { fetchExistingStops, removeStops, addNewStops } = useRouteStopsMutations();
+  const { fetchExistingStops, removeStops, addNewStops, updateStopsSequence } = useRouteStopsMutations();
   const { updateServicesStatus } = useServiceStatusMutations();
 
   const saveRoute = useMutation({
@@ -45,31 +45,30 @@ export const useRouteMutations = (routeId?: string) => {
         
         console.log("[DEBUG] Análise de mudanças:", { removedStops, addedStops, isRouteInProgress });
 
-        // 5. Atualizar status dos serviços removidos
-        if (removedStops.length > 0) {
-          console.log("[DEBUG] Atualizando status dos serviços removidos");
-          await updateServicesStatus(removedStops, "not-assigned");
-          await removeStops(routeId, removedStops);
-        }
+        // 5. Se houver mudanças na ordem ou nos serviços, atualizar todas as paradas
+        if (removedStops.length > 0 || addedStops.length > 0 || 
+            JSON.stringify(currentStops) !== JSON.stringify(newStops)) {
+          console.log("[DEBUG] Atualizando sequência das paradas");
+          
+          // Atualizar status dos serviços removidos
+          if (removedStops.length > 0) {
+            await updateServicesStatus(removedStops, "not-assigned");
+          }
 
-        // 6. Adicionar novas paradas
-        if (addedStops.length > 0) {
-          const maxSequence = existingStops.reduce((max, stop) => 
-            Math.max(max, stop.sequence_number), 0);
+          // Atualizar todas as paradas com a nova sequência
+          const updatedStops = stops.map((stop, index) => ({
+            service_id: stop.service_id,
+            sequence_number: index + 1,
+          }));
 
-          const newRouteStops = stops
-            .filter(stop => addedStops.includes(stop.service_id))
-            .map((service, index) => ({
-              service_id: service.service_id,
-              sequence_number: maxSequence + index + 1,
-            }));
-
-          await addNewStops(routeId, newRouteStops);
+          await updateStopsSequence(routeId, updatedStops);
 
           // Atualizar status dos novos serviços
-          const newStatus = isRouteInProgress ? "accepted" : "assigned";
-          console.log("[DEBUG] Atualizando status dos novos serviços para:", newStatus);
-          await updateServicesStatus(addedStops, newStatus);
+          if (addedStops.length > 0) {
+            const newStatus = isRouteInProgress ? "accepted" : "assigned";
+            console.log("[DEBUG] Atualizando status dos novos serviços para:", newStatus);
+            await updateServicesStatus(addedStops, newStatus);
+          }
         }
 
         return updatedRoute;
@@ -94,6 +93,10 @@ export const useRouteMutations = (routeId?: string) => {
     onSuccess: () => {
       console.log("[DEBUG] Operação concluída com sucesso - Invalidando cache");
       queryClient.invalidateQueries({ queryKey: ["routes"] });
+      toast({
+        title: "Sucesso",
+        description: "Rota salva com sucesso",
+      });
     },
     onError: (error) => {
       console.error("[DEBUG] Erro na operação:", error);

@@ -49,9 +49,31 @@ export const useRouteStopsMutations = () => {
     if (error) throw error;
   };
 
+  const updateStopsSequence = async (routeId: string, stops: { service_id: string; sequence_number: number }[]) => {
+    // Primeiro, removemos todas as paradas existentes
+    const { error: deleteError } = await supabase
+      .from("route_stops")
+      .delete()
+      .eq("route_id", routeId);
+
+    if (deleteError) throw deleteError;
+
+    // Depois, inserimos as paradas com a nova sequência
+    const { error: insertError } = await supabase
+      .from("route_stops")
+      .insert(stops.map(stop => ({
+        route_id: routeId,
+        service_id: stop.service_id,
+        sequence_number: stop.sequence_number,
+      })));
+
+    if (insertError) throw insertError;
+  };
+
   return {
     fetchExistingStops,
     removeStops,
     addNewStops,
+    updateStopsSequence,
   };
 };
