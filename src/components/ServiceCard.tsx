@@ -31,7 +31,7 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
   };
 
   const handleUnassign = async () => {
-    if (window.confirm("Tem certeza que deseja desatribuir este serviço?")) {
+    if (window.confirm("Tem certeza que deseja desatribuir este serviço? Ele será removido da rota associada.")) {
       try {
         await updateServiceStatus.mutateAsync({
           serviceId: service.id,

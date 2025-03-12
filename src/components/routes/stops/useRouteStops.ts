@@ -2,6 +2,7 @@
 import type { Service } from "@/types/routes";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useRouteStopsMutations } from "@/hooks/routes/mutations/useRouteStopsMutations";
 
 interface UseRouteStopsProps {
   services: Service[];
@@ -17,6 +18,7 @@ export const useRouteStops = ({
   disabled,
 }: UseRouteStopsProps) => {
   const { toast } = useToast();
+  const { removeServiceFromRoute } = useRouteStopsMutations();
 
   const handleAddStop = (service: Service) => {
     if (!selectedStops.find(s => s.id === service.id) && !disabled) {
@@ -59,6 +61,9 @@ export const useRouteStops = ({
         });
         return;
       }
+
+      // Remover o serviço da rota no banco de dados
+      await removeServiceFromRoute(serviceId);
 
       toast({
         title: "Sucesso",

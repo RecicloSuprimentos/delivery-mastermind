@@ -1,10 +1,13 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRouteStopsMutations } from "./routes/mutations/useRouteStopsMutations";
 
 export const useServices = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { removeServiceFromRoute } = useRouteStopsMutations();
 
   const { data: services, isLoading } = useQuery({
     queryKey: ["services"],
@@ -48,6 +51,15 @@ export const useServices = () => {
 
   const updateServiceStatus = useMutation({
     mutationFn: async ({ serviceId, status }: { serviceId: string; status: string }) => {
+      // Passo 1: Se o status for "not-assigned", remover o serviço de qualquer rota
+      if (status === "not-assigned") {
+        const result = await removeServiceFromRoute(serviceId);
+        if (result) {
+          console.log(`Serviço removido da rota ${result.routeId}. Restam ${result.remainingStopsCount} paradas.`);
+        }
+      }
+
+      // Passo 2: Atualizar o status do serviço
       const { error } = await supabase
         .from("services")
         .update({ status })
@@ -57,6 +69,7 @@ export const useServices = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["routes"] });
       toast({
         title: "Sucesso",
         description: "Status do serviço atualizado com sucesso",
