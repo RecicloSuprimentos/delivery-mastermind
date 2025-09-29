@@ -1,6 +1,8 @@
 
-import { KanbanColumn } from "./kanban/KanbanColumn";
+import React, { useMemo } from "react";
+import { OptimizedKanbanColumn } from "./kanban/OptimizedKanbanColumn";
 import { useKanbanData } from "./kanban/useKanbanData";
+import { useRealtimeServices } from "@/hooks/useRealtimeServices";
 import { isToday } from "date-fns";
 
 const columns = [
@@ -16,31 +18,38 @@ interface KanbanBoardProps {
 }
 
 export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
-  const { services, selectedServices, handleServiceSelect, fetchServices } = useKanbanData(searchTerm);
+  // Inicializar sistema realtime centralizado
+  useRealtimeServices();
+  
+  const { servicesByStatus, selectedServices, handleServiceSelect, fetchServices } = useKanbanData(searchTerm);
 
-  const filterCompletedServices = (services: any[]) => {
+  // Filtro otimizado para serviços completados
+  const completedServices = useMemo(() => {
+    const completed = servicesByStatus.completed || [];
+    const cancelled = servicesByStatus.cancelled || [];
+    const allCompletedAndCancelled = [...completed, ...cancelled];
+    
     if (searchTerm) {
-      return services.filter(s => s.status === "completed" || s.status === "cancelled");
+      return allCompletedAndCancelled;
     }
     
-    return services.filter(s => {
-      if (s.status !== "completed" && s.status !== "cancelled") return false;
-      const completedDate = new Date(s.completed_at || s.updated_at || s.created_at);
+    return allCompletedAndCancelled.filter(service => {
+      const completedDate = new Date(service.completed_at || service.updated_at || service.created_at);
       return isToday(completedDate);
     });
-  };
+  }, [servicesByStatus.completed, servicesByStatus.cancelled, searchTerm]);
 
   return (
     <div className="flex-1 w-full h-full overflow-hidden">
       <div className="flex h-full px-2 space-x-2 overflow-x-auto min-w-full">
         {columns.map((column) => (
-          <KanbanColumn
+          <OptimizedKanbanColumn
             key={column.id}
             id={column.id}
             title={column.title}
             services={column.id === "completed" 
-              ? filterCompletedServices(services)
-              : services.filter(s => s.status === column.id)
+              ? completedServices
+              : servicesByStatus[column.id] || []
             }
             selectedServices={selectedServices}
             onServiceSelect={handleServiceSelect}

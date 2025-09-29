@@ -103,53 +103,7 @@ export const useAgentsData = (selectedDate: Date) => {
     refetchInterval: 30000, // Refetch a cada 30 segundos
   });
 
-  useEffect(() => {
-    // Inscrever para atualizações em tempo real
-    const channel = supabase
-      .channel('realtime-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'services'
-        },
-        () => {
-          console.log("Mudança detectada nos serviços, atualizando dados...");
-          refetch();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'agent_locations'
-        },
-        () => {
-          console.log("Nova localização de agente detectada, atualizando dados...");
-          refetch();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'route_stops'
-        },
-        () => {
-          console.log("Mudança detectada nas paradas, atualizando dados...");
-          refetch();
-        }
-      )
-      .subscribe();
-
-    // Cleanup na inscrição quando o componente for desmontado
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
+  // Removido - realtime agora é gerenciado centralmente pelo useRealtimeServices
 
   return {
     data: agents,

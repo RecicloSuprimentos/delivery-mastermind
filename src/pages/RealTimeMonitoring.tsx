@@ -5,6 +5,7 @@ import { AgentsList } from "@/components/monitoring/AgentsList";
 import { AgentLocationMap } from "@/components/monitoring/AgentLocationMap";
 import { MapControls } from "@/components/monitoring/MapControls";
 import { useAgentsData } from "@/hooks/useAgentsData";
+import { useRealtimeServices } from "@/hooks/useRealtimeServices";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,6 +16,10 @@ import { cn } from "@/lib/utils";
 
 const RealTimeMonitoring = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
+  
+  // Inicializar sistema realtime centralizado
+  useRealtimeServices();
+  
   const { data: agents, isLoading } = useAgentsData(selectedDate);
   
   const [showAgents, setShowAgents] = useState(true);

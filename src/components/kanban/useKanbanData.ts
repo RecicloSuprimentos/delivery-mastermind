@@ -1,156 +1,16 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Service, ValidStatus } from "@/types/services";
-import type { Database } from "@/integrations/supabase/types";
+import { useState } from "react";
+import { useOptimizedServices } from "@/hooks/useOptimizedServices";
 
-type ServiceResponse = Database['public']['Tables']['services']['Row'];
-
+/**
+ * Hook otimizado para o KanbanBoard
+ * Substitui a query complexa por queries separadas e cache inteligente
+ */
 export const useKanbanData = (searchTerm: string) => {
-  const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
-
-  const formatService = (service: ServiceResponse & { 
-    agent_name?: string, 
-    agent_id?: string,
-    checklist?: any,
-    failure?: any,
-    failure_reason?: any,
-    payment_method?: any
-  }): Service => ({
-    ...service,
-    id: service.id,
-    type: service.type,
-    service_id: service.service_id,
-    customer_name: service.customer_name,
-    address: service.address,
-    phone: service.phone,
-    email: service.email || undefined,
-    complement: service.complement || undefined,
-    time_window: service.time_window || undefined,
-    observations: service.observations || undefined,
-    status: (service.status || 'not-assigned') as ValidStatus,
-    latitude: service.latitude || undefined,
-    longitude: service.longitude || undefined,
-    created_at: service.created_at || undefined,
-    updated_at: service.updated_at || undefined,
-    completed_at: service.completed_at || undefined,
-    assigned_to: service.agent_name ? {
-      id: service.agent_id!,
-      name: service.agent_name
-    } : undefined,
-    completion_details: service.checklist ? {
-      responsibleName: service.checklist.responsible_name,
-      collectedItems: service.checklist.collected_items,
-      observations: service.checklist.observations,
-      completedAt: service.checklist.completed_at,
-      paymentMethod: service.payment_method?.name
-    } : undefined,
-    failure_details: service.failure ? {
-      reason: service.failure_reason?.reason || "Outro",
-      observations: service.failure.observations,
-      completedAt: service.failure.completed_at
-    } : undefined
-  });
-
-  const fetchServices = async () => {
-    console.log("Buscando serviços...");
-    const { data, error } = await supabase
-      .from("services")
-      .select(`
-        *,
-        route:route_stops(
-          routes(
-            agent:system_users(
-              id,
-              name
-            )
-          )
-        ),
-        checklist:service_checklists(
-          *,
-          payment_method:payment_methods(
-            name
-          )
-        ),
-        failure:service_failures(
-          *,
-          failure_reason:service_failure_reasons(
-            reason
-          )
-        )
-      `)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Erro ao buscar serviços:", error);
-      return;
-    }
-
-    if (data) {
-      console.log("Serviços encontrados:", data);
-      const formattedServices: Service[] = data.map(service => {
-        const route = (service.route as any)?.[0]?.routes;
-        const agent = route?.agent;
-        const checklist = (service.checklist as any)?.[0];
-        const failure = (service.failure as any)?.[0];
-        const payment_method = checklist?.payment_method;
-        const failure_reason = failure?.failure_reason;
-        
-        return formatService({
-          ...service,
-          agent_id: agent?.id,
-          agent_name: agent?.name,
-          checklist,
-          failure,
-          payment_method,
-          failure_reason
-        });
-      });
-      setServices(formattedServices);
-    }
-  };
-
-  useEffect(() => {
-    fetchServices();
-
-    const channel = supabase
-      .channel('services_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'services'
-        },
-        (payload) => {
-          console.log("Mudança detectada nos serviços:", payload);
-          
-          if (payload.eventType === 'INSERT') {
-            const newService = payload.new as ServiceResponse;
-            const formattedService = formatService(newService);
-            setServices(prev => [formattedService, ...prev]);
-          } else if (payload.eventType === 'DELETE') {
-            setServices(prev => prev.filter(service => service.id !== payload.old.id));
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedService = payload.new as ServiceResponse;
-            const formattedService = formatService(updatedService);
-            setServices(prev => 
-              prev.map(service => 
-                service.id === payload.new.id ? formattedService : service
-              )
-            );
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log("Status da inscrição:", status);
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  
+  // Usar o hook otimizado ao invés da query complexa
+  const { services, servicesByStatus, isLoading } = useOptimizedServices(searchTerm);
 
   const handleServiceSelect = (serviceId: string) => {
     setSelectedServices(prev => {
@@ -161,28 +21,17 @@ export const useKanbanData = (searchTerm: string) => {
     });
   };
 
-  const filterServices = (services: Service[], searchTerm: string) => {
-    if (!searchTerm.trim()) return services;
-    
-    const term = searchTerm.toLowerCase().trim();
-    return services.filter(service => {
-      return (
-        service.service_id.toLowerCase().includes(term) ||
-        service.customer_name.toLowerCase().includes(term) ||
-        service.address.toLowerCase().includes(term) ||
-        service.phone.toLowerCase().includes(term) ||
-        (service.email?.toLowerCase().includes(term) || false) ||
-        (service.observations?.toLowerCase().includes(term) || false)
-      );
-    });
+  // Função para compatibilidade (não faz mais fetch direto)
+  const fetchServices = () => {
+    console.log("📝 fetchServices chamado - dados gerenciados pelo cache otimizado");
   };
 
-  const filteredServices = filterServices(services, searchTerm);
-
   return {
-    services: filteredServices,
+    services,
+    servicesByStatus,
     selectedServices,
     handleServiceSelect,
-    fetchServices
+    fetchServices,
+    isLoading
   };
 };
