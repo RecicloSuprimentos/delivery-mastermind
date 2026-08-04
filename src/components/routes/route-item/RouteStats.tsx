@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Route } from "@/types/routes";
 import { formatDuration, formatIntervalDuration } from "./utils";
+import { statusTranslations } from "../RoutePrintService";
 
 interface RouteStatsProps {
   route: Route;
@@ -45,7 +46,7 @@ export const RouteStats = ({ route }: RouteStatsProps) => {
       </div>
       <div>
         <p className="text-gray-500">Status</p>
-        <p className="font-medium">{route.status}</p>
+        <p className="font-medium">{statusTranslations[route.status] || route.status}</p>
       </div>
       <div>
         <p className="text-gray-500">Serviços</p>

@@ -20,7 +20,7 @@ export const UserAssignments = () => {
     queryKey: ["availableUsers"],
     queryFn: async () => {
       console.log("Buscando usuários disponíveis...");
-      const { data, error } = await supabase.functions.invoke("list-auth-users");
+      const { data, error } = await supabase.rpc("get_available_users");
       
       if (error) {
         console.error("Erro ao buscar usuários:", error);
@@ -28,7 +28,7 @@ export const UserAssignments = () => {
       }
 
       console.log("Usuários encontrados:", data);
-      return data.users as AuthUser[];
+      return (data || []) as AuthUser[];
     },
   });
 

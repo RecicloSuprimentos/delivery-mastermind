@@ -1,0 +1,7 @@
+CLOUD_DB_URL="postgresql://postgres:kF8RnWJ732Tn7CD%40@db.tmqgmbnbjklkgeiveanb.supabase.co:5432/postgres"
+VPS_DB_URL="postgresql://postgres:kF8RnWJ732Tn7CD@@137.131.212.71:5432/postgres"
+VPS_SUPABASE_URL="https://supabase.mgbase.com.br"
+VPS_SUPABASE_ANON_KEY="7a9b8c2d4e6f1a3b5c7d9e2f4a6b8c0d1e3f5a7b9c2d4e6f8a0b2c4d6e8f1a3b"
+
+
+

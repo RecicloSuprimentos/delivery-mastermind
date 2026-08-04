@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useOptimizedServices } from "@/hooks/useOptimizedServices";
 
 /**
@@ -12,19 +11,19 @@ export const useKanbanData = (searchTerm: string) => {
   // Usar o hook otimizado ao invés da query complexa
   const { services, servicesByStatus, isLoading } = useOptimizedServices(searchTerm);
 
-  const handleServiceSelect = (serviceId: string) => {
+  const handleServiceSelect = useCallback((serviceId: string) => {
     setSelectedServices(prev => {
       if (prev.includes(serviceId)) {
         return prev.filter(id => id !== serviceId);
       }
       return [...prev, serviceId];
     });
-  };
+  }, []);
 
   // Função para compatibilidade (não faz mais fetch direto)
-  const fetchServices = () => {
+  const fetchServices = useCallback(() => {
     console.log("📝 fetchServices chamado - dados gerenciados pelo cache otimizado");
-  };
+  }, []);
 
   return {
     services,

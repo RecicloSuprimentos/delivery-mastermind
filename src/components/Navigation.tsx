@@ -1,5 +1,5 @@
 
-import { MapPin, Settings, User, PlusCircle, LogOut, Route } from "lucide-react";
+import { MapPin, Settings, User, PlusCircle, LogOut, Route, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,9 +10,31 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 
-export const Navigation = () => {
+interface NavigationProps {
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
+  showSearch?: boolean;
+}
+
+export const Navigation = ({ searchTerm, onSearchChange, showSearch }: NavigationProps) => {
   const navigate = useNavigate();
+  const [localSearch, setLocalSearch] = useState(searchTerm || "");
+
+  useEffect(() => {
+    setLocalSearch(searchTerm || "");
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (onSearchChange && localSearch !== searchTerm) {
+        onSearchChange(localSearch);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [localSearch, onSearchChange, searchTerm]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -33,7 +55,7 @@ export const Navigation = () => {
 
   return (
     <nav className="bg-white border-b border-gray-200 fixed w-full z-50">
-      <div className="px-4 py-2.5">
+      <div className="px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-3 text-2xl font-bold text-primary hover:opacity-90 transition-opacity mr-12">
@@ -57,13 +79,19 @@ export const Navigation = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Input
-                type="search"
-                placeholder="Pesquisar..."
-                className="pl-10 pr-4 py-2 w-64"
-              />
-            </div>
+            {showSearch && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input
+                  type="text"
+                  placeholder="Digite para filtrar ..."
+                  className="pl-9 pr-4 py-2 w-64 bg-gray-50 border-gray-200"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+              </div>
+            )}
+            
             <Button 
               variant="default" 
               className="gap-2 bg-black hover:bg-black/90"

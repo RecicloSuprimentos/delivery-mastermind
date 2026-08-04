@@ -36,8 +36,8 @@ const RealTimeMonitoring = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="pt-16">
-        <div className="flex h-[calc(100vh-4rem)]">
+      <main className="pt-[73px]">
+        <div className="flex h-[calc(100vh-[73px])]">
           <div className="flex-1 overflow-y-auto">
             <div className="p-4">
               <div className="flex justify-between items-center mb-4 bg-white rounded-lg shadow-sm p-4">

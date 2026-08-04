@@ -4,6 +4,7 @@ import { Route } from "@/types/routes";
 const statusTranslations: Record<string, string> = {
   'draft': 'Rascunho',
   'assigned': 'Atribuída',
+  'accepted': 'Aceita',
   'in-progress': 'Em Andamento',
   'completed': 'Finalizada',
   'cancelled': 'Cancelada'

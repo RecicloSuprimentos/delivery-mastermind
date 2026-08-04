@@ -134,6 +134,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
 
       // Invalidate and refetch services query
       await queryClient.invalidateQueries({ queryKey: ["services"] });
+      await queryClient.invalidateQueries({ queryKey: ["services-kanban"] });
 
       toast({
         title: "Sucesso",

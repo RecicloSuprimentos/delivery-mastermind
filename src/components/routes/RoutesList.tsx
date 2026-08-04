@@ -4,16 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { RouteListItem } from "./route-item";
 import { printRoute, statusTranslations } from "./RoutePrintService";
 import type { Route } from "@/types/routes";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const RoutesList = () => {
-  const [showCancelled, setShowCancelled] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all_active");
 
   const { data: routes, error, isLoading } = useQuery({
-    queryKey: ["routes", showCancelled],
+    queryKey: ["routes", statusFilter],
     queryFn: async () => {
-      console.log("Iniciando busca de rotas...", { showCancelled });
+      console.log("Iniciando busca de rotas...", { statusFilter });
       let query = supabase
         .from("routes")
         .select(`
@@ -29,8 +29,10 @@ export const RoutesList = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (!showCancelled) {
+      if (statusFilter === "all_active") {
         query = query.neq("status", "cancelled");
+      } else if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
       }
 
       const { data, error } = await query;
@@ -59,21 +61,28 @@ export const RoutesList = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-10">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Rotas</h1>
         <div className="flex items-center gap-2">
-          <Checkbox
-            id="show-cancelled"
-            checked={showCancelled}
-            onCheckedChange={(checked) => setShowCancelled(checked as boolean)}
-          />
-          <label
-            htmlFor="show-cancelled"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          <Select
+            value={statusFilter}
+            onValueChange={setStatusFilter}
           >
-            Exibir rotas canceladas
-          </label>
+            <SelectTrigger className="w-[200px] bg-white">
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="all_active">Todas (Ocultar Canceladas)</SelectItem>
+              <SelectItem value="all">Exibir Absolutamente Todas</SelectItem>
+              <SelectItem value="draft">Rascunho</SelectItem>
+              <SelectItem value="assigned">Atribuída</SelectItem>
+              <SelectItem value="accepted">Aceita</SelectItem>
+              <SelectItem value="in-progress">Em Andamento</SelectItem>
+              <SelectItem value="completed">Finalizada</SelectItem>
+              <SelectItem value="cancelled">Cancelada</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -89,8 +98,8 @@ export const RoutesList = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-gray-500">
-          Nenhuma rota encontrada
+        <div className="text-center py-8 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">
+          Nenhuma rota encontrada para o filtro selecionado.
         </div>
       )}
     </div>

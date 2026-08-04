@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Check, ChevronDown, ChevronUp, SendToBack, PackageCheck } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -15,7 +15,7 @@ interface ServiceCardProps {
   onSelect?: (id: string) => void;
 }
 
-const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardProps) => {
+const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { deleteService, updateServiceStatus } = useServices();
 
@@ -118,6 +118,7 @@ const ServiceCard = ({ service, onUpdate, isSelected, onSelect }: ServiceCardPro
       </div>
     </Card>
   );
-};
+});
 
+ServiceCard.displayName = "ServiceCard";
 export default ServiceCard;

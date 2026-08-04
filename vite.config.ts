@@ -8,6 +8,29 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/rest': {
+        target: 'https://supabase.mgbase.com.br',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/auth': {
+        target: 'https://supabase.mgbase.com.br',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/storage': {
+        target: 'https://supabase.mgbase.com.br',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/realtime': {
+        target: 'https://supabase.mgbase.com.br',
+        changeOrigin: true,
+        secure: true,
+        ws: true,
+      },
+    },
   },
   plugins: [
     react(),
