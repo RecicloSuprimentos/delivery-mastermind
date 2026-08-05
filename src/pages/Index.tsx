@@ -10,7 +10,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-vibe-bg">
       <Navigation showSearch={true} searchTerm={searchTerm} onSearchChange={setSearchTerm} />
       <div className="pt-[73px] h-screen flex flex-col">
         <KanbanBoard searchTerm={searchTerm} />

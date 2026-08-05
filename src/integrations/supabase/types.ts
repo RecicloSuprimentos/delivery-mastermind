@@ -526,6 +526,8 @@ export type Database = {
       }
       system_settings: {
         Row: {
+          company_name: string | null
+          company_phone: string | null
           created_at: string | null
           google_maps_key: string | null
           id: string
@@ -538,6 +540,8 @@ export type Database = {
           vapid_public_key: string | null
         }
         Insert: {
+          company_name?: string | null
+          company_phone?: string | null
           created_at?: string | null
           google_maps_key?: string | null
           id?: string
@@ -550,6 +554,8 @@ export type Database = {
           vapid_public_key?: string | null
         }
         Update: {
+          company_name?: string | null
+          company_phone?: string | null
           created_at?: string | null
           google_maps_key?: string | null
           id?: string

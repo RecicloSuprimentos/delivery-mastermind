@@ -56,8 +56,8 @@ const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCa
   const showSelectButton = service.status === "not-assigned";
 
   return (
-    <Card className={`overflow-hidden ${isSelected ? 'border-primary border-2' : 'bg-white'}`}>
-      <div className="p-2">
+    <Card className={`overflow-hidden transition-all duration-200 border-none shadow-sm hover:shadow-md ${isSelected ? 'ring-2 ring-vibe-blue/50 bg-blue-50/30' : 'bg-white'}`}>
+      <div className="p-3">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-1">
             {showSelectButton && (

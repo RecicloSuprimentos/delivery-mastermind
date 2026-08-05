@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Printer, Eye, Edit, Check, X } from "lucide-react";
+import { Printer, Eye, Edit, Check, X, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Route } from "@/types/routes";
 import { useRoutes } from "@/hooks/useRoutes";
@@ -181,7 +181,21 @@ export const RouteActions = ({ route, onPrint }: RouteActionsProps) => {
       <Button 
         variant="ghost" 
         size="sm" 
-        onClick={() => onPrint(route)}
+        onClick={async () => {
+          try {
+            toast({
+              title: "Gerando documento...",
+              description: "Buscando os endereços da rota no servidor.",
+            });
+            await onPrint(route);
+          } catch (error) {
+            toast({
+              title: "Erro",
+              description: "Não foi possível gerar a impressão.",
+              variant: "destructive",
+            });
+          }
+        }}
         className="h-6 w-6 p-0"
       >
         <Printer className="h-3.5 w-3.5" />
@@ -201,6 +215,15 @@ export const RouteActions = ({ route, onPrint }: RouteActionsProps) => {
         className="h-6 w-6 p-0"
       >
         <Edit className="h-3.5 w-3.5" />
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={() => navigate(`/routes/lalamove/${route.id}`)}
+        className="h-6 w-6 p-0 text-[#f27421] hover:text-[#d1611a] hover:bg-[#f27421]/10"
+        title="Enviar para Lalamove"
+      >
+        <Truck className="h-4 w-4" />
       </Button>
     </div>
   );

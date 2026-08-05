@@ -18,16 +18,6 @@ export default {
       },
     },
     extend: {
-      fontSize: {
-        'xs': '0.68rem',    // Original 0.75rem
-        'sm': '0.77rem',    // Original 0.875rem
-        'base': '0.9rem',   // Original 1rem
-        'lg': '1rem',       // Original 1.125rem
-        'xl': '1.125rem',   // Original 1.25rem
-        '2xl': '1.35rem',   // Original 1.5rem
-        '3xl': '1.8rem',    // Original 2rem
-        '4xl': '2.25rem',   // Original 2.5rem
-      },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
@@ -60,6 +50,16 @@ export default {
         accent: {
           DEFAULT: "#2A2D35",
           foreground: "#FFFFFF",
+        },
+        // Vibe (Monday.com) Status Palette
+        vibe: {
+          bg: "#F5F6F8",
+          done: "#00C875",
+          working: "#FDAB3D",
+          stuck: "#E2445C",
+          blue: "#579BFC",
+          purple: "#A25DDC",
+          grey: "#C4C4C4"
         },
         soft: {
           green: "#F2FCE2",

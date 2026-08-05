@@ -38,41 +38,57 @@ export const RouteStats = ({ route }: RouteStatsProps) => {
     enabled: route.status !== 'draft'
   });
 
+  const getVibeStatusColor = (status: string) => {
+    switch(status) {
+      case 'not-assigned': return 'bg-[#C4C4C4] text-white';
+      case 'assigned': return 'bg-vibe-blue text-white';
+      case 'accepted': return 'bg-vibe-purple text-white';
+      case 'in-transit': return 'bg-vibe-working text-white';
+      case 'completed': return 'bg-vibe-done text-white';
+      case 'cancelled': return 'bg-vibe-stuck text-white';
+      default: return 'bg-gray-300 text-white';
+    }
+  };
+
   return (
-    <div className="grid grid-cols-7 gap-2 text-xs">
+    <div className="grid grid-cols-7 gap-4 text-xs mt-2">
       <div>
-        <p className="text-gray-500">Agente</p>
-        <p className="font-medium truncate">{route.agent?.name || "Não atribuído"}</p>
+        <p className="text-gray-500 mb-1">Agente</p>
+        <p className="font-medium truncate text-[13px]">{route.agent?.name || "Não atribuído"}</p>
       </div>
       <div>
-        <p className="text-gray-500">Status</p>
-        <p className="font-medium">{statusTranslations[route.status] || route.status}</p>
+        <p className="text-gray-500 mb-1">Status</p>
+        <div className="flex">
+          <span className={`${getVibeStatusColor(route.status)} px-2.5 py-1 rounded-full font-bold text-[11px] shadow-sm uppercase tracking-wider`}>
+            {statusTranslations[route.status] || route.status}
+          </span>
+        </div>
       </div>
       <div>
-        <p className="text-gray-500">Serviços</p>
-        <p className="font-medium">{route.route_stops?.length || 0}</p>
+        <p className="text-gray-500 mb-1">Serviços</p>
+        <p className="font-medium text-[13px]">{route.route_stops?.length || 0}</p>
       </div>
       <div>
-        <p className="text-gray-500">Km estimada</p>
-        <p className="font-medium">{route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : "N/A"}</p>
+        <p className="text-gray-500 mb-1">Km estimada</p>
+        <p className="font-medium text-[13px]">{route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : "N/A"}</p>
       </div>
       <div>
-        <p className="text-gray-500">Km percorrida</p>
-        <p className="font-medium">
+        <p className="text-gray-500 mb-1">Km percorrida</p>
+        <p className="font-medium text-[13px]">
           {realStats?.total_distance 
             ? `${(realStats.total_distance / 1000).toFixed(1)} km` 
             : "N/A"}
         </p>
       </div>
       <div>
-        <p className="text-gray-500">Tempo estimado</p>
-        <p className="font-medium">
+        <p className="text-gray-500 mb-1">Tempo estimado</p>
+        <p className="font-medium text-[13px]">
           {route.total_duration ? formatDuration(route.total_duration) : "N/A"}
         </p>
       </div>
       <div>
-        <p className="text-gray-500">Tempo gasto</p>
-        <p className="font-medium">
+        <p className="text-gray-500 mb-1">Tempo gasto</p>
+        <p className="font-medium text-[13px]">
           {realStats?.total_duration 
             ? formatIntervalDuration(realStats.total_duration) 
             : "N/A"}

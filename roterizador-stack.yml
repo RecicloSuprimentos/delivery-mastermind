@@ -1,0 +1,49 @@
+# =============================================================================
+# Stack YAML do Roterizador para Docker Swarm
+# Deploy: docker stack deploy --with-registry-auth -c ~/roterizador-stack.yml roterizador
+# =============================================================================
+
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/reciclosuprimentos/delivery-mastermind:latest
+    networks:
+      - web
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first          # zero-downtime: sobe novo antes de derrubar antigo
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 0s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        # ── Habilitar Traefik ────────────────────────────────────────────────
+        - "traefik.enable=true"
+
+        # ── Rota HTTPS ───────────────────────────────────────────────────────
+        - "traefik.http.routers.roterizador.rule=Host(`roterizador.mgbase.com.br`)"
+        - "traefik.http.routers.roterizador.entrypoints=websecure"
+        - "traefik.http.routers.roterizador.tls=true"
+        - "traefik.http.routers.roterizador.tls.certresolver=myresolver"
+        - "traefik.http.services.roterizador.loadbalancer.server.port=80"
+
+        # ── Rota HTTP → redireciona para HTTPS ───────────────────────────────
+        - "traefik.http.routers.roterizador-http.rule=Host(`roterizador.mgbase.com.br`)"
+        - "traefik.http.routers.roterizador-http.entrypoints=web"
+        - "traefik.http.routers.roterizador-http.middlewares=roterizador-redirect-https"
+
+        # ── Middleware de redirect ────────────────────────────────────────────
+        - "traefik.http.middlewares.roterizador-redirect-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.roterizador-redirect-https.redirectscheme.permanent=true"
+
+networks:
+  web:
+    external: true

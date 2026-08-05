@@ -15,6 +15,7 @@ import SettingsPage from "./pages/Settings";
 import RoutesPage from "./pages/RoutesPage";
 import CreateRoutePage from "./pages/routes/CreateRoutePage";
 import EditRoutePage from "./pages/routes/EditRoutePage";
+import LalamoveIntegrationPage from "./pages/routes/LalamoveIntegrationPage";
 import AgentPage from "./pages/AgentPage";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
 
@@ -113,6 +114,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <EditRoutePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/routes/lalamove/:id"
+            element={
+              <ProtectedRoute>
+                <LalamoveIntegrationPage />
               </ProtectedRoute>
             }
           />

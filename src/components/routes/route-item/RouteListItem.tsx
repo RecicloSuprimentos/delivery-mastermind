@@ -12,8 +12,8 @@ interface RouteListItemProps {
 
 export const RouteListItem = ({ route, onPrint, statusTranslations }: RouteListItemProps) => {
   return (
-    <div className="bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm">
-      <div className="flex flex-col space-y-2">
+    <div className="bg-white p-4 rounded-lg shadow-sm border-none transition-all hover:shadow-md">
+      <div className="flex flex-col space-y-3">
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-sm font-semibold">{route.name}</h3>

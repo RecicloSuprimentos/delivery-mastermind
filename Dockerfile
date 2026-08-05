@@ -19,6 +19,14 @@ RUN npm ci
 # Copia todo o restante do código
 COPY . .
 
+# Variáveis de build injetadas pelo GitHub Actions (embutidas no bundle React)
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_PUBLISHABLE_KEY
+ARG VITE_SUPABASE_PROJECT_ID
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
+ENV VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID
+
 # Faz o build de produção
 RUN npm run build
 

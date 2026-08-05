@@ -30,6 +30,11 @@ export default defineConfig(({ mode }) => ({
         secure: true,
         ws: true,
       },
+      '/functions': {
+        target: 'https://supabase.mgbase.com.br',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
   plugins: [
