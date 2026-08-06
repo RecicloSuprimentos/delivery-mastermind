@@ -71,6 +71,9 @@ jobs:
             docker service update --image ghcr.io/$GITHUB_REPOSITORY:latest roterizador_app 2>/dev/null || \
               docker stack deploy --with-registry-auth -c ~/roterizador-stack.yml roterizador
 
+            # Força o recarregamento das labels do Traefik removendo e adicionando o certresolver
+            docker service update --label-rm traefik.http.routers.roterizador.tls=true roterizador_app 2>/dev/null || true
+
             # Status final
             sleep 15
             docker service ps roterizador_app --format "table {{.Name}}\t{{.CurrentState}}\t{{.Error}}"
