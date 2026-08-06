@@ -59,8 +59,11 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: GHCR_PAT,GITHUB_ACTOR,GITHUB_REPOSITORY
+          envs: GHCR_PAT,GITHUB_ACTOR,GITHUB_REPOSITORY,SUPABASE_SERVICE_ROLE_KEY
           script: |
+            # Exporta a variável para o Swarm usar no compose file
+            export SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+            
             # Login no ghcr.io com PAT dedicado (read:packages)
             echo "$GHCR_PAT" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
@@ -81,3 +84,4 @@ jobs:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

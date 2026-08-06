@@ -36,8 +36,9 @@ FROM nginx:alpine
 # Remove configuração padrão do Nginx
 RUN rm -rf /etc/nginx/conf.d/*
 
-# Copia nossa configuração de proxy com bypass de CORS
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copia nossa configuração de proxy com bypass de CORS como um template
+# O Nginx automaticamente rodará envsubst neste arquivo e o salvará em conf.d
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Copia os arquivos estáticos gerados no Stage 1 para a pasta que o Nginx expõe
 COPY --from=builder /app/dist /usr/share/nginx/html
