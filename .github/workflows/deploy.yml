@@ -87,11 +87,11 @@ jobs:
                     max_attempts: 3
                   labels:
                     - "traefik.enable=true"
-                    - "traefik.http.routers.roterizador.rule=Host(\`roterizador.mgbase.com.br\`)"
+                    - "traefik.http.routers.roterizador.rule=Host(`roterizador.mgbase.com.br`)"
                     - "traefik.http.routers.roterizador.entrypoints=websecure"
                     - "traefik.http.routers.roterizador.tls.certresolver=myresolver"
                     - "traefik.http.services.roterizador.loadbalancer.server.port=80"
-                    - "traefik.http.routers.roterizador-http.rule=Host(\`roterizador.mgbase.com.br\`)"
+                    - "traefik.http.routers.roterizador-http.rule=Host(`roterizador.mgbase.com.br`)"
                     - "traefik.http.routers.roterizador-http.entrypoints=web"
                     - "traefik.http.routers.roterizador-http.middlewares=roterizador-redirect-https"
                     - "traefik.http.middlewares.roterizador-redirect-https.redirectscheme.scheme=https"
