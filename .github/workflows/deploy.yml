@@ -64,18 +64,51 @@ jobs:
             # Exporta a variável para o Swarm usar no compose file
             export SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
             
+            # Recria o arquivo roterizador-stack.yml no VPS para incluir a nova variável
+            cat << 'EOF' > ~/roterizador-stack.yml
+            version: '3.8'
+            services:
+              app:
+                image: ghcr.io/reciclosuprimentos/delivery-mastermind:latest
+                environment:
+                  - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+                networks:
+                  - web
+                deploy:
+                  replicas: 1
+                  update_config:
+                    parallelism: 1
+                    delay: 10s
+                    order: start-first
+                    failure_action: rollback
+                  restart_policy:
+                    condition: on-failure
+                    delay: 5s
+                    max_attempts: 3
+                  labels:
+                    - "traefik.enable=true"
+                    - "traefik.http.routers.roterizador.rule=Host(\`roterizador.mgbase.com.br\`)"
+                    - "traefik.http.routers.roterizador.entrypoints=websecure"
+                    - "traefik.http.routers.roterizador.tls.certresolver=myresolver"
+                    - "traefik.http.services.roterizador.loadbalancer.server.port=80"
+                    - "traefik.http.routers.roterizador-http.rule=Host(\`roterizador.mgbase.com.br\`)"
+                    - "traefik.http.routers.roterizador-http.entrypoints=web"
+                    - "traefik.http.routers.roterizador-http.middlewares=roterizador-redirect-https"
+                    - "traefik.http.middlewares.roterizador-redirect-https.redirectscheme.scheme=https"
+                    - "traefik.http.middlewares.roterizador-redirect-https.redirectscheme.permanent=true"
+            networks:
+              web:
+                external: true
+            EOF
+            
             # Login no ghcr.io com PAT dedicado (read:packages)
             echo "$GHCR_PAT" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
             # Puxa a imagem ARM64
             docker pull ghcr.io/$GITHUB_REPOSITORY:latest
 
-            # Atualiza o serviço se já existir, senão faz deploy do stack completo
-            docker service update --image ghcr.io/$GITHUB_REPOSITORY:latest roterizador_app 2>/dev/null || \
-              docker stack deploy --with-registry-auth -c ~/roterizador-stack.yml roterizador
-
-            # Força o recarregamento das labels do Traefik removendo e adicionando o certresolver
-            docker service update --label-rm traefik.http.routers.roterizador.tls=true roterizador_app 2>/dev/null || true
+            # Faz deploy do stack completo para aplicar a nova configuração
+            docker stack deploy --with-registry-auth -c ~/roterizador-stack.yml roterizador
 
             # Status final
             sleep 15
