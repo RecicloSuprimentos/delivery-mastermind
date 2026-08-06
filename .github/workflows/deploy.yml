@@ -60,14 +60,13 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Puxa a imagem (o login persistido em ~/.docker/config.json é usado)
+            # Puxa a imagem pública do ghcr.io
             docker pull ghcr.io/${{ github.repository }}:latest
 
-            # Força atualização da imagem no serviço Swarm
+            # Atualiza o serviço se já existir, senão faz deploy do stack completo
             docker service update --image ghcr.io/${{ github.repository }}:latest roterizador_app 2>/dev/null || \
-              docker stack deploy --with-registry-auth -c ~/roterizador-stack.yml roterizador
+              docker stack deploy -c ~/roterizador-stack.yml roterizador
 
             # Status final
             sleep 10
-            docker service ls | grep roterizador
-            docker service ps roterizador_app --format "{{.Name}} {{.CurrentState}} {{.Error}}"
+            docker service ps roterizador_app --format "table {{.Name}}\t{{.CurrentState}}\t{{.Error}}"
