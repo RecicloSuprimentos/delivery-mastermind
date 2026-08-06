@@ -76,8 +76,8 @@ server {
     # Rota obscura para receber o webhook e injetar as chaves seguras do Supabase
     # =========================================================================
     location /webhook/crm-integration-d9f2a7 {
-        # Redireciona internamente para o endpoint REST da tabela services
-        rewrite ^/webhook/crm-integration-d9f2a7$ /rest/v1/services break;
+        # Redireciona internamente para o endpoint REST da tabela services, ignorando se o CRM adicionou /services no final
+        rewrite ^/webhook/crm-integration-d9f2a7.*$ /rest/v1/services break;
         
         proxy_pass https://supabase.mgbase.com.br;
         
