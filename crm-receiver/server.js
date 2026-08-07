@@ -55,7 +55,7 @@ const server = http.createServer(async (req, res) => {
         latitude: payload.latitude ? parseFloat(payload.latitude) : null,
         longitude: payload.longitude ? parseFloat(payload.longitude) : null,
         type: serviceType,
-        status: 'accepted',
+        status: 'not-assigned',
       };
 
       console.log(`[${new Date().toISOString()}] Inserindo no Supabase:`, JSON.stringify(newService));
@@ -67,6 +67,13 @@ const server = http.createServer(async (req, res) => {
         .single();
 
       if (error) {
+        if (error.code === '23505') {
+          // Erro de duplicate key (já existe um serviço com esse service_id)
+          console.log(`[${new Date().toISOString()}] Serviço já existe (ignorado para não sobrescrever status):`, newService.service_id);
+          res.writeHead(200, corsHeaders);
+          res.end(JSON.stringify({ success: true, message: 'Serviço já existe' }));
+          return;
+        }
         console.error(`[${new Date().toISOString()}] Erro Supabase:`, error.message);
         res.writeHead(400, corsHeaders);
         res.end(JSON.stringify({ success: false, error: error.message }));
