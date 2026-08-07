@@ -76,9 +76,13 @@ server {
     # Rota obscura para receber o webhook e injetar as chaves seguras do Supabase
     # =========================================================================
     location /webhook/crm-integration-d9f2a7 {
+        # Resolver interno do Docker para resolução dinâmica (evita crash se o container subir depois)
+        resolver 127.0.0.11 valid=10s;
+        set $crm_backend http://crm-receiver:3001;
+        
         # Redireciona para o micro-serviço Node.js standalone (crm-receiver)
-        # Aceita qualquer sufixo que o CRM possa adicionar (/services, etc.)
-        proxy_pass http://crm-receiver:3001/;
+        proxy_pass $crm_backend$uri;
+
         
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
