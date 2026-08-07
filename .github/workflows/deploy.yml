@@ -20,6 +20,10 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
+      - name: Converter nome da imagem para lowercase
+        id: lowercase
+        run: echo "IMAGE_NAME_LOWER=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Configurar QEMU (suporte a múltiplas plataformas)
         uses: docker/setup-qemu-action@v3
 
@@ -60,7 +64,7 @@ jobs:
           context: ./crm-receiver
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-crm-receiver:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}-crm-receiver:latest
 
       - name: Deploy no VPS via SSH
         uses: appleboy/ssh-action@v1.2.0
