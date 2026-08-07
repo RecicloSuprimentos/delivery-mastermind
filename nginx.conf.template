@@ -90,10 +90,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Content-Type "application/json";
         
-        # CORS headers para o preflight OPTIONS
-        add_header Access-Control-Allow-Origin *;
-        add_header Access-Control-Allow-Headers "authorization, content-type";
-        add_header Access-Control-Allow-Methods "POST, OPTIONS";
+        # O micro-serviço Node já envia os headers CORS. Removendo do Nginx para evitar duplicidade (*, *).
     }
 }
 # Force trigger deploy
