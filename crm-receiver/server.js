@@ -55,7 +55,7 @@ const server = http.createServer(async (req, res) => {
         latitude: payload.latitude ? parseFloat(payload.latitude) : null,
         longitude: payload.longitude ? parseFloat(payload.longitude) : null,
         type: serviceType,
-        status: 'pendente',
+        status: 'pending',
       };
 
       console.log(`[${new Date().toISOString()}] Inserindo no Supabase:`, JSON.stringify(newService));
