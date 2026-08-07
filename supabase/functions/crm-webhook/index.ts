@@ -15,13 +15,14 @@ Deno.serve(async (req) => {
     const payload = await req.json()
     console.log('Recebido Webhook do CRM:', payload)
 
-    // Conectar ao Supabase local usando a Service Role Key para ignorar RLS
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Variáveis de ambiente SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY não configuradas')
+    // Conectar ao Supabase usando a Service Role Key que o Nginx injetou automaticamente no header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Nginx não injetou o Authorization header')
     }
+    
+    const supabaseUrl = 'https://supabase.mgbase.com.br'
+    const supabaseKey = authHeader.replace('Bearer ', '')
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 

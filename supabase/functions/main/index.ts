@@ -2,8 +2,9 @@
 Deno.serve(async (req: Request) => {
   const url = new URL(req.url)
   const { pathname } = url
-  // pathname comes in as /lalamove-proxy when strip_path=true in Kong
-  const service_name = pathname.replace(/^\//, '').split('/')[0]
+  // Trata tanto /functions/v1/nome-funcao quanto /nome-funcao
+  const cleanPath = pathname.replace(/^\/functions\/v1\//, '').replace(/^\//, '')
+  const service_name = cleanPath.split('/')[0]
 
   if (!service_name) {
     return new Response('Function not found', { status: 404 })
@@ -15,7 +16,7 @@ Deno.serve(async (req: Request) => {
       servicePath: `/home/deno/functions/${service_name}`,
       memoryLimitMb: 150,
       workerTimeoutMs: 5 * 60 * 1000,
-      noModuleCache: false,
+      noModuleCache: true,
     })
     return await worker.fetch(req)
   } catch (e: any) {
