@@ -76,20 +76,20 @@ server {
     # Rota obscura para receber o webhook e injetar as chaves seguras do Supabase
     # =========================================================================
     location /webhook/crm-integration-d9f2a7 {
-        # Redireciona internamente para a Edge Function de tradução
-        rewrite ^/webhook/crm-integration-d9f2a7.*$ /functions/v1/crm-webhook break;
+        # Redireciona para o micro-serviço Node.js standalone (crm-receiver)
+        # Aceita qualquer sufixo que o CRM possa adicionar (/services, etc.)
+        proxy_pass http://crm-receiver:3001/;
         
-        proxy_pass https://supabase.mgbase.com.br;
-        
-        # Injeta as chaves automaticamente (envsubst irá substituir no build/run)
-        proxy_set_header apikey "${SUPABASE_SERVICE_ROLE_KEY}";
-        proxy_set_header Authorization "Bearer ${SUPABASE_SERVICE_ROLE_KEY}";
-        proxy_set_header Content-Type "application/json";
-        
-        proxy_set_header Host supabase.mgbase.com.br;
+        proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Content-Type "application/json";
+        
+        # CORS headers para o preflight OPTIONS
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Headers "authorization, content-type";
+        add_header Access-Control-Allow-Methods "POST, OPTIONS";
     }
 }
 # Force trigger deploy

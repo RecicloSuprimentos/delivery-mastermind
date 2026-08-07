@@ -54,6 +54,14 @@ jobs:
             VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
             VITE_SUPABASE_PROJECT_ID=${{ secrets.VITE_SUPABASE_PROJECT_ID }}
 
+      - name: Build e Push do CRM Receiver
+        uses: docker/build-push-action@v5
+        with:
+          context: ./crm-receiver
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-crm-receiver:latest
+
       - name: Deploy no VPS via SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -97,6 +105,21 @@ jobs:
                     - "traefik.http.routers.roterizador-http.middlewares=roterizador-redirect-https"
                     - "traefik.http.middlewares.roterizador-redirect-https.redirectscheme.scheme=https"
                     - "traefik.http.middlewares.roterizador-redirect-https.redirectscheme.permanent=true"
+              crm-receiver:
+                image: ghcr.io/reciclosuprimentos/delivery-mastermind-crm-receiver:latest
+                environment:
+                  - SUPABASE_URL=https://supabase.mgbase.com.br
+                  - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+                networks:
+                  - web
+                deploy:
+                  replicas: 1
+                  restart_policy:
+                    condition: on-failure
+                    delay: 5s
+                    max_attempts: 3
+                  labels:
+                    - "traefik.enable=false"
             networks:
               web:
                 external: true

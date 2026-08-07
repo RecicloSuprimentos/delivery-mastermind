@@ -1,0 +1,1 @@
+curl -X POST https://roterizador.mgbase.com.br/webhook/crm-integration-d9f2a7/services -H \" Content-Type: "application/json\ -d \" -encodedCommand XAAiAHQAaQB0AGwAZQBcACIAOgBcACIAdABlAHMAdABcACIA "\ -v  
