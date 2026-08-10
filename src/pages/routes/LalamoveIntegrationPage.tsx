@@ -17,7 +17,7 @@ const VEHICLE_OPTIONS = [
 // ─── Utilitário: normaliza telefone BR para formato internacional E.164 ───────
 // Entrada: "(31)99183-3103" | "31991833103" | "+5531991833103"
 // Saída:   "+5531991833103"
-const normalizeBrPhone = (raw: string): string => {
+const normalizeBrPhone = (raw: string | null | undefined): string => {
   if (!raw) return "";
   // Remove tudo que não é dígito
   const digits = raw.replace(/\D/g, "");
@@ -25,8 +25,8 @@ const normalizeBrPhone = (raw: string): string => {
   if (digits.startsWith("55") && digits.length >= 12) return `+${digits}`;
   // Tem DDD (10 ou 11 dígitos)?
   if (digits.length === 10 || digits.length === 11) return `+55${digits}`;
-  // Caso desconhecido — retorna como veio (lalamove vai rejeitar se inválido)
-  return raw;
+  // Caso inválido (ex: só DDD, ou lixo) — retorna vazio para acionar o fallback
+  return "";
 };
 
 // ─── Formata stop para a Lalamove ─────────────────────────────────────────────
@@ -213,7 +213,7 @@ const LalamoveIntegrationPage = () => {
       // Remetente = primeiro stop (partida)
       const senderStopId = stops[0]?.stopId;
       const senderName = settings?.company_name || "Roterizador";
-      const senderPhone = normalizeBrPhone(settings?.company_phone || "");
+      const senderPhone = normalizeBrPhone(settings?.company_phone);
 
       if (!senderPhone) {
         throw new Error("Configure o telefone da empresa em Configurações → Base Operacional antes de contratar.");
@@ -228,7 +228,11 @@ const LalamoveIntegrationPage = () => {
         const isReturnStop = !svc;
         
         const name  = svc?.customer_name || senderName;
-        const phone = normalizeBrPhone(svc?.phone || settings?.company_phone || "");
+        // Tenta usar o telefone do cliente, se for inválido, faz fallback para o da empresa
+        let phone = normalizeBrPhone(svc?.phone);
+        if (!phone) {
+          phone = senderPhone;
+        }
 
         // Textos condicionais da rota (regras gerais)
         const currentHour = new Date().getHours();
