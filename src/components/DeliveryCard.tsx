@@ -146,11 +146,19 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
       } else {
         navigate("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving service:", error);
+      
+      let errorMessage = "Erro ao salvar serviço. Verifique se todos os campos estão preenchidos corretamente.";
+      
+      if (error?.code === '23505') {
+        const failedId = serviceId || "gerado automaticamente";
+        errorMessage = `Significa que o service_id (Código do Serviço) "${failedId}" já existe cadastrado na sua tabela de serviços!`;
+      }
+
       toast({
-        title: "Erro",
-        description: "Erro ao salvar serviço. Verifique se todos os campos estão preenchidos corretamente.",
+        title: "Erro ao criar serviço",
+        description: errorMessage,
         variant: "destructive",
       });
     }
