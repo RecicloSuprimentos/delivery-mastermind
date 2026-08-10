@@ -29,6 +29,8 @@ export const useRealtimeServices = () => {
   useEffect(() => {
     console.log("🔄 Iniciando sistema realtime centralizado...");
 
+    let fallbackInterval: NodeJS.Timeout;
+
     const channel = supabase
       .channel('central-realtime')
       .on(
@@ -70,11 +72,25 @@ export const useRealtimeServices = () => {
       )
       .subscribe((status) => {
         console.log("🔗 Status realtime central:", status);
+        
+        // Fallback inteligente: se o WebSocket falhar por causa da infraestrutura self-hosted,
+        // iniciamos um polling suave a cada 10 segundos para manter os cartões atualizados sem precisar de F5.
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn("⚠️ WebSocket offline. Ativando fallback de auto-atualização...");
+          clearInterval(fallbackInterval);
+          fallbackInterval = setInterval(() => {
+            debouncedInvalidateServices();
+            debouncedInvalidateAgents();
+          }, 10000); // 10 segundos
+        } else if (status === 'SUBSCRIBED') {
+          clearInterval(fallbackInterval);
+        }
       });
 
     return () => {
       console.log("🔌 Desconectando realtime central...");
       supabase.removeChannel(channel);
+      clearInterval(fallbackInterval);
       debouncedInvalidateServices.cancel();
       debouncedInvalidateAgents.cancel();
     };
