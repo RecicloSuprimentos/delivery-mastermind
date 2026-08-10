@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft, Bike, Car, Truck, Home, MapPin, RotateCcw, CheckCircle, ExternalLink } from "lucide-react";
+import { Loader2, ArrowLeft, Bike, Car, Truck, Home, MapPin, RotateCcw, CheckCircle, ExternalLink, AlertTriangle } from "lucide-react";
 
 const VEHICLE_OPTIONS = [
   { id: 'LALAGO', name: 'Moto', icon: Bike, description: 'Até 20kg' },
@@ -48,6 +49,12 @@ const LalamoveIntegrationPage = () => {
   const [loadingQuotation, setLoadingQuotation] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [order, setOrder] = useState<any>(null);
+
+  const queryClient = useQueryClient();
+  const [invalidPhones, setInvalidPhones] = useState<{ id: string; name: string; phone: string; serviceId: string }[]>([]);
+  const [editingPhones, setEditingPhones] = useState<Record<string, string>>({});
+  const [savingPhones, setSavingPhones] = useState(false);
+  const [ignoreInvalidPhones, setIgnoreInvalidPhones] = useState(false);
 
   // Busca a rota com suas paradas
   const { data: route, isLoading: loadingRoute } = useQuery({
@@ -320,6 +327,58 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
     }
   }, [route, settings, selectedVehicle]);
 
+  useEffect(() => {
+    if (route?.route_stops) {
+      const invalids = route.route_stops
+        .filter((stop: any) => stop.service)
+        .map((stop: any) => {
+          const rawPhone = stop.service?.phone;
+          const isValid = !!normalizeBrPhone(rawPhone);
+          return {
+            id: stop.id,
+            serviceId: stop.service?.id,
+            name: stop.service?.customer_name,
+            phone: rawPhone || '',
+            isValid
+          };
+        })
+        .filter((item: any) => !item.isValid);
+
+      setInvalidPhones(invalids);
+      const initialEditing: Record<string, string> = {};
+      invalids.forEach((inv: any) => {
+        initialEditing[inv.serviceId] = inv.phone;
+      });
+      setEditingPhones(initialEditing);
+      
+      if (invalids.length === 0) {
+        setIgnoreInvalidPhones(false);
+      }
+    }
+  }, [route]);
+
+  const handleSavePhone = async (serviceId: string) => {
+    const newPhone = editingPhones[serviceId];
+    if (!newPhone) return;
+    
+    setSavingPhones(true);
+    try {
+      const { error } = await supabase
+        .from('services')
+        .update({ phone: newPhone })
+        .eq('id', serviceId);
+        
+      if (error) throw error;
+      
+      toast({ title: "Telefone atualizado com sucesso!" });
+      queryClient.invalidateQueries({ queryKey: ["route", id] });
+    } catch (err: any) {
+      toast({ title: "Erro ao atualizar", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingPhones(false);
+    }
+  };
+
   if (loadingRoute) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -355,6 +414,58 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
               <p className="text-sm text-gray-500">Configurando entrega para: {route?.name}</p>
             </div>
           </div>
+
+          {/* Validação de Telefones */}
+          {invalidPhones.length > 0 && !ignoreInvalidPhones && (
+            <Card className="border-orange-200 shadow-sm bg-orange-50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center space-x-2 text-orange-700">
+                  <AlertTriangle className="h-5 w-5" />
+                  <CardTitle className="text-lg">Atenção: Telefones Inválidos</CardTitle>
+                </div>
+                <CardDescription className="text-orange-600/80">
+                  A Lalamove exige números de telefone válidos (com DDD). Corrija os números abaixo para o motorista poder ligar em caso de imprevistos, ou opte por usar o telefone da sua Base Operacional.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {invalidPhones.map((inv) => (
+                    <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white p-3 rounded-md border border-orange-100">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{inv.name}</p>
+                        <p className="text-xs text-red-500 line-through">Inválido: {inv.phone || '(vazio)'}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          placeholder="Ex: 31999999999" 
+                          value={editingPhones[inv.serviceId] || ''}
+                          onChange={(e) => setEditingPhones(prev => ({ ...prev, [inv.serviceId]: e.target.value }))}
+                          className="w-40 h-8 text-sm"
+                        />
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleSavePhone(inv.serviceId)}
+                          disabled={savingPhones || !editingPhones[inv.serviceId] || editingPhones[inv.serviceId] === inv.phone}
+                        >
+                          Salvar
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-2">
+                    <Button 
+                      variant="default" 
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                      onClick={() => setIgnoreInvalidPhones(true)}
+                    >
+                      Usar telefone da Base Operacional para os restantes
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Seleção de Veículo */}
           <Card className="border-0 shadow-sm">
@@ -517,10 +628,12 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
                   <Button
                     className="w-full bg-[#f27421] hover:bg-[#d1611a] text-white h-12 text-lg font-bold"
                     onClick={placeOrder}
-                    disabled={placingOrder}
+                    disabled={placingOrder || (invalidPhones.length > 0 && !ignoreInvalidPhones)}
                   >
                     {placingOrder ? (
                       <><Loader2 className="h-5 w-5 animate-spin mr-2" />Contratando...</>
+                    ) : invalidPhones.length > 0 && !ignoreInvalidPhones ? (
+                      "Resolva os telefones primeiro"
                     ) : (
                       "Contratar Entregador"
                     )}

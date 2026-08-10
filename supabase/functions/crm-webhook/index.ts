@@ -36,7 +36,12 @@ Deno.serve(async (req) => {
     // O cliente pode vir aninhado no payload.customer
     const customer = payload.customer || {}
     const customerName = customer.name || 'Desconhecido'
-    const phone = customer.phone_number || ''
+    
+    // Pega o telefone e aplica uma sanitização básica (remove espaços extras e caracteres estranhos do começo)
+    let rawPhone = customer.phone_number || ''
+    // Substitui múltiplos espaços por nenhum espaço, apenas para juntar o número
+    let phone = rawPhone.replace(/\s+/g, '').replace(/^-+/, '')
+    
     const complement = customer.address_complement || null
 
     const newService = {
