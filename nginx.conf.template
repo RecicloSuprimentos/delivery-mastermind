@@ -64,17 +64,18 @@ server {
     }
 
     # =========================================================================
-    # WORKAROUND PARA O KONG DO SUPABASE (BUG DO WEBSOCKET 404)
-    # O Kong em algumas versões self-hosted engole o path do WebSocket.
-    # Esta regra injeta o "/socket/" necessário para o Phoenix do Realtime achar a rota.
+    # WORKAROUND PARA O KONG DO SUPABASE (BUG DO WEBSOCKET 404 E TENANT)
+    # O Kong em algumas versões self-hosted engole o path do WebSocket
+    # e injeta o host "realtime" indevidamente, quebrando o Tenant.
     # =========================================================================
     location /realtime/v1/websocket {
-        proxy_pass https://supabase.mgbase.com.br/realtime/v1/socket/websocket;
+        # O $args mantém os parâmetros originais (apikey, vsn, etc)
+        proxy_pass https://supabase.mgbase.com.br/realtime/v1/socket/websocket?tenant=supabase.mgbase.com.br&$args;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         
-        # MÁGICA: Bypassa o erro "403 Forbidden" (check_origin) e "404" do Kong!
+        # MÁGICA: Bypassa o erro "403 Forbidden" (check_origin)
         proxy_set_header Host supabase.mgbase.com.br;
         proxy_set_header Origin "https://supabase.mgbase.com.br";
         
