@@ -44,13 +44,24 @@ Deno.serve(async (req) => {
     
     const complement = customer.address_complement || null
 
+    // Higieniza as observações (trata espaços duplicados e converte decimais (.0000) para formato moeda R$)
+    let sanitizedNote = payload.note || null
+    if (sanitizedNote) {
+      sanitizedNote = sanitizedNote.replace(/[ \t]{2,}/g, ' ')
+      sanitizedNote = sanitizedNote.replace(/(:\s*|\s|^)(\d*\.\d{2,4})(?=\s|$|\n)/g, (match: string, prefix: string, numStr: string) => {
+        const num = parseFloat(numStr) || 0
+        return `${prefix}R$ ${num.toFixed(2)}`
+      })
+      sanitizedNote = sanitizedNote.trim()
+    }
+
     const newService = {
       service_id: payload.code || `CRM-${Date.now()}`,
       customer_name: customerName,
       phone: phone,
       address: payload.address || '',
       complement: complement,
-      observations: payload.note || null,
+      observations: sanitizedNote,
       latitude: lat,
       longitude: lng,
       type: serviceType,
