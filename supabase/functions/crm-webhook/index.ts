@@ -52,6 +52,12 @@ Deno.serve(async (req) => {
         const num = parseFloat(numStr) || 0
         return `${prefix}R$ ${num.toFixed(2)}`
       })
+      
+      // Filtros de poluição visual
+      sanitizedNote = sanitizedNote.replace(/Levar troco:\s*R\$\s*0\.00/gi, '')
+      sanitizedNote = sanitizedNote.replace(/^F\.PAGTO\.:\s*$/gmi, '')
+      sanitizedNote = sanitizedNote.replace(/\n\s*\n/g, '\n')
+      
       sanitizedNote = sanitizedNote.trim()
     }
 
