@@ -132,15 +132,20 @@ jobs:
             # Login no ghcr.io com PAT dedicado (read:packages)
             echo "$GHCR_PAT" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
-            # Puxa a imagem ARM64
+            # Puxa as imagens atualizadas
             docker pull ghcr.io/$GITHUB_REPOSITORY:latest
+            docker pull ghcr.io/$GITHUB_REPOSITORY-crm-receiver:latest
 
             # Faz deploy do stack completo para aplicar a nova configuração
             docker stack deploy --with-registry-auth -c ~/roterizador-stack.yml roterizador
 
+            # Força atualização do crm-receiver para usar a nova imagem
+            docker service update --image ghcr.io/$GITHUB_REPOSITORY-crm-receiver:latest --with-registry-auth roterizador_crm-receiver
+
             # Status final
             sleep 15
             docker service ps roterizador_app --format "table {{.Name}}\t{{.CurrentState}}\t{{.Error}}"
+            docker service ps roterizador_crm-receiver --format "table {{.Name}}\t{{.CurrentState}}\t{{.Error}}"
         env:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
           GITHUB_ACTOR: ${{ github.actor }}
