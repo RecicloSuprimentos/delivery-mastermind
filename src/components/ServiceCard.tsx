@@ -7,6 +7,16 @@ import { ServiceCardDetails } from "./service/ServiceCardDetails";
 import { ServiceDetailsDialog } from "./service/ServiceDetailsDialog";
 import { useServices } from "@/hooks/useServices";
 import type { Service } from "@/types/services";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ServiceCardProps {
   service: Service;
@@ -18,30 +28,29 @@ interface ServiceCardProps {
 const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
+  
   const { deleteService, updateServiceStatus } = useServices();
 
-  const handleDelete = async () => {
-    if (window.confirm("Tem certeza que deseja excluir este serviço?")) {
-      try {
-        await deleteService.mutateAsync(service.id);
-        onUpdate();
-      } catch (error) {
-        console.error("Error deleting service:", error);
-      }
+  const confirmDelete = async () => {
+    try {
+      await deleteService.mutateAsync(service.id);
+      onUpdate();
+    } catch (error) {
+      console.error("Error deleting service:", error);
     }
   };
 
-  const handleUnassign = async () => {
-    if (window.confirm("Tem certeza que deseja desatribuir este serviço? Ele será removido da rota associada.")) {
-      try {
-        await updateServiceStatus.mutateAsync({
-          serviceId: service.id,
-          status: "not-assigned"
-        });
-        onUpdate();
-      } catch (error) {
-        console.error("Error unassigning service:", error);
-      }
+  const confirmUnassign = async () => {
+    try {
+      await updateServiceStatus.mutateAsync({
+        serviceId: service.id,
+        status: "not-assigned"
+      });
+      onUpdate();
+    } catch (error) {
+      console.error("Error unassigning service:", error);
     }
   };
 
@@ -52,8 +61,9 @@ const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCa
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Evita abrir o modal se o usuário clicou em um botão (checkbox, ações, expandir)
-    if ((e.target as HTMLElement).closest('button')) {
+    // Evita abrir o modal se o usuário clicou em um botão (checkbox, ações, expandir) ou dentro do dropdown
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[role="menuitem"]')) {
       return;
     }
     setIsModalOpen(true);
@@ -98,8 +108,8 @@ const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCa
               <ServiceCardActions
                 serviceId={service.id}
                 status={service.status}
-                onDelete={handleDelete}
-                onUnassign={handleUnassign}
+                onDelete={() => setIsDeleteDialogOpen(true)}
+                onUnassign={() => setIsUnassignDialogOpen(true)}
               />
             )}
           </div>
@@ -136,6 +146,40 @@ const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCa
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Serviço</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isUnassignDialogOpen} onOpenChange={setIsUnassignDialogOpen}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desatribuir Serviço</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desatribuir este serviço? Ele será removido da rota associada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmUnassign}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 });
