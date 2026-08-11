@@ -94,31 +94,47 @@ const server = http.createServer(async (req, res) => {
         status: 'not-assigned',
       };
 
-      console.log(`[${new Date().toISOString()}] Inserindo no Supabase:`, JSON.stringify(newService));
+      const originalServiceId = newService.service_id;
+      const suffixes = [' A', ' B', ' C', ' D', ' E', ' F', ' G', ' H', ' I', ' J', ' K', ' L', ' M', ' N', ' O', ' P', ' Q', ' R', ' S', ' T', ' U', ' V', ' W', ' X', ' Y', ' Z'];
+      let suffixIndex = -1; // -1 = sem sufixo
+      
+      let insertedData = null;
+      let insertError = null;
 
-      const { data, error } = await supabase
-        .from('services')
-        .insert([newService])
-        .select()
-        .single();
-
-      if (error) {
-        if (error.code === '23505') {
-          // Erro de duplicate key (já existe um serviço com esse service_id)
-          console.log(`[${new Date().toISOString()}] Serviço já existe (ignorado para não sobrescrever status):`, newService.service_id);
-          res.writeHead(200, corsHeaders);
-          res.end(JSON.stringify({ success: true, message: 'Serviço já existe' }));
-          return;
+      while (suffixIndex < suffixes.length) {
+        if (suffixIndex >= 0) {
+          newService.service_id = `${originalServiceId}${suffixes[suffixIndex]}`;
         }
-        console.error(`[${new Date().toISOString()}] Erro Supabase:`, error.message);
+        
+        console.log(`[${new Date().toISOString()}] Tentando inserir no Supabase (ID: ${newService.service_id})...`);
+
+        const { data, error } = await supabase
+          .from('services')
+          .insert([newService])
+          .select()
+          .single();
+
+        if (error && error.code === '23505') {
+          console.log(`[${new Date().toISOString()}] Serviço ${newService.service_id} já existe. Tentando próximo sufixo...`);
+          suffixIndex++;
+          continue;
+        }
+
+        insertedData = data;
+        insertError = error;
+        break; // Sucesso ou erro inesperado, sai do loop
+      }
+
+      if (insertError) {
+        console.error(`[${new Date().toISOString()}] Erro Supabase:`, insertError.message);
         res.writeHead(400, corsHeaders);
-        res.end(JSON.stringify({ success: false, error: error.message }));
+        res.end(JSON.stringify({ success: false, error: insertError.message }));
         return;
       }
 
-      console.log(`[${new Date().toISOString()}] Inserido com sucesso! ID:`, data.id);
+      console.log(`[${new Date().toISOString()}] Inserido com sucesso! ID no banco:`, insertedData.id);
       res.writeHead(201, corsHeaders);
-      res.end(JSON.stringify({ success: true, message: 'Serviço importado com sucesso', id: data.id }));
+      res.end(JSON.stringify({ success: true, message: 'Serviço importado com sucesso', id: insertedData.id }));
 
     } catch (err) {
       console.error(`[${new Date().toISOString()}] Erro:`, err.message);
