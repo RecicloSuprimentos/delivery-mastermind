@@ -8,7 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, ArrowLeft, Bike, Car, Truck, Home, MapPin, RotateCcw, CheckCircle, ExternalLink, AlertTriangle, Phone } from "lucide-react";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 const VEHICLE_OPTIONS = [
   { id: 'LALAGO', name: 'Moto', icon: Bike, description: 'Até 20kg' },
   { id: 'CAR', name: 'Carro', icon: Car, description: 'Até 200kg' },
@@ -43,14 +52,14 @@ const LalamoveIntegrationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  const queryClient = useQueryClient();
+  const [isConfirmHireOpen, setIsConfirmHireOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState('LALAGO');
   const [quotation, setQuotation] = useState<any>(null);
   const [loadingQuotation, setLoadingQuotation] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [order, setOrder] = useState<any>(null);
 
-  const queryClient = useQueryClient();
   const [invalidPhones, setInvalidPhones] = useState<{ id: string; name: string; phone: string; serviceId: string }[]>([]);
   const [editingPhones, setEditingPhones] = useState<Record<string, string>>({});
   const [savingPhones, setSavingPhones] = useState(false);
@@ -672,7 +681,7 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
 
                   <Button
                     className="w-full bg-[#f27421] hover:bg-[#d1611a] text-white h-12 text-lg font-bold"
-                    onClick={placeOrder}
+                    onClick={() => setIsConfirmHireOpen(true)}
                     disabled={placingOrder || (invalidPhones.length > 0 && !ignoreInvalidPhones)}
                   >
                     {placingOrder ? (
@@ -697,8 +706,33 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
             </CardContent>
           </Card>
         </div>
-
       </main>
+
+      <AlertDialog open={isConfirmHireOpen} onOpenChange={setIsConfirmHireOpen}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Contratação</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está prestes a despachar esta rota para a Lalamove. O valor de{" "}
+              <strong className="text-gray-900">R$ {quotation?.data?.priceBreakdown?.total}</strong>{" "}
+              será debitado da sua carteira Lalamove e o motorista será acionado.
+              Tem certeza que deseja prosseguir?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setIsConfirmHireOpen(false);
+                placeOrder();
+              }} 
+              className="bg-[#f27421] hover:bg-[#d1611a] text-white"
+            >
+              Confirmar Contratação
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
