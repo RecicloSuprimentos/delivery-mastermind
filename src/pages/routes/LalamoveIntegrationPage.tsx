@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft, Bike, Car, Truck, Home, MapPin, RotateCcw, CheckCircle, ExternalLink, AlertTriangle } from "lucide-react";
+import { Loader2, ArrowLeft, Bike, Car, Truck, Home, MapPin, RotateCcw, CheckCircle, ExternalLink, AlertTriangle, Phone } from "lucide-react";
 
 const VEHICLE_OPTIONS = [
   { id: 'LALAGO', name: 'Moto', icon: Bike, description: 'Até 20kg' },
@@ -532,50 +532,63 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
               <CardDescription>Ordem de paradas enviada à Lalamove</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {/* Partida */}
-                <div className="flex items-start space-x-3 p-3 bg-green-50 border border-green-200 rounded-md">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center">
+                <div className="flex items-start space-x-3 p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-md bg-green-50 text-green-600 flex items-center justify-center">
                     <Home className="h-4 w-4" />
                   </div>
                   <div>
                     <p className="font-semibold text-xs text-green-700 uppercase tracking-wide">Partida</p>
-                    <p className="text-sm text-gray-900">{startLabel}</p>
+                    <p className="text-sm font-medium text-gray-900 mt-1">{startLabel}</p>
                   </div>
                 </div>
 
                 {/* Paradas Intermediárias */}
                 {route?.route_stops?.map((stop: any, index: number) => (
-                  <div key={stop.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-                      <MapPin className="h-4 w-4" />
+                  <div key={stop.id} className="flex items-start space-x-3 p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-md bg-vibe-blue/10 text-vibe-blue flex items-center justify-center font-bold text-sm">
+                      {index + 1}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-sm text-gray-900">{stop.service?.customer_name}</p>
-                      <p className="text-xs text-gray-500">{stop.service?.address}</p>
-                      {stop.service?.complement && (
-                        <p className="text-xs text-blue-600 mt-0.5">📍 {stop.service.complement}</p>
-                      )}
-                      {stop.service?.phone && (
-                        <p className="text-xs text-gray-400 mt-0.5">📞 {stop.service.phone}</p>
-                      )}
+                      <p className="font-bold text-sm text-gray-900">{stop.service?.customer_name}</p>
+                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">{stop.service?.address}</p>
+                      
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {stop.service?.complement && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {stop.service.complement}
+                          </span>
+                        )}
+                        {stop.service?.phone && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium">
+                            <Phone className="h-3 w-3 mr-1" />
+                            {stop.service.phone}
+                          </span>
+                        )}
+                      </div>
+                      
                       {(!stop.service?.latitude || !stop.service?.longitude) && (
-                        <p className="text-xs text-red-500 mt-1">⚠ Sem coordenadas — será ignorada no cálculo</p>
+                        <div className="inline-flex items-center px-2 py-1 rounded-md bg-red-50 text-red-700 text-xs font-medium mt-2">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Sem coordenadas — ignorada
+                        </div>
                       )}
                     </div>
                   </div>
                 ))}
 
                 {/* Retorno */}
-                <div className="flex items-start space-x-3 p-3 bg-orange-50 border border-orange-200 rounded-md">
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#f27421] text-white flex items-center justify-center">
+                <div className="flex items-start space-x-3 p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-md bg-orange-50 text-orange-600 flex items-center justify-center">
                     <RotateCcw className="h-4 w-4" />
                   </div>
                   <div>
                     <p className="font-semibold text-xs text-orange-700 uppercase tracking-wide">Retorno</p>
-                    <p className="text-sm text-gray-900">{endLabel}</p>
+                    <p className="text-sm font-medium text-gray-900 mt-1">{endLabel}</p>
                     {endLabel === startLabel && (
-                      <p className="text-xs text-gray-400">Mesmo endereço de partida</p>
+                      <p className="text-xs text-gray-400 mt-1">Mesmo endereço de partida</p>
                     )}
                   </div>
                 </div>
