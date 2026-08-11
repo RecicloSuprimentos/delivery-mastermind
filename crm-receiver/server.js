@@ -45,13 +45,49 @@ const server = http.createServer(async (req, res) => {
       const customer = payload.customer || {};
       const serviceType = payload.type === 'delivery' ? 'entrega' : 'coleta';
 
+      // ── Sanitização do telefone ──────────────────────────────────────────
+      let rawPhone = (customer.phone_number || '').trim();
+
+      // Corrige padrão invertido do CRM: "99150-2945(31)" → "(31) 99150-2945"
+      const invertedPattern = /^([\d\s\-]+?)\s*\((\d{2})\)$/;
+      const phoneMatch = rawPhone.match(invertedPattern);
+      if (phoneMatch) {
+        rawPhone = `(${phoneMatch[2]}) ${phoneMatch[1].trim()}`;
+      }
+      // Remove espaços extras e traços no início
+      const phone = rawPhone.replace(/\s+/g, '').replace(/^-+/, '');
+
+      // ── Sanitização das observações ─────────────────────────────────────
+      let sanitizedNote = payload.note || null;
+      if (sanitizedNote) {
+        // 1. Compacta múltiplos espaços/tabs em um único espaço
+        sanitizedNote = sanitizedNote.replace(/[ \t]{2,}/g, ' ');
+
+        // 2. Converte decimais do CRM (.0000 / 360.0000) para R$ 0.00
+        sanitizedNote = sanitizedNote.replace(/(:\s*|\s|^)(\d*\.\d{2,4})(?=\s|$|\n)/g, (m, prefix, numStr) => {
+          const num = parseFloat(numStr) || 0;
+          return `${prefix}R$ ${num.toFixed(2)}`;
+        });
+
+        // 3. Remove "Levar troco: R$ 0.00" (informação irrelevante)
+        sanitizedNote = sanitizedNote.replace(/Levar troco:\s*R\$\s*0\.00/gi, '');
+
+        // 4. Remove linha "F.PAGTO.:" que ficou vazia após remoções
+        sanitizedNote = sanitizedNote.replace(/^F\.PAGTO\.:\s*$/gmi, '');
+
+        // 5. Remove quebras de linha duplas geradas pelas remoções
+        sanitizedNote = sanitizedNote.replace(/\n\s*\n/g, '\n');
+
+        sanitizedNote = sanitizedNote.trim() || null;
+      }
+
       const newService = {
         service_id: payload.code || `CRM-${Date.now()}`,
         customer_name: customer.name || 'Desconhecido',
-        phone: (customer.phone_number || '').trim(),
+        phone,
         address: payload.address || '',
         complement: customer.address_complement || null,
-        observations: payload.note || null,
+        observations: sanitizedNote,
         latitude: payload.latitude ? parseFloat(payload.latitude) : null,
         longitude: payload.longitude ? parseFloat(payload.longitude) : null,
         type: serviceType,
