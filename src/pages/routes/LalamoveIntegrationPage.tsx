@@ -40,13 +40,12 @@ const normalizeBrPhone = (raw: string | null | undefined): string => {
 };
 
 // ─── Formata stop para a Lalamove ─────────────────────────────────────────────
-const formatStop = (lat: number, lng: number, address: string, description?: string) => ({
+const formatStop = (lat: number, lng: number, address: string) => ({
   coordinates: {
     lat: lat.toFixed(7),
     lng: lng.toFixed(7),
   },
   address,
-  ...(description ? { description } : {}),
 });
 
 const LalamoveIntegrationPage = () => {
@@ -160,27 +159,11 @@ const LalamoveIntegrationPage = () => {
       validMiddleStops.forEach((stop: any) => {
         const svc = stop.service;
         const baseAddress = svc?.address || "";
-        
-        // Identifica se é coleta ou entrega e formata o ID
-        const typePrefix = svc?.type === 'coleta' ? 'COLETA' : '';
-        const codigo = svc?.service_id ? `#${typePrefix} ${svc.service_id}`.trim() : "";
-        
-        // Pega complemento
-        const complemento = svc?.complement ? svc.complement.trim() : "";
-
-        // Remove quebras de linha das observações para manter na mesma linha do app
-        const obs = svc?.observations?.trim() ? svc.observations.replace(/\n|\r/g, " ").trim() : "";
-        
-        // Monta a description (Linha 2 no app Lalamove): Endereço completo + Complemento + ID + Obs
-        // O campo address (Linha 1) recebe apenas o endereço limpo para geocodificação.
-        const extraParts = [complemento, codigo, obs].filter(Boolean).join(" - ");
-        const description = extraParts ? `${baseAddress}, ${extraParts}` : undefined;
 
         allStops.push(formatStop(
           parseFloat(svc.latitude),
           parseFloat(svc.longitude),
-          baseAddress,   // Linha 1: apenas o endereço base (geocodificação)
-          description    // Linha 2: complemento + código + observações (informativo)
+          baseAddress
         ));
       });
 
@@ -292,19 +275,18 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
             parts.push(`--- INSTRUÇÕES GERAIS ---\r\n${routeRules.trim()}`);
           }
         } else {
-          // Paradas de entrega: apenas adiciona se houver complemento ou observação
-          const hasComplement = !!svc?.complement?.trim();
-          const hasObservation = !!svc?.observations?.trim();
-
-          if (hasComplement || hasObservation) {
-            const label = name?.trim() || "Destinatário";
-            let stopNote = `[${label}]`;
-            
-            if (hasComplement) stopNote += ` Compl.: ${svc.complement.trim()}`;
-            if (hasObservation) stopNote += ` | Obs: ${svc.observations.trim()}`;
-            
-            parts.push(stopNote);
-          }
+          // Paradas de entrega/coleta: adicionamos o endereço completo + extras como instrução (remarks)
+          // para simular a Linha 2 exibida no app da Lalamove, igual ao cadastro manual.
+          const baseAddress = svc?.address || "";
+          const typePrefix = svc?.type === 'coleta' ? 'COLETA' : '';
+          const codigo = svc?.service_id ? `#${typePrefix} ${svc.service_id}`.trim() : "";
+          const complemento = svc?.complement ? svc.complement.trim() : "";
+          const obs = svc?.observations?.trim() ? svc.observations.replace(/\n|\r/g, " ").trim() : "";
+          
+          const extraParts = [complemento, codigo, obs].filter(Boolean).join(" - ");
+          const fullDescription = extraParts ? `${baseAddress}, ${extraParts}` : baseAddress;
+          
+          parts.push(fullDescription);
         }
 
         const remarks = parts.join("\r\n\r\n").substring(0, 1500);
