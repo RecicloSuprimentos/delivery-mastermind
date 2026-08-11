@@ -155,20 +155,17 @@ const LalamoveIntegrationPage = () => {
         const typePrefix = svc?.type === 'coleta' ? 'COLETA' : '';
         const codigo = svc?.service_id ? `#${typePrefix} ${svc.service_id}`.trim() : "";
         
-        // Pega complemento e observações (removendo quebras de linha para não quebrar a string)
+        // Pega complemento
         const complemento = svc?.complement ? svc.complement.trim() : "";
-        
-        // Limita a observação em ~50 caracteres para manter a UI do app limpa
-        let obs = svc?.observations?.trim() ? svc.observations.replace(/\n|\r/g, " ").trim() : "";
-        if (obs.length > 50) {
-          obs = obs.substring(0, 50) + "...";
-        }
 
-        // Monta o prefixo formatado
-        const prefixParts = [codigo, complemento, obs].filter(Boolean).join(" - ");
+        // Remove quebras de linha das observações para manter na mesma linha do app
+        const obs = svc?.observations?.trim() ? svc.observations.replace(/\n|\r/g, " ").trim() : "";
         
-        // Monta o endereço final que será enviado na cotação
-        const fullAddress = prefixParts ? `${prefixParts} , ${baseAddress}` : baseAddress;
+        // Monta a string extra na ordem solicitada: Complemento + ID + Observações completas
+        const extraParts = [complemento, codigo, obs].filter(Boolean).join(" - ");
+        
+        // Monta o endereço final: Endereço original + Extensões
+        const fullAddress = extraParts ? `${baseAddress}, ${extraParts}` : baseAddress;
 
         allStops.push(formatStop(
           parseFloat(svc.latitude),
