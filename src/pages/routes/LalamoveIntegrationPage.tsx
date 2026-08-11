@@ -40,12 +40,13 @@ const normalizeBrPhone = (raw: string | null | undefined): string => {
 };
 
 // ─── Formata stop para a Lalamove ─────────────────────────────────────────────
-const formatStop = (lat: number, lng: number, address: string) => ({
+const formatStop = (lat: number, lng: number, address: string, description?: string) => ({
   coordinates: {
     lat: lat.toFixed(7),
     lng: lng.toFixed(7),
   },
   address,
+  ...(description ? { description } : {}),
 });
 
 const LalamoveIntegrationPage = () => {
@@ -170,16 +171,16 @@ const LalamoveIntegrationPage = () => {
         // Remove quebras de linha das observações para manter na mesma linha do app
         const obs = svc?.observations?.trim() ? svc.observations.replace(/\n|\r/g, " ").trim() : "";
         
-        // Monta a string extra na ordem solicitada: Complemento + ID + Observações completas
+        // Monta a description (Linha 2 no app Lalamove): Endereço completo + Complemento + ID + Obs
+        // O campo address (Linha 1) recebe apenas o endereço limpo para geocodificação.
         const extraParts = [complemento, codigo, obs].filter(Boolean).join(" - ");
-        
-        // Monta o endereço final: Endereço original + Extensões
-        const fullAddress = extraParts ? `${baseAddress}, ${extraParts}` : baseAddress;
+        const description = extraParts ? `${baseAddress}, ${extraParts}` : undefined;
 
         allStops.push(formatStop(
           parseFloat(svc.latitude),
           parseFloat(svc.longitude),
-          fullAddress
+          baseAddress,   // Linha 1: apenas o endereço base (geocodificação)
+          description    // Linha 2: complemento + código + observações (informativo)
         ));
       });
 
