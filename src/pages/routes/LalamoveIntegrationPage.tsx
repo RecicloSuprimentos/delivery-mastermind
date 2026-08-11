@@ -241,7 +241,6 @@ const LalamoveIntegrationPage = () => {
           phone = senderPhone;
         }
 
-        // Textos condicionais da rota (regras gerais)
         const currentHour = new Date().getHours();
         const limitTime = currentHour < 13 ? "13:30" : "18:30";
         
@@ -257,12 +256,26 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
         const parts: string[] = [];
         
         if (isReturnStop) {
-          // Na parada final de retorno à base, colocamos as INSTRUÇÕES GERAIS
-          parts.push(`--- INSTRUÇÕES GERAIS ---\r\n${routeRules}`);
+          // Nota: como o app da Lalamove concatena os remarks de todas as paradas em um bloco único 
+          // para o motorista, a posição desta instrução na "parada de retorno" é meramente organizacional 
+          // no nosso código. Ela aparecerá junto das demais notas no topo ou fim do bloco.
+          if (routeRules && routeRules.trim()) {
+            parts.push(`--- INSTRUÇÕES GERAIS ---\r\n${routeRules.trim()}`);
+          }
         } else {
-          // Nas paradas de entrega, colocamos APENAS complemento e observação do destino
-          if (svc?.complement) parts.push(`Complemento: ${svc.complement}`);
-          if (svc?.observations) parts.push(`Obs do local: ${svc.observations.trim()}`);
+          // Paradas de entrega: apenas adiciona se houver complemento ou observação
+          const hasComplement = !!svc?.complement?.trim();
+          const hasObservation = !!svc?.observations?.trim();
+
+          if (hasComplement || hasObservation) {
+            const label = name?.trim() || "Destinatário";
+            let stopNote = `[${label}]`;
+            
+            if (hasComplement) stopNote += ` Compl.: ${svc.complement.trim()}`;
+            if (hasObservation) stopNote += ` | Obs: ${svc.observations.trim()}`;
+            
+            parts.push(stopNote);
+          }
         }
 
         const remarks = parts.join("\r\n\r\n").substring(0, 1500);
