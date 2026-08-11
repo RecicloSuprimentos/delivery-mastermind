@@ -1,10 +1,10 @@
-
 import { useState, memo } from "react";
 import { Check, ChevronDown, ChevronUp, SendToBack, PackageCheck } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { ServiceCardActions } from "./service/ServiceCardActions";
 import { ServiceCardDetails } from "./service/ServiceCardDetails";
+import { ServiceDetailsDialog } from "./service/ServiceDetailsDialog";
 import { useServices } from "@/hooks/useServices";
 import type { Service } from "@/types/services";
 
@@ -17,6 +17,7 @@ interface ServiceCardProps {
 
 const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { deleteService, updateServiceStatus } = useServices();
 
   const handleDelete = async () => {
@@ -50,73 +51,92 @@ const ServiceCard = memo(({ service, onUpdate, isSelected, onSelect }: ServiceCa
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Evita abrir o modal se o usuário clicou em um botão (checkbox, ações, expandir)
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
   const isCollection = service.type === "coleta";
   const Icon = isCollection ? SendToBack : PackageCheck;
   const iconColor = isCollection ? "text-blue-600" : "text-green-600";
   const showSelectButton = service.status === "not-assigned";
 
   return (
-    <Card className={`overflow-hidden transition-all duration-200 border-none shadow-sm hover:shadow-md ${isSelected ? 'ring-2 ring-vibe-blue/50 bg-blue-50/30' : 'bg-white'}`}>
-      <div className="p-3">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-1">
-            {showSelectButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSelect}
-                className={`${isSelected ? "text-primary" : "text-gray-500"} p-1`}
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-            )}
-            <div className={`${iconColor} flex items-center justify-center`}>
-              <Icon className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="font-medium text-sm">
-                {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
+    <>
+      <Card 
+        className={`overflow-hidden transition-all duration-200 border-none shadow-sm hover:shadow-md cursor-pointer ${isSelected ? 'ring-2 ring-vibe-blue/50 bg-blue-50/30' : 'bg-white'}`}
+        onClick={handleCardClick}
+      >
+        <div className="p-3">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-1">
+              {showSelectButton && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSelect}
+                  className={`${isSelected ? "text-primary" : "text-gray-500"} p-1`}
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+              )}
+              <div className={`${iconColor} flex items-center justify-center`}>
+                <Icon className="h-4 w-4" />
               </div>
-              <div className="font-medium text-sm">{service.customer_name}</div>
+              <div>
+                <div className="font-medium text-sm">
+                  {service.type === "coleta" ? "COLETA" : "ENTREGA"} {service.service_id}
+                </div>
+                <div className="font-medium text-sm">{service.customer_name}</div>
+              </div>
             </div>
-          </div>
-          
-          {(service.status === "not-assigned" || service.status === "assigned") && (
-            <ServiceCardActions
-              serviceId={service.id}
-              status={service.status}
-              onDelete={handleDelete}
-              onUnassign={handleUnassign}
-            />
-          )}
-        </div>
-
-        <ServiceCardDetails
-          address={service.address}
-          phone={service.phone}
-          timeWindow={service.time_window}
-          observations={service.observations}
-          isExpanded={isExpanded}
-          status={service.status}
-          agentName={service.assigned_to?.name}
-          completionDetails={service.completion_details}
-          failureDetails={service.failure_details}
-        />
-
-        <div className="flex justify-end mt-1">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
+            
+            {(service.status === "not-assigned" || service.status === "assigned") && (
+              <ServiceCardActions
+                serviceId={service.id}
+                status={service.status}
+                onDelete={handleDelete}
+                onUnassign={handleUnassign}
+              />
             )}
-          </button>
+          </div>
+
+          <ServiceCardDetails
+            address={service.address}
+            phone={service.phone}
+            timeWindow={service.time_window}
+            observations={service.observations}
+            isExpanded={isExpanded}
+            status={service.status}
+            agentName={service.assigned_to?.name}
+            completionDetails={service.completion_details}
+            failureDetails={service.failure_details}
+          />
+
+          <div className="flex justify-end mt-1">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+
+      <ServiceDetailsDialog 
+        service={service}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 });
 
