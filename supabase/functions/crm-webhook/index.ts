@@ -37,9 +37,17 @@ Deno.serve(async (req) => {
     const customer = payload.customer || {}
     const customerName = customer.name || 'Desconhecido'
     
-    // Pega o telefone e aplica uma sanitização básica (remove espaços extras e caracteres estranhos do começo)
+    // Pega o telefone
     let rawPhone = customer.phone_number || ''
-    // Substitui múltiplos espaços por nenhum espaço, apenas para juntar o número
+    
+    // Corrige padrão invertido do CRM onde o DDD vem no final: ex "99150-2945(31)" -> "(31) 99150-2945"
+    const invertedPattern = /^([\d\s\-]+?)\s*\((\d{2})\)$/
+    const match = rawPhone.trim().match(invertedPattern)
+    if (match) {
+      rawPhone = `(${match[2]}) ${match[1].trim()}`
+    }
+
+    // Aplica uma sanitização básica (remove espaços e caracteres estranhos do começo)
     let phone = rawPhone.replace(/\s+/g, '').replace(/^-+/, '')
     
     const complement = customer.address_complement || null
