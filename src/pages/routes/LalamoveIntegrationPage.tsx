@@ -160,24 +160,10 @@ const LalamoveIntegrationPage = () => {
         const svc = stop.service;
         const baseAddress = svc?.address || "";
 
-        // Identifica se é coleta ou entrega e formata o ID
-        const typePrefix = svc?.type === 'coleta' ? 'COLETA' : '';
-        const codigo = svc?.service_id ? `#${typePrefix} ${svc.service_id}`.trim() : "";
-        
-        // Pega complemento
-        const complemento = svc?.complement ? svc.complement.trim() : "";
-
-        // Remove quebras de linha das observações para manter na mesma linha do app
-        const obs = svc?.observations?.trim() ? svc.observations.replace(/\n|\r/g, " ").trim() : "";
-        
-        // Monta a description (Linha 2 no app Lalamove): Endereço completo + Complemento + ID + Obs
-        const extraParts = [complemento, codigo, obs].filter(Boolean).join(" - ");
-        const fullAddress = extraParts ? `${baseAddress}, ${extraParts}` : baseAddress;
-
         allStops.push(formatStop(
           parseFloat(svc.latitude),
           parseFloat(svc.longitude),
-          fullAddress
+          baseAddress
         ));
       });
 
@@ -259,8 +245,7 @@ const LalamoveIntegrationPage = () => {
         const svc = middleStops[idx]?.service;
         // Último stop é o retorno (sem serviço vinculado) — usa dados da empresa
         const isReturnStop = !svc;
-        
-        const name  = svc?.customer_name || senderName;
+
         // Tenta usar o telefone do cliente, se for inválido, faz fallback para o da empresa
         let phone = normalizeBrPhone(svc?.phone);
         if (!phone) {
@@ -269,7 +254,7 @@ const LalamoveIntegrationPage = () => {
 
         const currentHour = new Date().getHours();
         const limitTime = currentHour < 13 ? "13:30" : "18:30";
-        
+
         const routeRules = `FINALIZAR A ROTA ATÉ ${limitTime} HORAS – ENTREGA E COLETA DE CARTUCHOS E TONERS
 
 NECESSÁRIO RECEBER O PAGAMENTO NO LOCAL, QUANDO INFORMADO.
@@ -278,39 +263,30 @@ AO CHEGAR NO LOCAL, INFORMAR QUE ESTÁ REALIZANDO UMA ENTREGA/COLETA PARA A RECI
 
 EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`;
 
-        // Monta remarks
-        const parts: string[] = [];
-        
+        // ── Monta o campo name: Código | Nome | Complemento | Obs (sem obs em coletas) ──
+        let name: string;
         if (isReturnStop) {
-          // Nota: como o app da Lalamove concatena os remarks de todas as paradas em um bloco único 
-          // para o motorista, a posição desta instrução na "parada de retorno" é meramente organizacional 
-          // no nosso código. Ela aparecerá junto das demais notas no topo ou fim do bloco.
-          if (routeRules && routeRules.trim()) {
-            parts.push(`--- INSTRUÇÕES GERAIS ---\r\n${routeRules.trim()}`);
-          }
+          name = senderName;
         } else {
-          // Paradas de entrega: apenas adiciona se houver complemento ou observação
-          const hasComplement = !!svc?.complement?.trim();
-          const hasObservation = !!svc?.observations?.trim();
-
-          if (hasComplement || hasObservation) {
-            const label = name?.trim() || "Destinatário";
-            let stopNote = `[${label}]`;
-            
-            if (hasComplement) stopNote += ` Compl.: ${svc.complement.trim()}`;
-            if (hasObservation) stopNote += ` | Obs: ${svc.observations.trim()}`;
-            
-            parts.push(stopNote);
-          }
+          const customerName = svc?.customer_name || senderName;
+          const isColeta = svc?.type === 'coleta';
+          const typePrefix = isColeta ? 'COLETA ' : '';
+          const codigo = svc?.service_id ? `#${typePrefix}${svc.service_id}` : '';
+          const complemento = svc?.complement?.trim() || '';
+          // Para coletas, F.PAGTO. não se aplica — ignora o campo de observações
+          const obs = isColeta ? '' : (svc?.observations?.replace(/\n|\r/g, ' ').trim() || '');
+          const nameParts = [codigo, customerName, complemento, obs].filter(Boolean);
+          name = nameParts.join(' | ').substring(0, 255);
         }
 
-        const remarks = parts.join("\r\n\r\n").substring(0, 1500);
+        // remarks = instruções gerais da rota, enviadas em TODAS as paradas
+        const remarks = `--- INSTRUÇÕES GERAIS ---\r\n${routeRules.trim()}`.substring(0, 1500);
 
         return {
           stopId: lalamoveStop.stopId,
           name,
           phone,
-          ...(remarks ? { remarks } : {}),
+          remarks,
         };
       });
 
