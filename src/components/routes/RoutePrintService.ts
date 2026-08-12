@@ -34,6 +34,14 @@ export const printRoute = async (route: Route) => {
 
     const formatTime = (timeStr?: string) => timeStr ? timeStr.substring(0, 5) : "";
     
+    let formattedDuration = "-";
+    if (route.total_duration) {
+      const totalMinutes = Math.floor(route.total_duration / 60);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      formattedDuration = hours > 0 ? `${hours}h${minutes}min` : `${minutes}min`;
+    }
+    
     // Montando as linhas da tabela
     const rowsHtml = routeStops?.map((stop, index) => {
       const s = stop.service;
@@ -83,7 +91,7 @@ export const printRoute = async (route: Route) => {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            h1 { font-size: 26px; margin-bottom: 5px; color: #111; border-bottom: 2px solid #000; padding-bottom: 8px; }
+            h1 { font-size: 26px; margin-top: 0; margin-bottom: 5px; color: #111; border-bottom: 2px solid #000; padding-bottom: 8px; line-height: 1.1; }
             .header-grid {
               display: grid;
               grid-template-columns: 1fr 1fr;
@@ -154,7 +162,7 @@ export const printRoute = async (route: Route) => {
             </div>
             <div>
               <div class="info-item"><span class="label">Distância Prevista:</span> ${route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : "-"}</div>
-              <div class="info-item"><span class="label">Tempo Previsto:</span> ${route.total_duration ? `${Math.floor(route.total_duration / 60)}h${route.total_duration % 60}min` : "-"}</div>
+              <div class="info-item"><span class="label">Tempo Previsto:</span> ${formattedDuration}</div>
               <div class="info-item"><span class="label">Qtd de Paradas:</span> ${routeStops?.length || 0}</div>
             </div>
           </div>
