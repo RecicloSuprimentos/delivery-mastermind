@@ -91,18 +91,18 @@ export const printRoute = async (route: Route) => {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            h1 { font-size: 26px; margin-top: 0; margin-bottom: 5px; color: #111; border-bottom: 2px solid #000; padding-bottom: 8px; line-height: 1.1; }
+            h1 { font-size: 24px; margin-top: 0; margin-bottom: 2px; color: #111; border-bottom: 2px solid #000; padding-bottom: 4px; line-height: 1.1; }
             .header-grid {
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 15px;
-              margin-bottom: 20px;
+              gap: 8px;
+              margin-bottom: 8px;
               background: #f8f9fc;
-              padding: 12px;
+              padding: 8px 12px;
               border-radius: 6px;
               border: 1px solid #e2e8f0;
             }
-            .info-item { margin-bottom: 6px; font-size: 14px; }
+            .info-item { margin-bottom: 4px; font-size: 13px; }
             .label { font-weight: bold; color: #475569; }
             
             table {
