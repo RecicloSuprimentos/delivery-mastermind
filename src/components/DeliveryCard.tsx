@@ -99,7 +99,7 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
     try {
       const generatedServiceId = serviceId || Math.random().toString(36).substring(2, 8).toUpperCase();
       
-      const serviceData = {
+      const serviceData: any = {
         type: serviceType,
         service_id: generatedServiceId,
         customer_name: customerName,
@@ -111,8 +111,11 @@ const DeliveryCard = ({ onSuccess, onClose }: DeliveryCardProps) => {
         observations,
         latitude: location?.lat,
         longitude: location?.lng,
-        status: "not-assigned"
       };
+
+      if (!id) {
+        serviceData.status = "not-assigned";
+      }
 
       let error;
 
