@@ -279,14 +279,14 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
           name = nameParts.join(' | ').substring(0, 255);
         }
 
-        // remarks = instruções gerais da rota, enviadas em TODAS as paradas
-        const remarks = `--- INSTRUÇÕES GERAIS ---\r\n${routeRules.trim()}`.substring(0, 1500);
+        // remarks = instruções gerais da rota, enviadas APENAS na parada de retorno
+        const remarks = isReturnStop ? `--- INSTRUÇÕES GERAIS ---\r\n${routeRules.trim()}`.substring(0, 1500) : "";
 
         return {
           stopId: lalamoveStop.stopId,
           name,
           phone,
-          remarks,
+          ...(remarks ? { remarks } : {}),
         };
       });
 
