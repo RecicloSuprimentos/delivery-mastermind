@@ -30,6 +30,11 @@ export const AvailableServiceItem = ({
             <div className="text-sm text-gray-500">
               {service.address}
             </div>
+            {service.observations && (
+              <div className="text-xs text-gray-400 mt-1 italic">
+                Obs: {service.observations}
+              </div>
+            )}
           </div>
         </div>
         <Button

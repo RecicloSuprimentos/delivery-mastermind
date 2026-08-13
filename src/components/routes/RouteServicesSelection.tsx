@@ -32,6 +32,11 @@ export const RouteServicesSelection = ({
               </div>
               <div className="text-sm text-gray-600">{service.customer_name}</div>
               <div className="text-sm text-gray-600">{service.address}</div>
+              {service.observations && (
+                <div className="text-xs text-gray-500 mt-1 italic">
+                  Obs: {service.observations}
+                </div>
+              )}
             </div>
             {selectedServices.includes(service.id) && (
               <Check className="h-5 w-5 text-primary" />

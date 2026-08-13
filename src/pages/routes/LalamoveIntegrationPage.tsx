@@ -536,6 +536,11 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
                     <div className="flex-1">
                       <p className="font-bold text-sm text-gray-900">{stop.service?.customer_name}</p>
                       <p className="text-xs text-gray-600 mt-1 leading-relaxed">{stop.service?.address}</p>
+                      {stop.service?.observations && (
+                        <p className="text-[11px] text-gray-500 mt-1 italic bg-gray-50 p-1.5 rounded border border-gray-100">
+                          Obs: {stop.service.observations}
+                        </p>
+                      )}
                       
                       <div className="flex flex-wrap gap-2 mt-2">
                         {stop.service?.complement && (

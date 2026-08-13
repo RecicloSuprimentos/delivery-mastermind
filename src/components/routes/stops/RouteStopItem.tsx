@@ -47,6 +47,11 @@ export const RouteStopItem = ({
             <div className="text-sm text-gray-500">
               {stop.address}
             </div>
+            {stop.observations && (
+              <div className="text-xs text-gray-400 mt-1 italic">
+                Obs: {stop.observations}
+              </div>
+            )}
             {stop.time_window && (
               <div className="text-sm text-gray-500">
                 {stop.time_window}
