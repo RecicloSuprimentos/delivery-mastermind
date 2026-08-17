@@ -157,7 +157,7 @@ export const printRoute = async (route: Route) => {
           </style>
         </head>
         <body>
-          <h1>Documento de Rota: ${route.name}</h1>
+          <h1>ROTA ${route.name.replace(/-/g, '/')} &mdash; ENTREGAS RECICLO SUPRIMENTOS | 31 3226-3662</h1>
           
           <div class="header-grid">
             <div>
