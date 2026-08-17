@@ -49,6 +49,8 @@ export const printRoute = async (route: Route) => {
         ? '<span class="badge badge-coleta">COLETA</span>'
         : '<span class="badge badge-entrega">ENTREGA</span>';
       
+      const serviceIdHtml = s.service_id ? `<div style="margin-top: 5px; font-size: 11px; color: #64748b; font-weight: 500;">#${s.service_id}</div>` : '';
+      
       const timeWindow = s.time_window 
         ? `<br><small><strong>Janela:</strong> ${formatTime(s.time_window.split(',')[0])} às ${formatTime(s.time_window.split(',')[1])}</small>`
         : '';
@@ -62,7 +64,10 @@ export const printRoute = async (route: Route) => {
             <strong>${s.customer_name}</strong><br>
             ${s.phone || '-'}
           </td>
-          <td>${typeBadge}</td>
+          <td>
+            ${typeBadge}
+            ${serviceIdHtml}
+          </td>
           <td>
             ${s.address}
             ${obs}
