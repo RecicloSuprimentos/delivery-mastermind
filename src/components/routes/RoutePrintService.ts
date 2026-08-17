@@ -96,7 +96,7 @@ export const printRoute = async (route: Route) => {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            h1 { font-size: 24px; margin-top: 0; margin-bottom: 2px; color: #111; border-bottom: 2px solid #000; padding-bottom: 4px; line-height: 1.1; }
+            h1 { font-size: 15px; margin-top: 0; margin-bottom: 2px; color: #111; border-bottom: 2px solid #000; padding-bottom: 4px; line-height: 1.1; }
             .header-grid {
               display: grid;
               grid-template-columns: 1fr 1fr;
