@@ -290,6 +290,15 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
         };
       });
 
+      // Mapeamento stopId -> service_id (do nosso banco) para colocar no metadata
+      const stopServiceMap: Record<string, string> = {};
+      stops.slice(1).forEach((lalamoveStop: any, idx: number) => {
+        const svc = middleStops[idx]?.service;
+        if (svc?.id) {
+          stopServiceMap[lalamoveStop.stopId] = svc.id;
+        }
+      });
+
       const response = await supabase.functions.invoke('lalamove-proxy', {
         body: {
           method: 'POST',
@@ -307,6 +316,7 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
               metadata: {
                 routeId: id,
                 routeName: route?.name,
+                stopServiceMap: JSON.stringify(stopServiceMap)
               }
             }
           }
@@ -324,10 +334,37 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
         throw new Error(`Lalamove: ${msg}`);
       }
 
-      setOrder(response.data?.data);
+      const orderData = response.data?.data;
+      setOrder(orderData);
+      
+      if (orderData?.orderId) {
+        // Persistir na nova tabela lalamove_orders
+        const { data: newOrder, error: orderError } = await supabase.from('lalamove_orders').insert({
+          order_id: orderData.orderId,
+          route_id: id,
+          status: 'ASSIGNING'
+        }).select().single();
+        
+        if (orderError) {
+          console.error("Erro ao salvar lalamove_orders", orderError);
+        } else if (newOrder && Object.keys(stopServiceMap).length > 0) {
+          // Persistir os stops na lalamove_order_stops
+          const stopsToInsert = Object.entries(stopServiceMap).map(([stopId, serviceId]) => ({
+            lalamove_order_id: newOrder.id,
+            service_id: serviceId,
+            stop_id: stopId
+          }));
+          
+          const { error: stopsError } = await supabase.from('lalamove_order_stops').insert(stopsToInsert);
+          if (stopsError) {
+            console.error("Erro ao salvar lalamove_order_stops", stopsError);
+          }
+        }
+      }
+
       toast({
         title: "Pedido criado!",
-        description: `Motorista sendo encontrado. Pedido #${response.data?.data?.orderId}`,
+        description: `Motorista sendo encontrado. Pedido #${orderData?.orderId}`,
       });
     } catch (error: any) {
       toast({ title: "Erro ao contratar", description: error.message, variant: "destructive" });
