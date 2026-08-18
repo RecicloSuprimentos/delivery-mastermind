@@ -11,8 +11,26 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Lalamove valida o endpoint com um GET — responder 200 imediatamente
+  if (req.method === 'GET') {
+    return new Response(JSON.stringify({ status: 'ok' }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+
   try {
-    const payload = await req.json()
+    let payload: any;
+    try {
+      payload = await req.json()
+    } catch (_e) {
+      // Se o body não for JSON válido (ou estiver vazio), retorna 200 assim mesmo
+      return new Response(JSON.stringify({ status: 'ok', note: 'empty or non-json body' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     console.log('Recebido Webhook da Lalamove:', payload)
 
     // A Lalamove sempre envia eventType dentro do payload.data
