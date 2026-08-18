@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteFormContent } from "./RouteFormContent";
 import { useRouteFormState } from "@/hooks/useRouteFormState";
@@ -18,6 +18,8 @@ interface RouteFormProps {
 }
 
 export const RouteForm = ({ onSave, isLoading, routeId, initialData, isViewMode }: RouteFormProps) => {
+  const initializedRef = useRef(false);
+
   const {
     date,
     setDate,
@@ -46,7 +48,8 @@ export const RouteForm = ({ onSave, isLoading, routeId, initialData, isViewMode 
 
   // Carregar dados iniciais quando estiver em modo de edição
   useEffect(() => {
-    if (initialData) {
+    if (initialData && !initializedRef.current) {
+      initializedRef.current = true;
       setRouteName(initialData.name);
       setSelectedAgent(initialData.agent_id);
       setDate(new Date(initialData.start_time));

@@ -25,6 +25,7 @@ export const useRouteQuery = (routeId?: string) => {
       return data;
     },
     enabled: !!routeId,
+    staleTime: 60_000,
   });
 
   return {
