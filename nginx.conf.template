@@ -114,5 +114,23 @@ server {
         
         # O micro-serviço Node já envia os headers CORS. Removendo do Nginx para evitar duplicidade (*, *).
     }
+
+    # =========================================================================
+    # WEBHOOK DA LALAMOVE (SEM SENHA)
+    # Rota pública para receber eventos da Lalamove (ex: entrega concluída, motorista atribuído)
+    # O crm-receiver processa o evento e atualiza as tabelas lalamove_orders / lalamove_order_stops
+    # =========================================================================
+    location /webhook/lalamove {
+        resolver 127.0.0.11 valid=10s;
+        set $lalamove_backend http://crm-receiver:3001;
+
+        proxy_pass $lalamove_backend$request_uri;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Content-Type "application/json";
+    }
 }
 # Force trigger deploy
