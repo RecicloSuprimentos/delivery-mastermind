@@ -15,7 +15,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Content-Type': 'application/json',
 };
 
@@ -27,7 +27,17 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Aceitar qualquer path POST (o CRM pode adicionar /services no final)
+  const url = new URL(req.url, `http://localhost`);
+  const isLalamoveWebhook = url.pathname === '/webhook/lalamove';
+
+  // Lalamove valida o endpoint com GET — retornar 200 imediatamente
+  if (isLalamoveWebhook && req.method === 'GET') {
+    res.writeHead(200, corsHeaders);
+    res.end(JSON.stringify({ status: 'ok', service: 'lalamove-webhook' }));
+    return;
+  }
+
+  // Bloquear outros métodos que não sejam POST
   if (req.method !== 'POST') {
     res.writeHead(405, corsHeaders);
     res.end(JSON.stringify({ error: 'Method not allowed' }));
@@ -38,7 +48,70 @@ const server = http.createServer(async (req, res) => {
   req.on('data', chunk => { body += chunk.toString(); });
   req.on('end', async () => {
     try {
-      const payload = JSON.parse(body);
+      const payload = JSON.parse(body || '{}');
+
+      // ── Handler do Webhook da Lalamove ──────────────────────────────────
+      if (isLalamoveWebhook) {
+        console.log(`[${new Date().toISOString()}] [LALAMOVE] Evento recebido:`, JSON.stringify(payload));
+        const data = payload.data || payload;
+        const { eventType, orderId, metadata, stops, status, driverInfo } = data;
+
+        try {
+          if (eventType === 'ORDER_STATUS_CHANGED' && orderId) {
+            await supabase.from('lalamove_orders')
+              .update({ status: status, updated_at: new Date() })
+              .eq('order_id', orderId);
+            console.log(`[LALAMOVE] ORDER_STATUS_CHANGED: ${orderId} → ${status}`);
+          }
+
+          if (eventType === 'DRIVER_ASSIGNED' && orderId && driverInfo) {
+            await supabase.from('lalamove_orders')
+              .update({
+                driver_name: driverInfo.name,
+                driver_phone: driverInfo.phone,
+                driver_plate: driverInfo.plateNumber,
+                updated_at: new Date()
+              })
+              .eq('order_id', orderId);
+            console.log(`[LALAMOVE] DRIVER_ASSIGNED: ${orderId} → ${driverInfo.name}`);
+          }
+
+          if (eventType === 'POD_STATUS_CHANGED' && metadata) {
+            let stopServiceMap = {};
+            try {
+              stopServiceMap = typeof metadata.stopServiceMap === 'string'
+                ? JSON.parse(metadata.stopServiceMap)
+                : (metadata.stopServiceMap || {});
+            } catch (_e) {}
+
+            if (stops && Array.isArray(stops)) {
+              for (const stop of stops) {
+                const serviceId = stopServiceMap[stop.stopId];
+                if (serviceId) {
+                  await supabase.from('lalamove_order_stops')
+                    .update({
+                      pod_status: stop.podStatus,
+                      pod_photo_url: stop.photoUrl,
+                      delivered_at: stop.deliveredAt,
+                    })
+                    .eq('service_id', serviceId)
+                    .eq('stop_id', stop.stopId);
+                  console.log(`[LALAMOVE] POD_STATUS_CHANGED: service=${serviceId} → ${stop.podStatus}`);
+                }
+              }
+            }
+          }
+        } catch (lalamoveErr) {
+          console.error(`[LALAMOVE] Erro ao processar evento:`, lalamoveErr.message);
+        }
+
+        // A Lalamove exige 200 sempre, mesmo em erros internos
+        res.writeHead(200, corsHeaders);
+        res.end(JSON.stringify({ status: 'ok', eventType }));
+        return;
+      }
+
+      // ── Handler do Webhook do CRM (comportamento original) ──────────────
       console.log(`[${new Date().toISOString()}] Webhook recebido:`, JSON.stringify(payload));
 
       // Mapear campos do CRM para a tabela 'services'

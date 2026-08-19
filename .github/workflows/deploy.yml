@@ -123,7 +123,12 @@ jobs:
                     delay: 5s
                     max_attempts: 3
                   labels:
-                    - "traefik.enable=false"
+                    - "traefik.enable=true"
+                    - "traefik.http.routers.crm-receiver.rule=Host(`roterizador.mgbase.com.br`) && PathPrefix(`/webhook`)"
+                    - "traefik.http.routers.crm-receiver.entrypoints=websecure"
+                    - "traefik.http.routers.crm-receiver.tls.certresolver=myresolver"
+                    - "traefik.http.routers.crm-receiver.priority=10"
+                    - "traefik.http.services.crm-receiver.loadbalancer.server.port=3001"
             networks:
               web:
                 external: true
