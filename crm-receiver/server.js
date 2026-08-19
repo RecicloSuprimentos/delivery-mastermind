@@ -76,27 +76,23 @@ const server = http.createServer(async (req, res) => {
             console.log(`[LALAMOVE] DRIVER_ASSIGNED: ${orderId} → ${driverInfo.name}`);
           }
 
-          if (eventType === 'POD_STATUS_CHANGED' && metadata) {
-            let stopServiceMap = {};
-            try {
-              stopServiceMap = typeof metadata.stopServiceMap === 'string'
-                ? JSON.parse(metadata.stopServiceMap)
-                : (metadata.stopServiceMap || {});
-            } catch (_e) {}
+          if (eventType === 'POD_STATUS_CHANGED' && orderId) {
+            // Descobre o ID interno da lalamove_orders a partir do order_id externo
+            const { data: orderRec } = await supabase.from('lalamove_orders')
+              .select('id').eq('order_id', orderId).single();
 
-            if (stops && Array.isArray(stops)) {
+            if (orderRec && stops && Array.isArray(stops)) {
               for (const stop of stops) {
-                const serviceId = stopServiceMap[stop.stopId];
-                if (serviceId) {
+                if (stop.stopId) {
                   await supabase.from('lalamove_order_stops')
                     .update({
                       pod_status: stop.podStatus,
                       pod_photo_url: stop.photoUrl,
                       delivered_at: stop.deliveredAt,
                     })
-                    .eq('service_id', serviceId)
+                    .eq('lalamove_order_id', orderRec.id)
                     .eq('stop_id', stop.stopId);
-                  console.log(`[LALAMOVE] POD_STATUS_CHANGED: service=${serviceId} → ${stop.podStatus}`);
+                  console.log(`[LALAMOVE] POD_STATUS_CHANGED atualizado para stopId=${stop.stopId} → ${stop.podStatus}`);
                 }
               }
             }

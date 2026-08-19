@@ -324,10 +324,42 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
         throw new Error(`Lalamove: ${msg}`);
       }
 
-      setOrder(response.data?.data);
+      const orderData = response.data?.data;
+      setOrder(orderData);
+
+      if (orderData?.orderId) {
+        // Persistir na nova tabela lalamove_orders
+        const { data: newOrder, error: orderError } = await supabase.from('lalamove_orders').insert({
+          order_id: orderData.orderId,
+          route_id: id,
+          status: 'ASSIGNING'
+        }).select().single();
+        
+        if (orderError) {
+          console.error("Erro ao salvar lalamove_orders", orderError);
+        } else if (newOrder) {
+          // Persistir os stops na lalamove_order_stops
+          const stopsToInsert = stops.slice(1).map((lalamoveStop: any, idx: number) => {
+            const svc = middleStops[idx]?.service;
+            return {
+              lalamove_order_id: newOrder.id,
+              service_id: svc?.id || null,
+              stop_id: lalamoveStop.stopId
+            };
+          }).filter((s: any) => s.service_id); // Garante que só salva paradas vinculadas a serviços
+          
+          if (stopsToInsert.length > 0) {
+            const { error: stopsError } = await supabase.from('lalamove_order_stops').insert(stopsToInsert);
+            if (stopsError) {
+              console.error("Erro ao salvar lalamove_order_stops", stopsError);
+            }
+          }
+        }
+      }
+
       toast({
         title: "Pedido criado!",
-        description: `Motorista sendo encontrado. Pedido #${response.data?.data?.orderId}`,
+        description: `Motorista sendo encontrado. Pedido #${orderData?.orderId}`,
       });
     } catch (error: any) {
       toast({ title: "Erro ao contratar", description: error.message, variant: "destructive" });
