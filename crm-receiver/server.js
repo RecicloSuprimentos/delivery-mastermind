@@ -52,39 +52,49 @@ const server = http.createServer(async (req, res) => {
 
       // ── Handler do Webhook da Lalamove ──────────────────────────────────
       if (isLalamoveWebhook) {
-        console.log(`[${new Date().toISOString()}] [LALAMOVE] Evento recebido:`, JSON.stringify(payload));
-        const data = payload.data || payload;
-        const { eventType, orderId, metadata, stops, status, driverInfo } = data;
+        // ⚠️ IMPORTANTE: No webhook V3 da Lalamove, eventType vem na RAIZ do payload,
+        // não dentro de payload.data. O orderId e demais campos vêm em payload.data.
+        const eventType = payload.eventType || (payload.data && payload.data.eventType) || payload.event;
+        const data = payload.data || {};
+        const orderId = data.orderId || payload.orderId;
+        const status = data.status || payload.status;
+        const stops = data.stops || payload.stops;
+        // Lalamove usa 'driver' (não 'driverInfo') no DRIVER_ASSIGNED
+        const driver = data.driver || data.driverInfo || payload.driver;
+        const metadata = data.metadata || payload.metadata;
+
+        console.log(`[${new Date().toISOString()}] [LALAMOVE] Evento: ${eventType || 'DESCONHECIDO'} | OrderId: ${orderId || 'N/A'} | Payload completo:`, JSON.stringify(payload));
 
         try {
           if (eventType === 'ORDER_STATUS_CHANGED' && orderId) {
-            await supabase.from('lalamove_orders')
-              .update({ status: status, updated_at: new Date() })
+            const { error } = await supabase.from('lalamove_orders')
+              .update({ status, updated_at: new Date() })
               .eq('order_id', orderId);
-            console.log(`[LALAMOVE] ORDER_STATUS_CHANGED: ${orderId} → ${status}`);
+            if (error) console.error(`[LALAMOVE] Erro ao atualizar status:`, error.message);
+            else console.log(`[LALAMOVE] ORDER_STATUS_CHANGED: ${orderId} → ${status}`);
           }
 
-          if (eventType === 'DRIVER_ASSIGNED' && orderId && driverInfo) {
-            await supabase.from('lalamove_orders')
+          else if (eventType === 'DRIVER_ASSIGNED' && orderId && driver) {
+            const { error } = await supabase.from('lalamove_orders')
               .update({
-                driver_name: driverInfo.name,
-                driver_phone: driverInfo.phone,
-                driver_plate: driverInfo.plateNumber,
+                driver_name: driver.name,
+                driver_phone: driver.phone,
+                driver_plate: driver.plateNumber,
                 updated_at: new Date()
               })
               .eq('order_id', orderId);
-            console.log(`[LALAMOVE] DRIVER_ASSIGNED: ${orderId} → ${driverInfo.name}`);
+            if (error) console.error(`[LALAMOVE] Erro ao salvar motorista:`, error.message);
+            else console.log(`[LALAMOVE] DRIVER_ASSIGNED: ${orderId} → ${driver.name} / ${driver.plateNumber}`);
           }
 
-          if (eventType === 'POD_STATUS_CHANGED' && orderId) {
-            // Descobre o ID interno da lalamove_orders a partir do order_id externo
+          else if (eventType === 'POD_STATUS_CHANGED' && orderId) {
             const { data: orderRec } = await supabase.from('lalamove_orders')
               .select('id').eq('order_id', orderId).single();
 
             if (orderRec && stops && Array.isArray(stops)) {
               for (const stop of stops) {
                 if (stop.stopId) {
-                  await supabase.from('lalamove_order_stops')
+                  const { error } = await supabase.from('lalamove_order_stops')
                     .update({
                       pod_status: stop.podStatus,
                       pod_photo_url: stop.photoUrl,
@@ -92,13 +102,65 @@ const server = http.createServer(async (req, res) => {
                     })
                     .eq('lalamove_order_id', orderRec.id)
                     .eq('stop_id', stop.stopId);
-                  console.log(`[LALAMOVE] POD_STATUS_CHANGED atualizado para stopId=${stop.stopId} → ${stop.podStatus}`);
+                  if (error) console.error(`[LALAMOVE] Erro ao atualizar POD stopId=${stop.stopId}:`, error.message);
+                  else console.log(`[LALAMOVE] POD_STATUS_CHANGED: stopId=${stop.stopId} → ${stop.podStatus}`);
                 }
               }
+            } else if (!orderRec) {
+              console.warn(`[LALAMOVE] POD_STATUS_CHANGED: orderId=${orderId} não encontrado no banco!`);
             }
           }
+
+          else if (eventType === 'POP_STATUS_CHANGED' && orderId) {
+            // Proof-of-pickup: foto e horário da coleta
+            const { error } = await supabase.from('lalamove_orders')
+              .update({ pop_photo_url: data.photoUrl, picked_up_at: data.pickupDateTime, updated_at: new Date() })
+              .eq('order_id', orderId);
+            if (error) console.error(`[LALAMOVE] Erro ao salvar POP:`, error.message);
+            else console.log(`[LALAMOVE] POP_STATUS_CHANGED: ${orderId}`);
+          }
+
+          else if (eventType === 'ORDER_AMOUNT_CHANGED' && orderId) {
+            const newAmount = data.priceBreakdown?.total;
+            const { error } = await supabase.from('lalamove_orders')
+              .update({ total_price: newAmount, updated_at: new Date() })
+              .eq('order_id', orderId);
+            if (error) console.error(`[LALAMOVE] Erro ao atualizar valor:`, error.message);
+            else console.log(`[LALAMOVE] ORDER_AMOUNT_CHANGED: ${orderId} → R$ ${newAmount}`);
+          }
+
+          else if (eventType === 'ORDER_REPLACED' && orderId) {
+            const newOrderId = data.newOrderId;
+            console.log(`[LALAMOVE] ORDER_REPLACED: ${orderId} foi substituído por ${newOrderId}`);
+            if (newOrderId) {
+              await supabase.from('lalamove_orders')
+                .update({ status: 'REPLACED', replaced_by: newOrderId, updated_at: new Date() })
+                .eq('order_id', orderId);
+            }
+          }
+
+          else if (eventType === 'ORDER_CREATED' && orderId) {
+            console.log(`[LALAMOVE] ORDER_CREATED recebido para orderId=${orderId} (salvo pelo frontend no momento da contratação)`);
+          }
+
+          else if (eventType === 'WALLET_BALANCE_CHANGED') {
+            console.log(`[LALAMOVE] WALLET_BALANCE_CHANGED: novo saldo = ${JSON.stringify(data)}`);
+          }
+
+          else if (eventType === 'DELIVERY_CODE_STATUS_CHANGED' && orderId) {
+            console.log(`[LALAMOVE] DELIVERY_CODE_STATUS_CHANGED: ${orderId} → ${JSON.stringify(data)}`);
+          }
+
+          else if (eventType === 'ORDER_EDITED' && orderId) {
+            console.log(`[LALAMOVE] ORDER_EDITED: ${orderId} foi editado → ${JSON.stringify(data)}`);
+          }
+
+          else {
+            console.warn(`[LALAMOVE] Evento não mapeado: ${eventType} | Dados:`, JSON.stringify(data));
+          }
+
         } catch (lalamoveErr) {
-          console.error(`[LALAMOVE] Erro ao processar evento:`, lalamoveErr.message);
+          console.error(`[LALAMOVE] Erro ao processar evento ${eventType}:`, lalamoveErr.message);
         }
 
         // A Lalamove exige 200 sempre, mesmo em erros internos
