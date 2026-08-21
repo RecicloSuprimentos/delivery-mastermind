@@ -67,11 +67,45 @@ const server = http.createServer(async (req, res) => {
         try {
           // ── ORDER_STATUS_CHANGED ─────────────────────────────────────────
           if (eventType === 'ORDER_STATUS_CHANGED' && orderId) {
-            const { error } = await supabase.from('lalamove_orders')
+            // Atualiza status do pedido Lalamove
+            const { error, data: orderRec } = await supabase.from('lalamove_orders')
               .update({ status, updated_at: new Date() })
-              .eq('order_id', orderId);
+              .eq('order_id', orderId)
+              .select('route_id')
+              .single();
+              
             if (error) console.error(`[LALAMOVE] Erro ao atualizar status:`, error.message);
             else console.log(`[LALAMOVE] ORDER_STATUS_CHANGED: ${orderId} → ${status}`);
+
+            // Atualização em lote dos serviços internos atrelados a esta rota
+            const STATUS_MAP = {
+              'ASSIGNING_DRIVER': 'assigned',
+              'ON_GOING':         'accepted',
+              'PICKED_UP':        'in-transit',
+            };
+
+            const newServiceStatus = STATUS_MAP[status];
+            if (newServiceStatus && orderRec?.route_id) {
+              const { data: stops } = await supabase
+                .from('route_stops')
+                .select('service_id')
+                .eq('route_id', orderRec.route_id);
+
+              const serviceIds = (stops || []).map(s => s.service_id).filter(Boolean);
+
+              if (serviceIds.length > 0) {
+                const { error: batchErr } = await supabase.from('services')
+                  .update({ status: newServiceStatus })
+                  .in('id', serviceIds)
+                  .not('status', 'in', '("completed","cancelled")');
+                  
+                if (batchErr) {
+                  console.error(`[LALAMOVE] Erro no update em lote dos serviços:`, batchErr.message);
+                } else {
+                  console.log(`[LALAMOVE] Serviços da rota ${orderRec.route_id} atualizados para '${newServiceStatus}'`);
+                }
+              }
+            }
           }
 
           // ── DRIVER_ASSIGNED ──────────────────────────────────────────────
@@ -159,11 +193,19 @@ const server = http.createServer(async (req, res) => {
                       if (pod.status === 'DELIVERED') {
                         const { error: svcUpdErr } = await supabase
                           .from('services')
-                          .update({ status: 'entregue' })
+                          .update({ status: 'completed' })
                           .eq('id', svcRec.id);
 
-                        if (svcUpdErr) console.error(`[LALAMOVE] Erro ao atualizar services.status:`, svcUpdErr.message);
-                        else console.log(`[LALAMOVE] services.status atualizado para 'entregue': ${humanServiceId}`);
+                        if (svcUpdErr) console.error(`[LALAMOVE] Erro ao atualizar services.status (completed):`, svcUpdErr.message);
+                        else console.log(`[LALAMOVE] services.status atualizado para 'completed': ${humanServiceId}`);
+                      } else if (pod.status === 'REJECTED') {
+                        const { error: svcUpdErr } = await supabase
+                          .from('services')
+                          .update({ status: 'cancelled' })
+                          .eq('id', svcRec.id);
+
+                        if (svcUpdErr) console.error(`[LALAMOVE] Erro ao atualizar services.status (cancelled):`, svcUpdErr.message);
+                        else console.log(`[LALAMOVE] services.status atualizado para 'cancelled': ${humanServiceId}`);
                       }
                     }
                   } else {
