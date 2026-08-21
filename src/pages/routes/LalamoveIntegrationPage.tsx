@@ -344,7 +344,8 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
             return {
               lalamove_order_id: newOrder.id,
               service_id: svc?.id || null,
-              stop_id: lalamoveStop.stopId
+              stop_id: lalamoveStop.stopId,
+              position: idx   // posição 0-based entre as paradas de entrega (sem o stop de coleta)
             };
           }).filter((s: any) => s.service_id); // Garante que só salva paradas vinculadas a serviços
           
