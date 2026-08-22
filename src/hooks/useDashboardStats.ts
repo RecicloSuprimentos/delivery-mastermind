@@ -72,29 +72,31 @@ export const useDashboardStats = (period: Period) => {
       }, 0);
 
       // 4. Desempenho por agente
-      // Usaremos os serviços completados neste período, que têm o completed_at e completion_details
+      // Usaremos os serviços completados neste período, e contaremos por agent_id
       const { data: completedServices, error: agentErr } = await supabase
         .from('services')
-        .select('completion_details')
+        .select(`
+          id,
+          agent_id,
+          system_users:agent_id(name)
+        `)
         .eq('status', 'completed')
-        .gte('completed_at', startDateStr)
-        .not('completion_details', 'is', null);
+        .gte('completed_at', startDateStr);
 
       if (agentErr) throw agentErr;
 
       const agentCounts: Record<string, number> = {};
       completedServices?.forEach(s => {
-        const details = s.completion_details as { responsibleName?: string };
-        if (details && details.responsibleName) {
-          const name = details.responsibleName;
-          agentCounts[name] = (agentCounts[name] || 0) + 1;
-        }
+        // @ts-ignore - Supabase type might not resolve the join perfectly
+        const agentName = s.system_users?.name || 'Não Atribuído';
+        agentCounts[agentName] = (agentCounts[agentName] || 0) + 1;
       });
 
       const topAgents = Object.entries(agentCounts)
         .map(([name, deliveries]) => ({ name, deliveries }))
         .sort((a, b) => b.deliveries - a.deliveries)
         .slice(0, 5);
+
 
       // Consolidar resultados
       return {
