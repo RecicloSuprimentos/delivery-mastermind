@@ -73,7 +73,9 @@ export const Navigation = ({ searchTerm, onSearchChange, showSearch }: Navigatio
               <Button variant="ghost" onClick={() => navigate('/realtime')}>
                 TEMPO REAL
               </Button>
-              <Button variant="ghost">ANÁLISE</Button>
+              <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+                DASHBOARD
+              </Button>
               <Button variant="ghost">COMUNICAÇÃO</Button>
             </div>
           </div>

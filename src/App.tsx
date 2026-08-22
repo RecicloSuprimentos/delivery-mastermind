@@ -18,6 +18,7 @@ import EditRoutePage from "./pages/routes/EditRoutePage";
 import LalamoveIntegrationPage from "./pages/routes/LalamoveIntegrationPage";
 import AgentPage from "./pages/AgentPage";
 import RealTimeMonitoring from "./pages/RealTimeMonitoring";
+import DashboardPage from "./pages/DashboardPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,6 +59,14 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <Index />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
               </ProtectedRoute>
             }
           />
