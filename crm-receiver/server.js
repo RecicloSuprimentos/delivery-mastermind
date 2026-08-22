@@ -12,6 +12,29 @@ if (!SUPABASE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── Cache de configuração: raw_capture_enabled ────────────────────────────────
+// Evita consultar o banco em cada request — expira a cada 30 segundos.
+// Para ativar: UPDATE webhook_settings SET value='true' WHERE key='raw_capture_enabled';
+let rawCaptureCache = { enabled: false, fetchedAt: 0 };
+const RAW_CAPTURE_TTL_MS = 30 * 1000;
+
+async function isRawCaptureEnabled() {
+  const now = Date.now();
+  if (now - rawCaptureCache.fetchedAt > RAW_CAPTURE_TTL_MS) {
+    const { data } = await supabase
+      .from('webhook_settings')
+      .select('value')
+      .eq('key', 'raw_capture_enabled')
+      .maybeSingle();
+    rawCaptureCache.enabled = data?.value === 'true';
+    rawCaptureCache.fetchedAt = now;
+    if (rawCaptureCache.enabled) {
+      console.log('[CONFIG] raw_capture_enabled = true');
+    }
+  }
+  return rawCaptureCache.enabled;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -63,6 +86,22 @@ const server = http.createServer(async (req, res) => {
         const driver   = order.driver || null;
 
         console.log(`[${new Date().toISOString()}] [LALAMOVE] Evento: ${eventType || 'DESCONHECIDO'} | OrderId: ${orderId || 'N/A'}`);
+
+        // ── Raw Capture (controlado via webhook_settings.raw_capture_enabled) ──
+        try {
+          if (await isRawCaptureEnabled()) {
+            await supabase.from('webhook_raw_captures').insert({
+              source:     'lalamove',
+              event_id:   payload.eventId  || null,
+              event_type: payload.eventType || null,
+              payload:    payload,
+            });
+            console.log(`[LALAMOVE] Raw capture salvo: ${payload.eventType} / ${payload.eventId}`);
+          }
+        } catch (captureErr) {
+          // Captura nunca pode derrubar o processamento principal
+          console.error('[LALAMOVE] Falha no raw capture (não crítico):', captureErr.message);
+        }
 
         try {
           // ── ORDER_STATUS_CHANGED ─────────────────────────────────────────
@@ -189,22 +228,39 @@ const server = http.createServer(async (req, res) => {
                       matchedByName = true;
                       console.log(`[LALAMOVE] POD atualizado via name: service=${humanServiceId} → ${pod.status}`);
 
-                      // Atualiza o status do serviço no sistema principal
+                      // Atualiza o status + dados de conclusão do serviço
                       if (pod.status === 'DELIVERED') {
+                        // Coleta a observação do motorista — pode não existir em todos os eventos
+                        const driverObservation = pod.comment || pod.note || pod.remark || pod.remarks || null;
+
                         const { error: svcUpdErr } = await supabase
                           .from('services')
-                          .update({ status: 'completed' })
+                          .update({
+                            status:      'completed',
+                            completed_at: pod.deliveredAt || new Date().toISOString(),
+                            completion_details: {
+                              completedAt:  pod.deliveredAt,
+                              podPhotoUrl:  pod.image || null,
+                              observations: driverObservation,
+                            },
+                          })
                           .eq('id', svcRec.id);
 
-                        if (svcUpdErr) console.error(`[LALAMOVE] Erro ao atualizar services.status (completed):`, svcUpdErr.message);
-                        else console.log(`[LALAMOVE] services.status atualizado para 'completed': ${humanServiceId}`);
+                        if (svcUpdErr) console.error(`[LALAMOVE] Erro ao atualizar services (completed):`, svcUpdErr.message);
+                        else console.log(`[LALAMOVE] services atualizado para 'completed' com comprovante: ${humanServiceId}`);
                       } else if (pod.status === 'REJECTED') {
                         const { error: svcUpdErr } = await supabase
                           .from('services')
-                          .update({ status: 'cancelled' })
+                          .update({
+                            status: 'cancelled',
+                            failure_details: {
+                              reason:      'Entrega não realizada pelo motorista Lalamove',
+                              completedAt: new Date().toISOString(),
+                            },
+                          })
                           .eq('id', svcRec.id);
 
-                        if (svcUpdErr) console.error(`[LALAMOVE] Erro ao atualizar services.status (cancelled):`, svcUpdErr.message);
+                        if (svcUpdErr) console.error(`[LALAMOVE] Erro ao atualizar services (cancelled):`, svcUpdErr.message);
                         else console.log(`[LALAMOVE] services.status atualizado para 'cancelled': ${humanServiceId}`);
                       }
                     }
