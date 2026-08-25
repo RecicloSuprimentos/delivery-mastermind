@@ -196,12 +196,13 @@ const server = http.createServer(async (req, res) => {
 
                 // ── 1. Matching primário: service_id embutido no campo `name` ──
                 // O frontend gera: "#504342 | Nome | ..." ou "#COLETA 504342 | Nome | ..."
-                const nameMatch = stop.name && stop.name.match(/^#(?:COLETA )?(\w+)/);
+                // Também suporta sufixos de duplicata: "#504282 B | Nome | ..."
+                const nameMatch = stop.name && stop.name.match(/^#(?:COLETA )?(\w+(?:\s+[A-Z])?)/);
                 const humanServiceId = nameMatch ? nameMatch[1] : null;
 
                 let matchedByName = false;
                 if (humanServiceId) {
-                  // Busca o UUID do serviço pelo código legível (ex: "504342")
+                  // Busca o UUID do serviço pelo código legível (ex: "504342" ou "504282 B")
                   const { data: svcRec, error: svcErr } = await supabase
                     .from('services')
                     .select('id')
@@ -230,7 +231,7 @@ const server = http.createServer(async (req, res) => {
 
                       // Atualiza o status + dados de conclusão do serviço
                       if (pod.status === 'DELIVERED') {
-                        // Coleta a observação do motorista — pode não existir em todos os eventos
+                        // Coleta a observação do motorista
                         const driverObservation = pod.comment || pod.note || pod.remark || pod.remarks || null;
 
                         const { error: svcUpdErr } = await supabase
@@ -271,7 +272,7 @@ const server = http.createServer(async (req, res) => {
 
                 // ── 2. Fallback: matching por posição ──
                 if (!matchedByName) {
-                  const { error: updErr } = await supabase
+                  const { data: stopRec, error: updErr } = await supabase
                     .from('lalamove_order_stops')
                     .update({
                       pod_status:    pod.status,
@@ -279,10 +280,43 @@ const server = http.createServer(async (req, res) => {
                       delivered_at:  pod.deliveredAt,
                     })
                     .eq('lalamove_order_id', orderRec.id)
-                    .eq('position', i);
+                    .eq('position', i)
+                    .select('service_id')
+                    .maybeSingle();
 
-                  if (updErr) console.error(`[LALAMOVE] Erro ao atualizar stop position=${i} (fallback):`, updErr.message);
-                  else console.log(`[LALAMOVE] POD atualizado via posição: position=${i} → ${pod.status}`);
+                  if (updErr) {
+                    console.error(`[LALAMOVE] Erro ao atualizar stop position=${i} (fallback):`, updErr.message);
+                  } else {
+                    console.log(`[LALAMOVE] POD atualizado via posição: position=${i} → ${pod.status}`);
+
+                    // Atualizar services.status via o service_id recuperado do stop
+                    if (stopRec?.service_id) {
+                      if (pod.status === 'DELIVERED') {
+                        const driverObservation = pod.comment || pod.note || pod.remark || pod.remarks || null;
+                        await supabase.from('services').update({
+                          status:      'completed',
+                          completed_at: pod.deliveredAt || new Date().toISOString(),
+                          completion_details: {
+                            completedAt:  pod.deliveredAt,
+                            podPhotoUrl:  pod.image || null,
+                            observations: driverObservation,
+                          },
+                        }).eq('id', stopRec.service_id);
+                        console.log(`[LALAMOVE] services 'completed' via fallback posição=${i}`);
+                      } else if (pod.status === 'REJECTED') {
+                        await supabase.from('services').update({
+                          status: 'cancelled',
+                          failure_details: {
+                            reason:      'Entrega não realizada pelo motorista Lalamove',
+                            completedAt: new Date().toISOString(),
+                          },
+                        }).eq('id', stopRec.service_id);
+                        console.log(`[LALAMOVE] services 'cancelled' via fallback posição=${i}`);
+                      }
+                    } else {
+                      console.warn(`[LALAMOVE] Fallback: stop position=${i} sem service_id, services não atualizado.`);
+                    }
+                  }
                 }
               }
             }
