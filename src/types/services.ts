@@ -23,15 +23,16 @@ export interface Service {
     name: string;
   };
   completion_details?: {
-    responsibleName: string;
+    responsibleName?: string;
     collectedItems?: string;
     observations?: string;
-    completedAt: string;
+    completedAt?: string;
     paymentMethod?: string;
+    podPhotoUrl?: string;
   };
   failure_details?: {
-    reason: string;
+    reason?: string;
     observations?: string;
-    completedAt: string;
+    completedAt?: string;
   };
 }
