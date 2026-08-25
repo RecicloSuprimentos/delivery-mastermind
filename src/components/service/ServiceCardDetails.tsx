@@ -1,5 +1,4 @@
-
-import { MapPin, Phone, Clock, FileEdit, User, Check, X, CreditCard, Package } from "lucide-react";
+import { MapPin, Phone, Clock, FileEdit, User, Check, X, CreditCard, Package, Camera } from "lucide-react";
 
 interface ServiceCardDetailsProps {
   address: string;
@@ -10,11 +9,12 @@ interface ServiceCardDetailsProps {
   status?: string;
   agentName?: string;
   completionDetails?: {
-    responsibleName: string;
+    responsibleName?: string;
     collectedItems?: string;
     observations?: string;
-    completedAt: string;
+    completedAt?: string;
     paymentMethod?: string;
+    podPhotoUrl?: string;
   };
   failureDetails?: {
     reason: string;
@@ -34,7 +34,8 @@ export const ServiceCardDetails = ({
   completionDetails,
   failureDetails
 }: ServiceCardDetailsProps) => {
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleString('pt-BR');
   };
@@ -84,9 +85,11 @@ export const ServiceCardDetails = ({
                 </span>
               </div>
               
-              <div className="text-sm text-gray-600">
-                Responsável: {completionDetails.responsibleName}
-              </div>
+              {completionDetails.responsibleName && (
+                <div className="text-sm text-gray-600">
+                  Responsável: {completionDetails.responsibleName}
+                </div>
+              )}
 
               {completionDetails.paymentMethod && (
                 <div className="flex items-center gap-2 text-gray-600">
@@ -111,6 +114,18 @@ export const ServiceCardDetails = ({
                   <FileEdit className="h-4 w-4 mt-1 shrink-0" />
                   <span className="text-sm">{completionDetails.observations}</span>
                 </div>
+              )}
+
+              {completionDetails.podPhotoUrl && (
+                <a
+                  href={completionDetails.podPhotoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  <Camera className="h-4 w-4 shrink-0" />
+                  Ver foto comprovante
+                </a>
               )}
             </div>
           )}
