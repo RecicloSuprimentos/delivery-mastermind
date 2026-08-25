@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import ServiceCard from "../ServiceCard";
 import type { Service } from "@/types/services";
+import { CompletedPeriodFilter, PeriodOption, CustomDateRange } from "./CompletedPeriodFilter";
 
 interface OptimizedKanbanColumnProps {
   id: string;
@@ -9,6 +10,9 @@ interface OptimizedKanbanColumnProps {
   selectedServices: string[];
   onServiceSelect: (serviceId: string) => void;
   onServiceUpdate: () => void;
+  currentPeriod?: PeriodOption;
+  customDateRange?: CustomDateRange;
+  onPeriodChange?: (period: PeriodOption, range?: CustomDateRange) => void;
 }
 
 const getVibeColors = (id: string) => {
@@ -33,16 +37,30 @@ export const OptimizedKanbanColumn = memo(({
   selectedServices,
   onServiceSelect,
   onServiceUpdate,
+  currentPeriod,
+  customDateRange,
+  onPeriodChange
 }: OptimizedKanbanColumnProps) => {
   const colors = getVibeColors(id);
 
   return (
     <div className="flex-1 min-w-[220px] max-w-[350px] flex flex-col">
       <div className={`flex items-center justify-between mb-4 pb-2 border-t-4 pt-3 ${colors.header} bg-transparent`}>
-        <h2 className="font-bold text-[15px] text-gray-800 tracking-tight">{title}</h2>
-        <span className={`${colors.badge} text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm`}>
-          {services.length}
-        </span>
+        <h2 className="font-bold text-[15px] text-gray-800 tracking-tight flex items-center gap-1">
+          {title}
+        </h2>
+        <div className="flex items-center">
+          <span className={`${colors.badge} text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm`}>
+            {services.length}
+          </span>
+          {id === "completed" && onPeriodChange && currentPeriod && (
+            <CompletedPeriodFilter 
+              currentPeriod={currentPeriod}
+              customDateRange={customDateRange}
+              onPeriodChange={onPeriodChange}
+            />
+          )}
+        </div>
       </div>
       <div className="bg-transparent flex-1 min-h-[calc(100vh-12rem)] overflow-y-auto px-1">
         <div className="space-y-3 pb-4">

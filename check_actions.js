@@ -1,0 +1,1 @@
+fetch('https://api.github.com/repos/RecicloSuprimentos/delivery-mastermind/actions/runs').then(r=>r.json()).then(d=>console.log(d.workflow_runs.slice(0,1).map(r=>({name:r.name, status:r.status, conclusion:r.conclusion, head_commit:r.head_commit.message}))));
