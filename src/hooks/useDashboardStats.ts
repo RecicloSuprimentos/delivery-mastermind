@@ -25,22 +25,41 @@ export const useDashboardStats = (period: Period) => {
 
       const startDateStr = startDate.toISOString();
 
-      // 1. Serviços (Cards de status)
-      const { data: services, error: servicesErr } = await supabase
+      // 1. Serviços criados no período (usado para métricas de criação)
+      const { data: createdServices, error: servicesErr } = await supabase
         .from('services')
         .select('status, created_at')
         .gte('created_at', startDateStr);
         
-      if (servicesErr) throw servicesErr;
+      if (servicesErr) {
+        console.warn('[Dashboard] Erro ao buscar serviços criados:', servicesErr.message);
+      }
 
-      // 2. Gráfico de volume (últimos 7 dias, fixo)
+      // 2. Serviços concluídos no período e seus agentes (usado para Entregues e Top Entregadores)
+      const { data: completedServices, error: agentErr } = await supabase
+        .from('services')
+        .select(`
+          id,
+          agent_id,
+          agent:system_users(id, name)
+        `)
+        .eq('status', 'completed')
+        .gte('completed_at', startDateStr);
+
+      if (agentErr) {
+        console.warn('[Dashboard] Erro ao buscar serviços concluídos/agentes:', agentErr.message);
+      }
+
+      // 3. Gráfico de volume (últimos 7 dias, fixo) - Contabiliza criações
       const sevenDaysAgo = subDays(startOfDay(now), 6).toISOString();
       const { data: last7DaysServices, error: chartErr } = await supabase
         .from('services')
         .select('created_at')
         .gte('created_at', sevenDaysAgo);
 
-      if (chartErr) throw chartErr;
+      if (chartErr) {
+        console.warn('[Dashboard] Erro ao buscar dados do gráfico:', chartErr.message);
+      }
 
       // Agrupar para o gráfico
       const volumeData = Array.from({ length: 7 }).map((_, i) => {
@@ -59,36 +78,25 @@ export const useDashboardStats = (period: Period) => {
         if (dayItem) dayItem.count++;
       });
 
-      // 3. Custos Lalamove
-      const { data: lalaOrders, error: lalaErr } = await supabase
+      // 4. Custos Lalamove - bypass de tipagem com (supabase as any)
+      const { data: lalaOrders, error: lalaErr } = await (supabase as any)
         .from('lalamove_orders')
         .select('total_price')
         .gte('created_at', startDateStr);
 
-      if (lalaErr) throw lalaErr;
+      if (lalaErr) {
+        console.warn('[Dashboard] lalamove_orders indisponível ou erro:', lalaErr.message);
+      }
 
-      const totalLalamoveCost = (lalaOrders || []).reduce((acc, order) => {
+      const totalLalamoveCost = (lalaOrders || []).reduce((acc: number, order: any) => {
         return acc + (order.total_price ? Number(order.total_price) : 0);
       }, 0);
 
-      // 4. Desempenho por agente
-      // Usaremos os serviços completados neste período, e contaremos por agent_id
-      const { data: completedServices, error: agentErr } = await supabase
-        .from('services')
-        .select(`
-          id,
-          agent_id,
-          system_users:agent_id(name)
-        `)
-        .eq('status', 'completed')
-        .gte('completed_at', startDateStr);
-
-      if (agentErr) throw agentErr;
-
+      // 5. Desempenho por agente - Baseado nos concluídos no período
       const agentCounts: Record<string, number> = {};
-      completedServices?.forEach(s => {
-        // @ts-ignore - Supabase type might not resolve the join perfectly
-        const agentName = s.system_users?.name || 'Não Atribuído';
+      completedServices?.forEach((s: any) => {
+        // O supabase client com alias retorna o objeto dentro da propriedade do alias
+        const agentName = s.agent?.name || 'Não Atribuído';
         agentCounts[agentName] = (agentCounts[agentName] || 0) + 1;
       });
 
@@ -101,11 +109,11 @@ export const useDashboardStats = (period: Period) => {
       // Consolidar resultados
       return {
         cards: {
-          total: services?.length || 0,
-          completed: services?.filter(s => s.status === 'completed').length || 0,
-          inTransit: services?.filter(s => ['assigned', 'accepted', 'in-transit', 'arrived'].includes(s.status || '')).length || 0,
-          pending: services?.filter(s => s.status === 'not-assigned').length || 0,
-          cancelled: services?.filter(s => s.status === 'cancelled').length || 0,
+          total: createdServices?.length || 0,
+          completed: completedServices?.length || 0, // Agora conta os finalizados no período de fato
+          inTransit: createdServices?.filter(s => ['assigned', 'accepted', 'in-transit', 'arrived'].includes(s.status || '')).length || 0,
+          pending: createdServices?.filter(s => s.status === 'not-assigned').length || 0,
+          cancelled: createdServices?.filter(s => s.status === 'cancelled').length || 0,
         },
         chartData: volumeData,
         lalamove: {
