@@ -121,15 +121,17 @@ export const ServiceDetailsDialog = ({ service, isOpen, onClose }: ServiceDetail
                 </div>
               )}
 
-              <a
-                href={completionDetails.podPhotoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                <Camera className="h-4 w-4" />
-                Ver foto comprovante
-              </a>
+              {completionDetails.podPhotoUrl && (
+                <a
+                  href={completionDetails.podPhotoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  <Camera className="h-4 w-4" />
+                  Ver foto comprovante
+                </a>
+              )}
             </div>
           )}
         </div>

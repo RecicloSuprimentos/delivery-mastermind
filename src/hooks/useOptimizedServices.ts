@@ -90,8 +90,12 @@ export const useOptimizedServices = (searchTerm: string = "") => {
       created_at: service.created_at || undefined,
       updated_at: service.updated_at || undefined,
       completed_at: service.completed_at || undefined,
-      completion_details: (service.completion_details as Service["completion_details"]) || undefined,
-      failure_details: (service.failure_details as Service["failure_details"]) || undefined,
+      completion_details: service.completion_details
+        ? (service.completion_details as Service["completion_details"])
+        : undefined,
+      failure_details: service.failure_details
+        ? (service.failure_details as Service["failure_details"])
+        : undefined,
       assigned_to: agentsData?.get(service.id),
     }));
   }, [rawServices, agentsData]);

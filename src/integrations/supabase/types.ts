@@ -427,9 +427,11 @@ export type Database = {
           assigned_to: Json | null
           complement: string | null
           completed_at: string | null
+          completion_details: Json | null
           created_at: string | null
           customer_name: string
           email: string | null
+          failure_details: Json | null
           id: string
           latitude: number | null
           longitude: number | null
@@ -447,9 +449,11 @@ export type Database = {
           assigned_to?: Json | null
           complement?: string | null
           completed_at?: string | null
+          completion_details?: Json | null
           created_at?: string | null
           customer_name: string
           email?: string | null
+          failure_details?: Json | null
           id?: string
           latitude?: number | null
           longitude?: number | null
@@ -467,9 +471,11 @@ export type Database = {
           assigned_to?: Json | null
           complement?: string | null
           completed_at?: string | null
+          completion_details?: Json | null
           created_at?: string | null
           customer_name?: string
           email?: string | null
+          failure_details?: Json | null
           id?: string
           latitude?: number | null
           longitude?: number | null
