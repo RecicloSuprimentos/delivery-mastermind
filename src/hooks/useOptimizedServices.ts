@@ -103,12 +103,12 @@ export const useOptimizedServices = (searchTerm: string = "") => {
     const term = searchTerm.toLowerCase().trim();
     return services.filter(service => {
       return (
-        service.service_id.toLowerCase().includes(term) ||
-        service.customer_name.toLowerCase().includes(term) ||
-        service.address.toLowerCase().includes(term) ||
-        service.phone.toLowerCase().includes(term) ||
-        (service.email?.toLowerCase().includes(term) || false) ||
-        (service.observations?.toLowerCase().includes(term) || false)
+        (service.service_id?.toLowerCase() || "").includes(term) ||
+        (service.customer_name?.toLowerCase() || "").includes(term) ||
+        (service.address?.toLowerCase() || "").includes(term) ||
+        (service.phone?.toLowerCase() || "").includes(term) ||
+        (service.email?.toLowerCase() || "").includes(term) ||
+        (service.observations?.toLowerCase() || "").includes(term)
       );
     });
   }, [services, searchTerm]);
