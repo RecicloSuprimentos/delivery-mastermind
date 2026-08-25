@@ -76,7 +76,6 @@ export const Navigation = ({ searchTerm, onSearchChange, showSearch }: Navigatio
               <Button variant="ghost" onClick={() => navigate('/dashboard')}>
                 DASHBOARD
               </Button>
-              <Button variant="ghost">COMUNICAÇÃO</Button>
             </div>
           </div>
           
