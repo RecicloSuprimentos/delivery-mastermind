@@ -3,11 +3,21 @@ import type { Service, SystemSettings } from "@/types/routes";
 
 interface MapMarkersProps {
   startLocationType: string;
+  endLocationType?: string;
   settings?: SystemSettings;
   selectedStops: Service[];
+  selectedStartService?: Service;
+  selectedEndService?: Service;
 }
 
-export const MapMarkers = ({ startLocationType, settings, selectedStops }: MapMarkersProps) => {
+export const MapMarkers = ({ 
+  startLocationType, 
+  endLocationType,
+  settings, 
+  selectedStops,
+  selectedStartService,
+  selectedEndService
+}: MapMarkersProps) => {
   return (
     <>
       {settings && startLocationType === "operational_base" && (
@@ -28,6 +38,38 @@ export const MapMarkers = ({ startLocationType, settings, selectedStops }: MapMa
             text: "Base",
             color: "#FFFFFF"
           }}
+        />
+      )}
+
+      {startLocationType === "service" && selectedStartService && (
+        <Marker
+          position={{ lat: selectedStartService.latitude, lng: selectedStartService.longitude }}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: "#10B981",
+            fillOpacity: 1,
+            strokeColor: "#047857",
+            strokeWeight: 2,
+          }}
+          label={{ text: "A", color: "#FFFFFF", fontWeight: "bold" }}
+          zIndex={100}
+        />
+      )}
+
+      {endLocationType === "service" && selectedEndService && (
+        <Marker
+          position={{ lat: selectedEndService.latitude, lng: selectedEndService.longitude }}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: "#EF4444",
+            fillOpacity: 1,
+            strokeColor: "#B91C1C",
+            strokeWeight: 2,
+          }}
+          label={{ text: "B", color: "#FFFFFF", fontWeight: "bold" }}
+          zIndex={100}
         />
       )}
 

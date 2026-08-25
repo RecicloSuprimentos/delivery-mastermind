@@ -69,8 +69,11 @@ export const RouteMap = ({
             <MapDirections directions={directions} />
             <MapMarkers 
               startLocationType={startLocationType}
+              endLocationType={endLocationType}
               settings={settings}
               selectedStops={selectedStops}
+              selectedStartService={selectedStartService}
+              selectedEndService={selectedEndService}
             />
           </>
         )}

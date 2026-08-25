@@ -34,6 +34,8 @@ interface RouteBasicFieldsProps {
   setSelectedEndService: (value: string) => void;
   agents?: Agent[];
   services?: Service[];
+  /** Paradas já adicionadas à rota — excluídas dos dropdowns de início/fim */
+  selectedStops?: Service[];
   disabled?: boolean;
   disableOnlyStart?: boolean;
 }
@@ -55,9 +57,12 @@ export const RouteBasicFields = ({
   setSelectedEndService,
   agents,
   services,
+  selectedStops = [],
   disabled,
   disableOnlyStart,
 }: RouteBasicFieldsProps) => {
+  const stopIds = selectedStops.map(s => s.id);
+
   return (
     <div className="space-y-4 pt-16">
       <div className="grid grid-cols-2 gap-4">
@@ -87,6 +92,7 @@ export const RouteBasicFields = ({
           selectedService={selectedStartService}
           onServiceChange={setSelectedStartService}
           services={services}
+          excludeServiceIds={stopIds}
           disabled={disabled || disableOnlyStart}
         />
         <LocationFields
@@ -96,6 +102,7 @@ export const RouteBasicFields = ({
           selectedService={selectedEndService}
           onServiceChange={setSelectedEndService}
           services={services}
+          excludeServiceIds={stopIds}
           disabled={disabled}
         />
       </div>
