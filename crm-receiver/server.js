@@ -12,6 +12,22 @@ if (!SUPABASE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── Sanitização de datas da Lalamove ──────────────────────────────────────────
+// A Lalamove às vezes envia datas com formato inválido ex: "2026-08-25T16:19.00Z"
+// (ponto no lugar de ':' nos segundos). Isso quebra date-fns no frontend.
+// Normalizamos para ISO 8601 válido antes de gravar no banco.
+function sanitizeDate(rawDate) {
+  if (!rawDate) return null;
+  const parsed = new Date(rawDate);
+  if (!isNaN(parsed.getTime())) return parsed.toISOString();
+  // Tenta corrigir o padrão "HH:MM.SS" → "HH:MM:SS"
+  const fixed = String(rawDate).replace(/(\d{2}:\d{2})\.(\d+)/, '$1:$2');
+  const parsed2 = new Date(fixed);
+  if (!isNaN(parsed2.getTime())) return parsed2.toISOString();
+  console.warn(`[LALAMOVE] Data inválida ignorada: "${rawDate}"`);
+  return new Date().toISOString();
+}
+
 // ── Cache de configuração: raw_capture_enabled ────────────────────────────────
 // Evita consultar o banco em cada request — expira a cada 30 segundos.
 // Para ativar: UPDATE webhook_settings SET value='true' WHERE key='raw_capture_enabled';
@@ -218,7 +234,7 @@ const server = http.createServer(async (req, res) => {
                       .update({
                         pod_status:    pod.status,
                         pod_photo_url: pod.image,
-                        delivered_at:  pod.deliveredAt,
+                        delivered_at:  sanitizeDate(pod.deliveredAt),
                       })
                       .eq('lalamove_order_id', orderRec.id)
                       .eq('service_id', svcRec.id);
@@ -238,9 +254,9 @@ const server = http.createServer(async (req, res) => {
                           .from('services')
                           .update({
                             status:      'completed',
-                            completed_at: pod.deliveredAt || new Date().toISOString(),
+                            completed_at: sanitizeDate(pod.deliveredAt),
                             completion_details: {
-                              completedAt:  pod.deliveredAt,
+                              completedAt:  sanitizeDate(pod.deliveredAt),
                               podPhotoUrl:  pod.image || null,
                               observations: driverObservation,
                             },
@@ -277,7 +293,7 @@ const server = http.createServer(async (req, res) => {
                     .update({
                       pod_status:    pod.status,
                       pod_photo_url: pod.image,
-                      delivered_at:  pod.deliveredAt,
+                      delivered_at:  sanitizeDate(pod.deliveredAt),
                     })
                     .eq('lalamove_order_id', orderRec.id)
                     .eq('position', i)
@@ -295,9 +311,9 @@ const server = http.createServer(async (req, res) => {
                         const driverObservation = pod.comment || pod.note || pod.remark || pod.remarks || null;
                         await supabase.from('services').update({
                           status:      'completed',
-                          completed_at: pod.deliveredAt || new Date().toISOString(),
+                          completed_at: sanitizeDate(pod.deliveredAt),
                           completion_details: {
-                            completedAt:  pod.deliveredAt,
+                            completedAt:  sanitizeDate(pod.deliveredAt),
                             podPhotoUrl:  pod.image || null,
                             observations: driverObservation,
                           },

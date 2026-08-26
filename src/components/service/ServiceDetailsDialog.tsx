@@ -20,7 +20,13 @@ export const ServiceDetailsDialog = ({ service, isOpen, onClose }: ServiceDetail
 
   const formatDate = (date: string | undefined) => {
     if (!date) return "";
-    return format(new Date(date), "dd/MM/yyyy HH:mm", { locale: ptBR });
+    try {
+      const parsed = new Date(date);
+      if (isNaN(parsed.getTime())) return date.replace("T", " ").replace(/\..+Z?$/, "").replace("Z", "");
+      return format(parsed, "dd/MM/yyyy HH:mm", { locale: ptBR });
+    } catch {
+      return date;
+    }
   };
 
   // Dados do comprovante Lalamove (gravados pelo webhook ao confirmar entrega)

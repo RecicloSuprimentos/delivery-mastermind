@@ -36,8 +36,13 @@ export const ServiceCardDetails = ({
 }: ServiceCardDetailsProps) => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR');
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString.replace("T", " ").replace(/\..+Z?$/, "").replace("Z", "");
+      return date.toLocaleString('pt-BR');
+    } catch {
+      return dateString;
+    }
   };
 
   return (
