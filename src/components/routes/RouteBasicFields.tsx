@@ -36,6 +36,7 @@ interface RouteBasicFieldsProps {
   services?: Service[];
   /** Paradas já adicionadas à rota — excluídas dos dropdowns de início/fim */
   selectedStops?: Service[];
+  setSelectedStops?: (stops: Service[]) => void;
   disabled?: boolean;
   disableOnlyStart?: boolean;
 }
@@ -58,10 +59,24 @@ export const RouteBasicFields = ({
   agents,
   services,
   selectedStops = [],
+  setSelectedStops,
   disabled,
   disableOnlyStart,
 }: RouteBasicFieldsProps) => {
-  const stopIds = selectedStops.map(s => s.id);
+
+  const handleStartServiceChange = (id: string) => {
+    setSelectedStartService(id);
+    if (setSelectedStops && selectedStops.some(s => s.id === id)) {
+      setSelectedStops(selectedStops.filter(s => s.id !== id));
+    }
+  };
+
+  const handleEndServiceChange = (id: string) => {
+    setSelectedEndService(id);
+    if (setSelectedStops && selectedStops.some(s => s.id === id)) {
+      setSelectedStops(selectedStops.filter(s => s.id !== id));
+    }
+  };
 
   return (
     <div className="space-y-4 pt-16">
@@ -90,9 +105,8 @@ export const RouteBasicFields = ({
           locationType={startLocationType}
           onLocationTypeChange={setStartLocationType}
           selectedService={selectedStartService}
-          onServiceChange={setSelectedStartService}
+          onServiceChange={handleStartServiceChange}
           services={services}
-          excludeServiceIds={stopIds}
           disabled={disabled || disableOnlyStart}
         />
         <LocationFields
@@ -100,9 +114,8 @@ export const RouteBasicFields = ({
           locationType={endLocationType}
           onLocationTypeChange={setEndLocationType}
           selectedService={selectedEndService}
-          onServiceChange={setSelectedEndService}
+          onServiceChange={handleEndServiceChange}
           services={services}
-          excludeServiceIds={stopIds}
           disabled={disabled}
         />
       </div>

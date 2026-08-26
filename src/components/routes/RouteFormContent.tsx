@@ -110,6 +110,7 @@ export const RouteFormContent = ({
           agents={agents}
           services={services}
           selectedStops={selectedStops}
+          setSelectedStops={setSelectedStops}
           disabled={isViewMode || isCompleted || hasStartedServices}
           disableOnlyStart={hasStartedServices}
         />
