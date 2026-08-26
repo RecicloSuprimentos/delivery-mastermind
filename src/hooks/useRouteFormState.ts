@@ -34,10 +34,16 @@ export const useRouteFormState = () => {
   };
 
   const validateForm = () => {
-    if (!date || !selectedAgent || !routeName || selectedStops.length === 0) {
+    const hasStartService = startLocationType === "service" && !!selectedStartService;
+    const hasEndService = endLocationType === "service" && !!selectedEndService;
+    const hasMiddleStops = selectedStops.length > 0;
+    
+    const hasAnyService = hasStartService || hasEndService || hasMiddleStops;
+
+    if (!date || !selectedAgent || !routeName || !hasAnyService) {
       toast({
         title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
+        description: "Por favor, preencha os campos obrigatórios e garanta que haja pelo menos um serviço na rota.",
         variant: "destructive",
       });
       return false;
