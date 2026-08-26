@@ -24,7 +24,9 @@ const ServiceIdField = ({
         <Input
           value={serviceId}
           onChange={(e) => onServiceIdChange(e.target.value)}
-          placeholder="ID do serviço (opcional)"
+          placeholder="ID será gerado automaticamente"
+          disabled={true}
+          className="bg-gray-100 text-gray-500 cursor-not-allowed"
         />
       </div>
     </div>
