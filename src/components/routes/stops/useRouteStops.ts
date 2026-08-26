@@ -9,6 +9,8 @@ interface UseRouteStopsProps {
   selectedStops: Service[];
   onStopsChange: (stops: Service[]) => void;
   disabled?: boolean;
+  selectedStartService?: string;
+  selectedEndService?: string;
 }
 
 export const useRouteStops = ({
@@ -16,9 +18,20 @@ export const useRouteStops = ({
   selectedStops,
   onStopsChange,
   disabled,
+  selectedStartService,
+  selectedEndService,
 }: UseRouteStopsProps) => {
   const { toast } = useToast();
   const { removeServiceFromRoute } = useRouteStopsMutations();
+
+  const getAvailableServices = () => {
+    return services.filter(
+      service => 
+        !selectedStops.find(s => s.id === service.id) &&
+        service.id !== selectedStartService &&
+        service.id !== selectedEndService
+    );
+  };
 
   const handleAddStop = (service: Service) => {
     if (!selectedStops.find(s => s.id === service.id) && !disabled) {
@@ -29,9 +42,7 @@ export const useRouteStops = ({
   const handleAddAllStops = () => {
     if (disabled) return;
     
-    const availableServices = services.filter(
-      service => !selectedStops.find(s => s.id === service.id)
-    );
+    const availableServices = getAvailableServices();
     
     onStopsChange([...selectedStops, ...availableServices]);
   };
@@ -93,10 +104,6 @@ export const useRouteStops = ({
       // Combina os serviços completados com os pendentes invertidos
       onStopsChange([...completedStops, ...invertedPendingStops]);
     }
-  };
-
-  const getAvailableServices = () => {
-    return services.filter(service => !selectedStops.find(s => s.id === service.id));
   };
 
   return {

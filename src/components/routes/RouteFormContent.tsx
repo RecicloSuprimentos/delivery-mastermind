@@ -120,6 +120,8 @@ export const RouteFormContent = ({
           onStopsChange={handleStopsChange}
           onOptimize={() => handleOptimize(onOptimize)}
           disabled={isViewMode || isCompleted}
+          selectedStartService={selectedStartService}
+          selectedEndService={selectedEndService}
         />
       </div>
 

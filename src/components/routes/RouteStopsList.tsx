@@ -12,6 +12,8 @@ interface RouteStopsListProps {
   onOptimize?: () => void;
   onInvertRoute?: () => void;
   disabled?: boolean;
+  selectedStartService?: string;
+  selectedEndService?: string;
 }
 
 export const RouteStopsList = ({ 
@@ -21,6 +23,8 @@ export const RouteStopsList = ({
   onOptimize,
   onInvertRoute,
   disabled,
+  selectedStartService,
+  selectedEndService,
 }: RouteStopsListProps) => {
   const {
     handleAddStop,
@@ -33,6 +37,8 @@ export const RouteStopsList = ({
     selectedStops,
     onStopsChange,
     disabled,
+    selectedStartService,
+    selectedEndService,
   });
 
   const handleDragEnd = (result: any) => {
