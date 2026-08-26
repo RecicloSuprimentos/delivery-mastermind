@@ -255,13 +255,19 @@ const LalamoveIntegrationPage = () => {
         const currentHour = new Date().getHours();
         const limitTime = currentHour < 13 ? "13:30" : "18:30";
 
-        const routeRules = `FINALIZAR A ROTA ATÉ ${limitTime} HORAS – ENTREGA E COLETA DE CARTUCHOS E TONERS
+        const routeRules = `--- IMPORTANTE ---
 
-NECESSÁRIO RECEBER O PAGAMENTO NO LOCAL, QUANDO INFORMADO.
+ROTA EXCLUSIVA PARA MOTOCICLISTAS
 
-AO CHEGAR NO LOCAL, INFORMAR QUE ESTÁ REALIZANDO UMA ENTREGA/COLETA PARA A RECICLO SUPRIMENTOS.
+FINALIZAR A ROTA ATÉ ${limitTime} HORAS
+Realizar todas as entregas e coletas de cartuchos e toners dentro desse horário.
 
-EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`;
+PAGAMENTO: Quando houver indicação de pagamento, é obrigatório receber o valor no local da entrega com nossa maquina de cartão.
+
+AO CHEGAR AO LOCAL: Informar que está realizando uma entrega ou coleta em nome da Reciclo Suprimentos.
+
+DÚVIDAS OU IMPREVISTOS:
+Entrar em contato pelo telefone fixo: (31) 3226-3662.`;
 
         // ── Monta o campo name: Código | Nome | Complemento | Obs (sem obs em coletas) ──
         let name: string;
@@ -280,7 +286,7 @@ EM CASO DE DÚVIDAS OU IMPREVISTOS, LIGAR PARA O TELEFONE FIXO: (31) 3226-3662.`
         }
 
         // remarks = instruções gerais da rota, enviadas APENAS na parada de retorno
-        const remarks = isReturnStop ? `--- INSTRUÇÕES GERAIS ---\r\n${routeRules.trim()}`.substring(0, 1500) : "";
+        const remarks = isReturnStop ? routeRules.trim().substring(0, 1500) : "";
 
         return {
           stopId: lalamoveStop.stopId,
