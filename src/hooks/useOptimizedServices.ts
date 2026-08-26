@@ -18,7 +18,26 @@ export const useOptimizedServices = (searchTerm: string = "") => {
       console.log("🚀 Buscando serviços otimizado...");
       const { data, error } = await supabase
         .from("services")
-        .select("*")
+        .select(`
+          id,
+          type,
+          service_id,
+          customer_name,
+          address,
+          phone,
+          email,
+          complement,
+          time_window,
+          observations,
+          status,
+          latitude,
+          longitude,
+          created_at,
+          updated_at,
+          completed_at,
+          completion_details,
+          failure_details
+        `)
         .neq("status", "cancelled")
         .order("created_at", { ascending: false });
 
@@ -27,7 +46,13 @@ export const useOptimizedServices = (searchTerm: string = "") => {
         throw error;
       }
 
-      console.log("✅ Serviços carregados:", data?.length || 0);
+      // Log de diagnóstico para verificar se os campos JSONB chegam
+      const withPOD = (data || []).filter((s: any) => s.completion_details !== null);
+      console.log(`✅ Serviços carregados: ${data?.length || 0} (com POD: ${withPOD.length})`);
+      if (withPOD.length > 0) {
+        console.log("📦 Exemplo POD:", JSON.stringify(withPOD[0].completion_details));
+      }
+
       return data || [];
     },
     // Cache por 5 minutos com stale-while-revalidate

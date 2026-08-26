@@ -44,16 +44,17 @@ export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
   // Filtro otimizado e dinâmico para serviços completados
   const completedServices = useMemo(() => {
     const completed = servicesByStatus.completed || [];
-    const cancelled = servicesByStatus.cancelled || [];
-    const allCompletedAndCancelled = [...completed, ...cancelled];
-    
+
     if (searchTerm) {
-      return allCompletedAndCancelled;
+      return completed;
     }
-    
-    return allCompletedAndCancelled.filter(service => {
-      const completedDate = new Date(service.completed_at || service.updated_at || service.created_at);
-      
+
+    return completed.filter(service => {
+      const rawDate = service.completed_at ?? service.updated_at ?? service.created_at;
+      if (!rawDate) return true;
+      const completedDate = new Date(rawDate);
+      if (isNaN(completedDate.getTime())) return true;
+
       switch (completedPeriod) {
         case "today": return isToday(completedDate);
         case "yesterday": return isYesterday(completedDate);
@@ -71,7 +72,7 @@ export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
         default: return true;
       }
     });
-  }, [servicesByStatus.completed, servicesByStatus.cancelled, searchTerm, completedPeriod, customDateRange]);
+  }, [servicesByStatus.completed, searchTerm, completedPeriod, customDateRange]);
 
   const handlePeriodChange = (period: PeriodOption, range?: CustomDateRange) => {
     setCompletedPeriod(period);
