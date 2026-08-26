@@ -1,4 +1,4 @@
-import { MoreVertical, FileEdit, Undo, Trash2 } from "lucide-react";
+import { MoreVertical, FileEdit, Undo, Trash2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useDuplicateService } from "@/hooks/services/useDuplicateService";
 
 interface ServiceCardActionsProps {
   serviceId: string;
@@ -22,6 +23,7 @@ export const ServiceCardActions = ({
   onUnassign,
 }: ServiceCardActionsProps) => {
   const navigate = useNavigate();
+  const { duplicateService, isDuplicating } = useDuplicateService();
 
   return (
     <DropdownMenu>
@@ -41,6 +43,16 @@ export const ServiceCardActions = ({
           <FileEdit className="h-4 w-4 mr-2" />
           Editar
         </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => duplicateService(serviceId)}
+          disabled={isDuplicating}
+          className="hover:bg-gray-100 cursor-pointer"
+        >
+          <Copy className="h-4 w-4 mr-2" />
+          Duplicar
+        </DropdownMenuItem>
+
         {status === "assigned" && (
           <DropdownMenuItem 
             onClick={onUnassign}
