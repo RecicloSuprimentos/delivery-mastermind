@@ -22,6 +22,9 @@ export const useRouteMutations = (routeId?: string) => {
         // Modo Edição
         console.log("[DEBUG] Iniciando edição de rota", { routeId, routeData, stops });
         
+        // 0. Pegar a rota antiga para saber quais eram os serviços de Início e Fim
+        const { data: oldRoute } = await supabase.from('routes').select('*').eq('id', routeId).single();
+
         // 1. Atualizar dados da rota
         const updatedRoute = await updateRouteData(routeData);
         console.log("[DEBUG] Rota atualizada:", updatedRoute);
@@ -36,39 +39,40 @@ export const useRouteMutations = (routeId?: string) => {
         );
         console.log("[DEBUG] Rota em andamento:", isRouteInProgress);
 
-        // 4. Identificar mudanças nos serviços
-        const currentStops = existingStops.map(stop => stop.service_id);
-        const newStops = stops.map(stop => stop.service_id);
+        // 4. Identificar mudanças de serviços (incluindo início e fim)
+        const currentServiceIds = Array.from(new Set([
+          ...existingStops.map(stop => stop.service_id),
+          oldRoute?.start_location_type === 'service' ? oldRoute.start_location_reference : null,
+          oldRoute?.end_location_type === 'service' ? oldRoute.end_location_reference : null
+        ].filter(Boolean) as string[]));
+
+        const newServiceIds = Array.from(new Set([
+          ...stops.map(stop => stop.service_id),
+          routeData.start_location_type === 'service' ? routeData.start_location_reference : null,
+          routeData.end_location_type === 'service' ? routeData.end_location_reference : null
+        ].filter(Boolean) as string[]));
         
-        const removedStops = currentStops.filter(id => !newStops.includes(id));
-        const addedStops = newStops.filter(id => !currentStops.includes(id));
+        const removedServices = currentServiceIds.filter(id => !newServiceIds.includes(id));
+        const addedServices = newServiceIds.filter(id => !currentServiceIds.includes(id));
         
-        console.log("[DEBUG] Análise de mudanças:", { removedStops, addedStops, isRouteInProgress });
+        console.log("[DEBUG] Análise de mudanças globais:", { removedServices, addedServices, isRouteInProgress });
 
-        // 5. Se houver mudanças na ordem ou nos serviços, atualizar todas as paradas
-        if (removedStops.length > 0 || addedStops.length > 0 || 
-            JSON.stringify(currentStops) !== JSON.stringify(newStops)) {
-          console.log("[DEBUG] Atualizando sequência das paradas");
-          
-          // Atualizar status dos serviços removidos
-          if (removedStops.length > 0) {
-            await updateServicesStatus(removedStops, "not-assigned");
-          }
+        // 5. Atualizar sequência das paradas intermediárias sempre
+        const updatedStops = stops.map((stop, index) => ({
+          service_id: stop.service_id,
+          sequence_number: index + 1,
+        }));
+        await updateStopsSequence(routeId, updatedStops);
 
-          // Atualizar todas as paradas com a nova sequência
-          const updatedStops = stops.map((stop, index) => ({
-            service_id: stop.service_id,
-            sequence_number: index + 1,
-          }));
+        // 6. Atualizar status dos serviços removidos (inclusive se era Início/Fim e foi removido)
+        if (removedServices.length > 0) {
+          await updateServicesStatus(removedServices, "not-assigned");
+        }
 
-          await updateStopsSequence(routeId, updatedStops);
-
-          // Atualizar status dos novos serviços
-          if (addedStops.length > 0) {
-            const newStatus = isRouteInProgress ? "accepted" : "assigned";
-            console.log("[DEBUG] Atualizando status dos novos serviços para:", newStatus);
-            await updateServicesStatus(addedStops, newStatus);
-          }
+        // 7. Atualizar status dos novos serviços (inclusive Início/Fim novos)
+        if (addedServices.length > 0) {
+          const newStatus = isRouteInProgress ? "accepted" : "assigned";
+          await updateServicesStatus(addedServices, newStatus);
         }
 
         return updatedRoute;
@@ -82,9 +86,17 @@ export const useRouteMutations = (routeId?: string) => {
             service_id: service.service_id,
             sequence_number: index + 1,
           }));
-
           await addNewStops(newRoute.id, routeStops);
-          await updateServicesStatus(stops.map(s => s.service_id), "assigned");
+        }
+        
+        const allServiceIds = Array.from(new Set([
+          ...stops.map(s => s.service_id),
+          routeData.start_location_type === 'service' ? routeData.start_location_reference : null,
+          routeData.end_location_type === 'service' ? routeData.end_location_reference : null
+        ].filter(Boolean) as string[]));
+
+        if (allServiceIds.length > 0) {
+          await updateServicesStatus(allServiceIds, "assigned");
         }
         
         return newRoute;

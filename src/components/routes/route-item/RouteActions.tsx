@@ -41,7 +41,7 @@ export const RouteActions = ({ route, onPrint }: RouteActionsProps) => {
 
   const handleCancelRouteKeepServices = async () => {
     try {
-      // 1. Buscar todos os serviços da rota
+      // 1. Buscar todos os serviços intermediários da rota
       const { data: routeStops, error: stopsError } = await supabase
         .from('route_stops')
         .select('service_id')
@@ -49,7 +49,13 @@ export const RouteActions = ({ route, onPrint }: RouteActionsProps) => {
         
       if (stopsError) throw stopsError;
 
-      const serviceIds = routeStops.map(stop => stop.service_id);
+      const stopServiceIds = routeStops.map(stop => stop.service_id);
+      
+      const serviceIds = Array.from(new Set([
+        ...stopServiceIds,
+        route.start_location_type === 'service' ? route.start_location_reference : null,
+        route.end_location_type === 'service' ? route.end_location_reference : null
+      ].filter(Boolean) as string[]));
 
       if (serviceIds.length > 0) {
         // 2. Atualizar serviços para 'not-assigned'

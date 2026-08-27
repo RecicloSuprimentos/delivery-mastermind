@@ -50,6 +50,11 @@ export const RouteStats = ({ route }: RouteStatsProps) => {
     }
   };
 
+  const middleStopsCount = route.route_stops?.length || 0;
+  const startServiceCount = route.start_location_type === "service" ? 1 : 0;
+  const endServiceCount = (route.end_location_type === "service" && route.end_location_reference !== route.start_location_reference) ? 1 : 0;
+  const totalServices = middleStopsCount + startServiceCount + endServiceCount;
+
   return (
     <div className="grid grid-cols-7 gap-4 text-xs mt-2">
       <div>
@@ -66,7 +71,7 @@ export const RouteStats = ({ route }: RouteStatsProps) => {
       </div>
       <div>
         <p className="text-gray-500 mb-1">Serviços</p>
-        <p className="font-medium text-[13px]">{route.route_stops?.length || 0}</p>
+        <p className="font-medium text-[13px]">{totalServices}</p>
       </div>
       <div>
         <p className="text-gray-500 mb-1">Km estimada</p>
