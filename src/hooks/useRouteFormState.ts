@@ -34,20 +34,66 @@ export const useRouteFormState = () => {
   };
 
   const validateForm = () => {
+    if (!routeName?.trim()) {
+      toast({
+        title: "Nome da rota ausente",
+        description: "Por favor, defina um nome ou turno para a rota antes de salvar.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!date) {
+      toast({
+        title: "Data não informada",
+        description: "Selecione a data em que a rota será executada.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!selectedAgent) {
+      toast({
+        title: "Motorista ausente",
+        description: "Selecione o agente/motorista responsável por realizar esta rota.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (startLocationType === "service" && !selectedStartService) {
+      toast({
+        title: "Local de Início incompleto",
+        description: "Você marcou o início como 'Serviço', mas não escolheu qual é. Selecione-o na lista.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (endLocationType === "service" && !selectedEndService) {
+      toast({
+        title: "Local de Término incompleto",
+        description: "Você marcou o término como 'Serviço', mas não escolheu qual é. Selecione-o na lista.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     const hasStartService = startLocationType === "service" && !!selectedStartService;
     const hasEndService = endLocationType === "service" && !!selectedEndService;
     const hasMiddleStops = selectedStops.length > 0;
     
     const hasAnyService = hasStartService || hasEndService || hasMiddleStops;
 
-    if (!date || !selectedAgent || !routeName || !hasAnyService) {
+    if (!hasAnyService) {
       toast({
-        title: "Erro",
-        description: "Por favor, preencha os campos obrigatórios e garanta que haja pelo menos um serviço na rota.",
+        title: "Rota vazia",
+        description: "Sua rota não possui nenhuma parada. Adicione pelo menos um serviço (seja no Início, Meio ou Fim) para salvá-la.",
         variant: "destructive",
       });
       return false;
     }
+
     return true;
   };
 
