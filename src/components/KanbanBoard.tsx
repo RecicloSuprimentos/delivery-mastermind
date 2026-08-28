@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { OptimizedKanbanColumn } from "./kanban/OptimizedKanbanColumn";
 import { useKanbanData } from "./kanban/useKanbanData";
 import { useRealtimeServices } from "@/hooks/useRealtimeServices";
@@ -9,7 +9,7 @@ interface KanbanBoardProps {
   searchTerm: string;
 }
 
-export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
+const KanbanBoardInner = ({ searchTerm }: KanbanBoardProps) => {
   // Inicializar sistema realtime centralizado
   useRealtimeServices();
   
@@ -105,3 +105,7 @@ export const KanbanBoard = ({ searchTerm }: KanbanBoardProps) => {
     </div>
   );
 };
+
+// React.memo garante que o KanbanBoard só re-renderiza quando searchTerm
+// realmente mudar (após o debounce de 500ms do Navigation.tsx)
+export const KanbanBoard = memo(KanbanBoardInner);

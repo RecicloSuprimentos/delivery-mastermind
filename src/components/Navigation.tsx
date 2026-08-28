@@ -1,5 +1,4 @@
-
-import { MapPin, Settings, User, PlusCircle, LogOut, Route, Search } from "lucide-react";
+﻿import { MapPin, Settings, User, PlusCircle, LogOut, Route, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface NavigationProps {
   searchTerm?: string;
@@ -21,20 +20,40 @@ interface NavigationProps {
 export const Navigation = ({ searchTerm, onSearchChange, showSearch }: NavigationProps) => {
   const navigate = useNavigate();
   const [localSearch, setLocalSearch] = useState(searchTerm || "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Sincroniza de fora para dentro (quando o pai limpa o filtro)
   useEffect(() => {
     setLocalSearch(searchTerm || "");
   }, [searchTerm]);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (onSearchChange && localSearch !== searchTerm) {
-        onSearchChange(localSearch);
-      }
-    }, 300);
+  // Debounce de 500ms: só notifica o pai depois que o usuário parou de digitar
+  const handleChange = (value: string) => {
+    setLocalSearch(value);
 
-    return () => clearTimeout(handler);
-  }, [localSearch, onSearchChange, searchTerm]);
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      if (onSearchChange) {
+        onSearchChange(value);
+      }
+    }, 500);
+  };
+
+  const handleClear = () => {
+    setLocalSearch("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (onSearchChange) onSearchChange("");
+  };
+
+  // Limpar timer ao desmontar
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -86,10 +105,19 @@ export const Navigation = ({ searchTerm, onSearchChange, showSearch }: Navigatio
                 <Input
                   type="text"
                   placeholder="Digite para filtrar ..."
-                  className="pl-9 pr-4 py-2 w-64 bg-gray-50 border-gray-200"
+                  className="pl-9 pr-8 py-2 w-64 bg-gray-50 border-gray-200"
                   value={localSearch}
-                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onChange={(e) => handleChange(e.target.value)}
                 />
+                {localSearch && (
+                  <button
+                    onClick={handleClear}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label="Limpar busca"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             )}
             
