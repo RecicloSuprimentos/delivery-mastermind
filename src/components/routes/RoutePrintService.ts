@@ -41,42 +41,91 @@ export const printRoute = async (route: Route) => {
       const minutes = totalMinutes % 60;
       formattedDuration = hours > 0 ? `${hours}h${minutes}min` : `${minutes}min`;
     }
-    
-    // Montando as linhas da tabela
-    const rowsHtml = routeStops?.map((stop, index) => {
-      const s = stop.service;
-      const typeBadge = s.type === 'coleta' 
-        ? '<span class="badge badge-coleta">COLETA</span>'
-        : '<span class="badge badge-entrega">ENTREGA</span>';
-      
-      const serviceIdHtml = s.service_id ? `<div style="margin-top: 5px; font-size: 15px; color: #000; font-weight: 500;">#${s.service_id}</div>` : '';
-      
-      const timeWindow = s.time_window 
-        ? `<br><small><strong>Janela:</strong> ${formatTime(s.time_window.split(',')[0])} às ${formatTime(s.time_window.split(',')[1])}</small>`
-        : '';
-        
-      const obs = s.observations ? `<br><small><strong>Obs:</strong> ${s.observations}</small>` : '';
 
-      return `
-        <tr>
-          <td class="text-center"><strong>${index + 1}</strong></td>
-          <td>
-            <strong>${s.customer_name}</strong><br>
-            ${s.phone || '-'}
-          </td>
-          <td>
-            ${typeBadge}
-            ${serviceIdHtml}
-          </td>
-          <td>
-            ${s.address}${s.complement ? ` - <strong>${s.complement}</strong>` : ''}
-            ${obs}
-            ${timeWindow}
-          </td>
-          <td class="checkbox-cell"></td>
-        </tr>
-      `;
-    }).join('') || '<tr><td colspan="5" class="text-center">Nenhum serviço atrelado a esta rota.</td></tr>';
+    // Buscar serviços de Início e Fim se forem do tipo "service"
+    let startService = null;
+    let endService = null;
+
+    if (route.start_location_type === 'service' && route.start_location_reference) {
+      const { data } = await supabase
+        .from('services')
+        .select('*')
+        .eq('id', route.start_location_reference)
+        .maybeSingle();
+      startService = data;
+    }
+
+    if (route.end_location_type === 'service' && route.end_location_reference) {
+      const { data } = await supabase
+        .from('services')
+        .select('*')
+        .eq('id', route.end_location_reference)
+        .maybeSingle();
+      endService = data;
+    }
+
+    // Montar lista completa de paradas: Início → Intermediárias → Fim
+    type PrintStop = { service: any; label?: string };
+    const allStops: PrintStop[] = [];
+
+    if (startService) {
+      allStops.push({ service: startService, label: 'INÍCIO' });
+    }
+
+    (routeStops || []).forEach(stop => {
+      // Evitar duplicata se o início ou fim já está nas intermediárias
+      const alreadyAdded = allStops.some(s => s.service?.id === stop.service?.id);
+      if (!alreadyAdded) {
+        allStops.push({ service: stop.service });
+      }
+    });
+
+    if (endService && !allStops.some(s => s.service?.id === endService.id)) {
+      allStops.push({ service: endService, label: 'FIM' });
+    }
+
+    // Montando as linhas da tabela
+    const rowsHtml = allStops.length > 0
+      ? allStops.map((stop, index) => {
+          const s = stop.service;
+          if (!s) return '';
+          const typeBadge = s.type === 'coleta'
+            ? '<span class="badge badge-coleta">COLETA</span>'
+            : '<span class="badge badge-entrega">ENTREGA</span>';
+
+          const labelBadge = stop.label
+            ? `<span class="badge badge-label">${stop.label}</span> `
+            : '';
+
+          const serviceIdHtml = s.service_id ? `<div style="margin-top: 5px; font-size: 15px; color: #000; font-weight: 500;">#${s.service_id}</div>` : '';
+
+          const timeWindow = s.time_window 
+            ? `<br><small><strong>Janela:</strong> ${formatTime(s.time_window.split(',')[0])} às ${formatTime(s.time_window.split(',')[1])}</small>`
+            : '';
+            
+          const obs = s.observations ? `<br><small><strong>Obs:</strong> ${s.observations}</small>` : '';
+
+          return `
+            <tr>
+              <td class="text-center"><strong>${index + 1}</strong></td>
+              <td>
+                <strong>${s.customer_name}</strong><br>
+                ${s.phone || '-'}
+              </td>
+              <td>
+                ${labelBadge}${typeBadge}
+                ${serviceIdHtml}
+              </td>
+              <td>
+                ${s.address}${s.complement ? ` - <strong>${s.complement}</strong>` : ''}
+                ${obs}
+                ${timeWindow}
+              </td>
+              <td class="checkbox-cell"></td>
+            </tr>
+          `;
+        }).join('')
+      : '<tr><td colspan="5" class="text-center">Nenhum serviço atrelado a esta rota.</td></tr>';
 
     const content = `
       <!DOCTYPE html>
@@ -140,6 +189,7 @@ export const printRoute = async (route: Route) => {
             }
             .badge-coleta { background-color: #3b82f6; } /* vibe-blue */
             .badge-entrega { background-color: #10b981; } /* vibe-green */
+            .badge-label { background-color: #6b7280; font-size: 10px; } /* cinza para INÍCIO/FIM */
             
             .signature-area {
               margin-top: 40px;
@@ -168,7 +218,7 @@ export const printRoute = async (route: Route) => {
             <div>
               <div class="info-item"><span class="label">Distância Prevista:</span> ${route.total_distance ? `${(route.total_distance / 1000).toFixed(1)} km` : "-"}</div>
               <div class="info-item"><span class="label">Tempo Previsto:</span> ${formattedDuration}</div>
-              <div class="info-item"><span class="label">Qtd de Paradas:</span> ${routeStops?.length || 0}</div>
+              <div class="info-item"><span class="label">Qtd de Paradas:</span> ${allStops.length}</div>
             </div>
           </div>
 
