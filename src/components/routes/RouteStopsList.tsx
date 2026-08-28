@@ -60,6 +60,12 @@ export const RouteStopsList = ({
   };
 
   const availableServices = getAvailableServices();
+  
+  const startServiceObj = selectedStartService ? services.find(s => s.id === selectedStartService) : null;
+  const endServiceObj = selectedEndService ? services.find(s => s.id === selectedEndService) : null;
+  const isEndSameAsStart = startServiceObj && endServiceObj && startServiceObj.id === endServiceObj.id;
+  
+  const totalSelected = selectedStops.length + (startServiceObj ? 1 : 0) + (endServiceObj && !isEndSameAsStart ? 1 : 0);
 
   return (
     <div className="space-y-4">
@@ -72,6 +78,14 @@ export const RouteStopsList = ({
       />
 
       <div className="space-y-2">
+        {startServiceObj && (
+          <RouteStopItem
+            stop={startServiceObj}
+            isFixedStart={true}
+            disabled={true}
+          />
+        )}
+        
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="stops">
             {(provided) => (
@@ -103,6 +117,14 @@ export const RouteStopsList = ({
             )}
           </Droppable>
         </DragDropContext>
+        
+        {endServiceObj && !isEndSameAsStart && (
+          <RouteStopItem
+            stop={endServiceObj}
+            isFixedEnd={true}
+            disabled={true}
+          />
+        )}
       </div>
 
       <div className="space-y-2">
@@ -119,7 +141,7 @@ export const RouteStopsList = ({
 
       <div className="flex items-center justify-between text-sm text-gray-500 border-t pt-4">
         <div>
-          <div>Paradas selecionadas: {selectedStops.length}</div>
+          <div>Paradas selecionadas: {totalSelected}</div>
           <div>Serviços disponíveis: {availableServices.length}</div>
         </div>
       </div>
