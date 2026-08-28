@@ -69,7 +69,7 @@ export const printRoute = async (route: Route) => {
             ${serviceIdHtml}
           </td>
           <td>
-            ${s.address}
+            ${s.address}${s.complement ? ` - <strong>${s.complement}</strong>` : ''}
             ${obs}
             ${timeWindow}
           </td>
