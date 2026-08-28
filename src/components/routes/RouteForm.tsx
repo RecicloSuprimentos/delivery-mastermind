@@ -1,5 +1,4 @@
-
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 import { RouteFormHeader } from "./RouteFormHeader";
 import { RouteFormContent } from "./RouteFormContent";
 import { useRouteFormState } from "@/hooks/useRouteFormState";
@@ -44,9 +43,10 @@ export const RouteForm = ({ onSave, isLoading, routeId, initialData, isViewMode 
     validateForm,
   } = useRouteFormState();
 
-  const { agents, services, settings } = useRouteData();
+  // Passa o routeId para que useRouteData inclua os servicos ja vinculados a rota na lista
+  const { agents, services, settings } = useRouteData(routeId);
 
-  // Carregar dados iniciais quando estiver em modo de edição
+  // Carregar dados iniciais quando estiver em modo de edicao
   useEffect(() => {
     if (initialData && !initializedRef.current) {
       initializedRef.current = true;
@@ -64,10 +64,10 @@ export const RouteForm = ({ onSave, isLoading, routeId, initialData, isViewMode 
         setSelectedEndService(initialData.end_location_reference);
       }
 
-      // Carregar paradas se disponíveis
+      // Carregar paradas intermediarias se disponiveis
       if (initialData.route_stops?.length > 0) {
         const stops = initialData.route_stops.map((stop: any) => stop.service);
-        setSelectedStops(stops);
+        setSelectedStops(stops.filter(Boolean));
       }
     }
   }, [initialData]);
@@ -132,4 +132,3 @@ export const RouteForm = ({ onSave, isLoading, routeId, initialData, isViewMode 
     </form>
   );
 };
-
