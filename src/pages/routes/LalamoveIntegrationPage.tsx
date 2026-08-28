@@ -80,6 +80,34 @@ const LalamoveIntegrationPage = () => {
     },
   });
 
+  // Busca o serviço de Início quando o tipo for "service"
+  const { data: startServiceData } = useQuery({
+    queryKey: ["service", route?.start_location_reference],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("services")
+        .select("*")
+        .eq("id", route!.start_location_reference!)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!route && route.start_location_type === "service" && !!route.start_location_reference,
+  });
+
+  // Busca o serviço de Fim quando o tipo for "service"
+  const { data: endServiceData } = useQuery({
+    queryKey: ["service", route?.end_location_reference],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("services")
+        .select("*")
+        .eq("id", route!.end_location_reference!)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!route && route.end_location_type === "service" && !!route.end_location_reference,
+  });
+
   // Busca as configurações da base operacional
   const { data: settings } = useQuery({
     queryKey: ["system_settings"],
@@ -444,12 +472,16 @@ Entrar em contato pelo telefone fixo: (31) 3226-3662.`;
   const startLabel =
     route?.start_location_type === "operational_base"
       ? settings?.operational_base_address || "Base Operacional"
-      : `Serviço: ${route?.start_location_reference}`;
+      : startServiceData
+        ? `${startServiceData.customer_name} — ${startServiceData.address}${startServiceData.complement ? ` (${startServiceData.complement})` : ''}`
+        : "Carregando...";
 
   const endLabel =
     route?.end_location_type === "operational_base"
       ? settings?.operational_base_address || "Base Operacional"
-      : `Serviço: ${route?.end_location_reference}`;
+      : endServiceData
+        ? `${endServiceData.customer_name} — ${endServiceData.address}${endServiceData.complement ? ` (${endServiceData.complement})` : ''}`
+        : "Carregando...";
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
