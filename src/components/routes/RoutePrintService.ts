@@ -321,15 +321,17 @@ export const copyRouteToClipboard = async (route: Route): Promise<void> => {
   }
 
   // 4. Montar o texto formatado
-  const routeDate = new Date(route.start_time).toLocaleDateString('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  });
-
   const totalStops = allStops.length;
   const lines: string[] = [];
 
-  lines.push(`🛵 ROTA ${route.name.toUpperCase()} — ${routeDate}`);
-  lines.push(`📍 ${totalStops} PARADA${totalStops !== 1 ? 'S' : ''}`);
+  // Título sem data (o nome da rota já costuma conter a data, ex: "MANHÃ 31-08-2026")
+  lines.push(`🛵 ROTA ${route.name.toUpperCase()}`);
+
+  // Quilometragem estimada formatada (ex: 48,9km) quando disponível
+  const distanceStr = route.total_distance
+    ? ` - ${(route.total_distance / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}km`
+    : '';
+  lines.push(`📍 ${totalStops} PARADA${totalStops !== 1 ? 'S' : ''}${distanceStr}`);
   lines.push('');
 
   const numberEmojis = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
@@ -360,7 +362,8 @@ export const copyRouteToClipboard = async (route: Route): Promise<void> => {
     lines.push('');
   });
 
-  lines.push('📞 Dúvidas: (31) 3226-3662');
+  // Remove a linha em branco final para texto mais limpo
+  if (lines[lines.length - 1] === '') lines.pop();
 
   const text = lines.join('\n');
 
