@@ -1,11 +1,13 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Eye, Edit, Check, X, Truck } from "lucide-react";
+import { Printer, Eye, Edit, Check, X, Truck, Clipboard, ClipboardCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Route } from "@/types/routes";
 import { useRoutes } from "@/hooks/useRoutes";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { copyRouteToClipboard } from "@/components/routes/RoutePrintService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +29,25 @@ export const RouteActions = ({ route, onPrint }: RouteActionsProps) => {
   const navigate = useNavigate();
   const { updateRouteStatus } = useRoutes();
   const { toast } = useToast();
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyToClipboard = async () => {
+    try {
+      await copyRouteToClipboard(route);
+      setIsCopied(true);
+      toast({
+        title: "Copiado!",
+        description: "Cole no WhatsApp para compartilhar a rota com o motoboy.",
+      });
+      setTimeout(() => setIsCopied(false), 2500);
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível acessar a área de transferência.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleAcceptRoute = async () => {
     try {
@@ -205,6 +226,18 @@ export const RouteActions = ({ route, onPrint }: RouteActionsProps) => {
         className="h-6 w-6 p-0"
       >
         <Printer className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleCopyToClipboard}
+        className={`h-6 w-6 p-0 transition-colors ${isCopied ? 'text-green-600 hover:text-green-700' : 'text-gray-500 hover:text-gray-700'}`}
+        title="Copiar rota para WhatsApp"
+      >
+        {isCopied
+          ? <ClipboardCheck className="h-3.5 w-3.5" />
+          : <Clipboard className="h-3.5 w-3.5" />
+        }
       </Button>
       <Button 
         variant="ghost" 

@@ -266,3 +266,103 @@ export const printRoute = async (route: Route) => {
 };
 
 export { statusTranslations };
+
+/**
+ * Copia os dados da rota formatados para WhatsApp na área de transferência.
+ * Formato compacto sem nome do destinatário — ideal para oferecer a rota a um entregador.
+ */
+export const copyRouteToClipboard = async (route: Route): Promise<void> => {
+  // 1. Buscar paradas intermediárias com dados do serviço
+  const { data: routeStops, error } = await supabase
+    .from('route_stops')
+    .select('*, service:services(*)')
+    .eq('route_id', route.id)
+    .order('sequence_number', { ascending: true });
+
+  if (error) throw error;
+
+  // 2. Buscar serviços de Início e Fim (quando do tipo "service")
+  let startService: any = null;
+  let endService: any = null;
+
+  if ((route as any).start_location_type === 'service' && (route as any).start_location_reference) {
+    const { data } = await supabase
+      .from('services')
+      .select('*')
+      .eq('id', (route as any).start_location_reference)
+      .maybeSingle();
+    startService = data;
+  }
+
+  if ((route as any).end_location_type === 'service' && (route as any).end_location_reference) {
+    const { data } = await supabase
+      .from('services')
+      .select('*')
+      .eq('id', (route as any).end_location_reference)
+      .maybeSingle();
+    endService = data;
+  }
+
+  // 3. Montar lista completa: Início → Intermediárias → Fim (sem duplicatas)
+  type StopEntry = { service: any };
+  const allStops: StopEntry[] = [];
+
+  if (startService) {
+    allStops.push({ service: startService });
+  }
+
+  (routeStops || []).forEach(stop => {
+    const alreadyAdded = allStops.some(s => s.service?.id === stop.service?.id);
+    if (!alreadyAdded) allStops.push({ service: stop.service });
+  });
+
+  if (endService && !allStops.some(s => s.service?.id === endService.id)) {
+    allStops.push({ service: endService });
+  }
+
+  // 4. Montar o texto formatado
+  const routeDate = new Date(route.start_time).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+
+  const totalStops = allStops.length;
+  const lines: string[] = [];
+
+  lines.push(`🛵 ROTA ${route.name.toUpperCase()} — ${routeDate}`);
+  lines.push(`📍 ${totalStops} PARADA${totalStops !== 1 ? 'S' : ''}`);
+  lines.push('');
+
+  const numberEmojis = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+
+  allStops.forEach((stop, index) => {
+    const s = stop.service;
+    if (!s) return;
+
+    const seq = index < numberEmojis.length ? numberEmojis[index] : `${index + 1}.`;
+    const typeIcon = s.type === 'coleta' ? '📥 COLETA' : '📦 ENTREGA';
+    const serviceCode = s.service_id ? ` #${s.service_id}` : '';
+
+    // Formatar endereço: remover partes redundantes em caps (cidade, estado, país)
+    const rawAddress = (s.address || '').trim();
+    // Pega apenas os dois primeiros segmentos separados por vírgula (rua + bairro)
+    const addressParts = rawAddress.split(' - ');
+    const shortAddress = addressParts.slice(0, 2).join(' - ');
+
+    const complement = s.complement ? ` (${s.complement})` : '';
+
+    lines.push(`${seq} ${typeIcon}${serviceCode}`);
+    lines.push(`${shortAddress}${complement}`);
+
+    if (s.observations) {
+      lines.push(`Obs: ${s.observations}`);
+    }
+
+    lines.push('');
+  });
+
+  lines.push('📞 Dúvidas: (31) 3226-3662');
+
+  const text = lines.join('\n');
+
+  await navigator.clipboard.writeText(text);
+};
