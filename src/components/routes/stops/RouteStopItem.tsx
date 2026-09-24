@@ -70,7 +70,7 @@ export const RouteStopItem = ({
             <div className="text-sm text-gray-500">
               {stop.customer_name}
             </div>
-            <div className="text-sm text-gray-500 line-clamp-1 max-w-[300px]">
+            <div className="text-sm text-gray-500">
               {stop.address}
             </div>
             {stop.observations && (
