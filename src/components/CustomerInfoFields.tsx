@@ -21,41 +21,38 @@ const CustomerInfoFields = ({
   onEmailChange
 }: CustomerInfoFieldsProps) => {
   const [mask, setMask] = useState("(99) 9999-9999");
-  const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     // Remove todos os caracteres não numéricos
     const digits = phone.replace(/\D/g, '');
     
-    // Verifica se é celular (começa com 9) ou telefone fixo
+    // Verifica se é celular (começa com 9) ou telefone fixo para atualizar a máscara dinamicamente
     if (digits.length > 2) {
       const isCellPhone = digits.substring(2, 3) === '9';
       setMask(isCellPhone ? "(99) 99999-9999" : "(99) 9999-9999");
-      
-      // Só valida após o usuário parar de digitar
-      if (isTyping) {
-        const timeoutId = setTimeout(() => {
-          setIsTyping(false);
-          // Validação da quantidade de dígitos
-          if (digits.length > 0 && digits.length !== (isCellPhone ? 11 : 10)) {
-            toast({
-              title: "Erro no telefone",
-              description: isCellPhone 
-                ? "Celular deve ter 11 dígitos (incluindo DDD)" 
-                : "Telefone fixo deve ter 10 dígitos (incluindo DDD)",
-              variant: "destructive",
-            });
-          }
-        }, 1000); // Aguarda 1 segundo após a última digitação
+    }
+  }, [phone]);
 
-        return () => clearTimeout(timeoutId);
+  const handlePhoneBlur = () => {
+    const digits = phone.replace(/\D/g, '');
+    // Valida apenas se houver algum dígito preenchido
+    if (digits.length > 0) {
+      const isCellPhone = digits.length > 2 && digits.substring(2, 3) === '9';
+      
+      if (digits.length !== (isCellPhone ? 11 : 10)) {
+        toast({
+          title: "Erro no telefone",
+          description: isCellPhone 
+            ? "Celular deve ter 11 dígitos (incluindo DDD)" 
+            : "Telefone fixo deve ter 10 dígitos (incluindo DDD)",
+          variant: "destructive",
+        });
       }
     }
-  }, [phone, toast, isTyping]);
+  };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsTyping(true);
     onPhoneChange(e.target.value);
   };
 
@@ -86,6 +83,7 @@ const CustomerInfoFields = ({
             mask={mask}
             value={phone}
             onChange={handlePhoneChange}
+            onBlur={handlePhoneBlur}
           >
             {(inputProps: any) => (
               <Input
